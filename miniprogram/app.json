@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/train/train",
+    "pages/new-training/new-training",
     "pages/index/index",
     "pages/profile/profile"
   ],

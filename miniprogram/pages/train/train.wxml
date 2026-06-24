@@ -54,7 +54,7 @@
     </view>
   </view>
 
-  <button class="start-training" bindtap="onActionTap" data-name="开始新训练">
+  <button class="start-training" bindtap="onActionTap" data-action="newTraining" data-name="开始新训练">
     <view class="lucide-icon icon-plus"></view>
     <text>开始新训练</text>
   </button>

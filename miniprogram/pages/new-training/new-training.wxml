@@ -1,0 +1,24 @@
+<view class="new-training-page">
+  <view class="top-row">
+    <view class="timer">00:00</view>
+    <view class="finish-button" bindtap="onFinishTap">完成</view>
+  </view>
+
+  <view class="title-row">
+    <view class="pen-icon"></view>
+    <input
+      class="title-input"
+      value="{{title}}"
+      placeholder="点击输入训练标题"
+      placeholder-class="title-placeholder"
+      bindinput="onTitleInput"
+    />
+  </view>
+
+  <view class="action-panel">
+    <button class="add-action" bindtap="onAddActionTap">
+      <view class="add-icon">+</view>
+      <view class="add-label">加动作</view>
+    </button>
+  </view>
+</view>

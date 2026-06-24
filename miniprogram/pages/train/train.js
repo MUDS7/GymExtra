@@ -55,7 +55,14 @@ Page({
   },
 
   onActionTap(event) {
-    const { name } = event.currentTarget.dataset;
+    const { action, name } = event.currentTarget.dataset;
+
+    if (action === "newTraining") {
+      wx.navigateTo({
+        url: "/pages/new-training/new-training"
+      });
+      return;
+    }
 
     wx.showToast({
       title: `${name} 待接入`,
