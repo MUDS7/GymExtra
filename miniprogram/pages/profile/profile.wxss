@@ -1,0 +1,424 @@
+.profile-page {
+  min-height: 100vh;
+  padding: 32rpx 28rpx 156rpx;
+  padding-top: calc(32rpx + env(safe-area-inset-top));
+  background: #FFFFFF;
+  color: #111111;
+}
+
+.profile-header {
+  padding: 8rpx 0 46rpx;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.page-title {
+  font-size: 48rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.notice-button {
+  position: relative;
+  width: 72rpx;
+  height: 72rpx;
+  margin-top: -8rpx;
+  border: 1rpx solid #DADDE2;
+  border-radius: 50%;
+  color: #5E6269;
+  background: #FBFBFC;
+  display: grid;
+  place-items: center;
+}
+
+.notice-button .lucide-icon {
+  width: 31rpx;
+  height: 31rpx;
+}
+
+.notice-dot {
+  position: absolute;
+  top: 10rpx;
+  right: 18rpx;
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #D14AC7;
+}
+
+.profile-card {
+  position: relative;
+  min-height: 204rpx;
+  padding: 34rpx 34rpx;
+  border: 1rpx solid #DADDE2;
+  border-radius: 40rpx;
+  background: #F9FAFB;
+  display: flex;
+  align-items: center;
+  gap: 32rpx;
+}
+
+.avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-letter {
+  width: 138rpx;
+  height: 138rpx;
+  border-radius: 50%;
+  color: #FFFFFF;
+  background: #E26424;
+  box-shadow: 0 15rpx 30rpx rgba(226, 100, 36, 0.24);
+  display: grid;
+  place-items: center;
+  font-size: 44rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.avatar-badge {
+  position: absolute;
+  right: -4rpx;
+  bottom: 0;
+  width: 42rpx;
+  height: 42rpx;
+  border: 4rpx solid #FFFFFF;
+  border-radius: 50%;
+  color: #FFFFFF;
+  background: #58C985;
+  display: grid;
+  place-items: center;
+}
+
+.avatar-badge .lucide-icon {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+.profile-info {
+  min-width: 0;
+  padding-right: 116rpx;
+  flex: 1;
+}
+
+.nickname {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 34rpx;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.user-id {
+  margin-top: 14rpx;
+  color: #6B6F76;
+  font-size: 26rpx;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.level {
+  margin-top: 14rpx;
+  color: #F06F38;
+  font-size: 22rpx;
+  line-height: 1;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.level .lucide-icon {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+.edit-button {
+  position: absolute;
+  right: 34rpx;
+  top: 73rpx;
+  width: 84rpx;
+  height: 48rpx;
+  border: 1rpx solid #F4A77D;
+  border-radius: 26rpx;
+  color: #E26424;
+  background: #FFF9F5;
+  font-size: 23rpx;
+  line-height: 1;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-grid {
+  margin-top: 44rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 26rpx;
+}
+
+.profile-stat {
+  min-height: 204rpx;
+  padding: 36rpx 8rpx 30rpx;
+  border: 1rpx solid #DADDE2;
+  border-radius: 38rpx;
+  text-align: center;
+}
+
+.profile-stat.energy {
+  background: #FFF0EA;
+}
+
+.profile-stat.vital {
+  background: #EAF8EF;
+}
+
+.profile-stat.cool {
+  background: #E9F4FF;
+}
+
+.profile-stat-value {
+  font-size: 48rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.profile-stat.energy .profile-stat-value {
+  color: #F06F38;
+}
+
+.profile-stat.vital .profile-stat-value {
+  color: #44BF72;
+}
+
+.profile-stat.cool .profile-stat-value {
+  color: #258DE9;
+}
+
+.profile-stat-unit {
+  margin-top: 17rpx;
+  color: #5E6269;
+  font-size: 25rpx;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.profile-stat-label {
+  margin-top: 18rpx;
+  color: #5E6269;
+  font-size: 23rpx;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.achievement-section {
+  margin-top: 46rpx;
+}
+
+.section-head {
+  margin-bottom: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-title {
+  font-size: 30rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.all-button {
+  color: #5E6269;
+  font-size: 25rpx;
+  line-height: 1;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.all-button .lucide-icon {
+  width: 25rpx;
+  height: 25rpx;
+}
+
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 26rpx;
+}
+
+.achievement-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.achievement-icon {
+  width: 118rpx;
+  height: 118rpx;
+  border: 1rpx solid #DADDE2;
+  border-radius: 38rpx;
+  display: grid;
+  place-items: center;
+}
+
+.achievement-icon .lucide-icon {
+  width: 45rpx;
+  height: 45rpx;
+}
+
+.achievement-icon.energy {
+  color: #F06F38;
+  border-color: #F4B18C;
+  background: #FFF0EA;
+  box-shadow: 0 10rpx 24rpx rgba(240, 111, 56, 0.14);
+}
+
+.achievement-icon.vital {
+  color: #44BF72;
+  border-color: #9EE3B7;
+  background: #EAF8EF;
+  box-shadow: 0 10rpx 24rpx rgba(68, 191, 114, 0.14);
+}
+
+.achievement-icon.muted {
+  color: #A5A9AF;
+  background: #F3F4F7;
+}
+
+.achievement-icon.locked {
+  opacity: 0.86;
+}
+
+.achievement-name {
+  width: 100%;
+  margin-top: 17rpx;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #111111;
+  font-size: 24rpx;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.locked-text {
+  color: #5E6269;
+  font-weight: 600;
+}
+
+.menu-section {
+  margin-top: 46rpx;
+}
+
+.menu-group-title {
+  margin: 0 0 18rpx 8rpx;
+  color: #6B6F76;
+  font-size: 26rpx;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.menu-card {
+  overflow: hidden;
+  border: 1rpx solid #DADDE2;
+  border-radius: 38rpx;
+  background: #FBFBFC;
+}
+
+.menu-item {
+  min-height: 118rpx;
+  padding: 0 30rpx 0 36rpx;
+  border-bottom: 1rpx solid #DADDE2;
+  display: flex;
+  align-items: center;
+  gap: 26rpx;
+}
+
+.menu-item:last-child {
+  border-bottom: 0;
+}
+
+.menu-mark {
+  width: 66rpx;
+  height: 66rpx;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.menu-mark .lucide-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.menu-mark.energy {
+  color: #F06F38;
+  background: #FBE2D8;
+}
+
+.menu-mark.cool {
+  color: #258DE9;
+  background: #DCEFFC;
+}
+
+.menu-mark.gold {
+  color: #D9B300;
+  background: #FFF4C9;
+}
+
+.menu-mark.power {
+  color: #D14AC7;
+  background: #F3D8EF;
+}
+
+.menu-mark.vital {
+  color: #44BF72;
+  background: #DDF4E4;
+}
+
+.menu-mark.muted {
+  color: #6B6F76;
+  background: #ECEEF2;
+}
+
+.menu-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.menu-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 30rpx;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.menu-desc {
+  margin-top: 9rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #5E6269;
+  font-size: 25rpx;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+.menu-arrow {
+  width: 34rpx;
+  height: 34rpx;
+  color: #5E6269;
+  flex-shrink: 0;
+}

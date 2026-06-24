@@ -1,0 +1,61 @@
+<view class="train-page">
+  <view class="home-header">
+    <view class="title">训练</view>
+  </view>
+
+  <view class="week-panel">
+    <view class="week-head">
+      <view class="week-title">本周训练</view>
+      <view class="week-progress">4 / 7 天</view>
+    </view>
+    <view class="week-days">
+      <view class="day-item" wx:for="{{weekDays}}" wx:key="label">
+        <view class="day-dot {{item.active ? 'active' : ''}}">
+          <view wx:if="{{item.active}}" class="lucide-icon icon-flame day-icon"></view>
+          <text wx:else>{{item.label}}</text>
+        </view>
+        <view class="day-label">{{item.label}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="stats-grid">
+    <view class="stat-card" wx:for="{{stats}}" wx:key="label">
+      <view class="stat-mark {{item.tone}}">
+        <view class="lucide-icon {{item.icon}}"></view>
+      </view>
+      <view class="stat-number {{item.tone}}">{{item.value}}</view>
+      <view class="stat-unit">{{item.unit}}</view>
+      <view class="stat-label">{{item.label}}</view>
+    </view>
+  </view>
+
+  <view class="records-section">
+    <view class="section-head">
+      <view class="section-title">最近记录</view>
+      <button class="all-button" bindtap="onActionTap" data-name="全部记录">
+        <text>全部</text>
+        <view class="lucide-icon icon-chevron-right"></view>
+      </button>
+    </view>
+
+    <view class="record-list">
+      <view class="record-card" wx:for="{{recentWorkouts}}" wx:key="id" bindtap="onActionTap" data-name="{{item.name}}">
+        <view class="record-dot {{item.tone}}"></view>
+        <view class="record-main">
+          <view class="record-title-row">
+            <view class="record-title">{{item.name}}</view>
+            <view class="record-tag {{item.tone}}">{{item.tag}}</view>
+          </view>
+          <view class="record-meta">{{item.date}} · {{item.duration}} · {{item.sets}} 组</view>
+        </view>
+        <view class="lucide-icon icon-chevron-right row-arrow"></view>
+      </view>
+    </view>
+  </view>
+
+  <button class="start-training" bindtap="onActionTap" data-name="开始新训练">
+    <view class="lucide-icon icon-plus"></view>
+    <text>开始新训练</text>
+  </button>
+</view>

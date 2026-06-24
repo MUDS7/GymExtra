@@ -1,0 +1,318 @@
+.train-page {
+  min-height: 100vh;
+  padding: 32rpx 28rpx 144rpx;
+  padding-top: calc(32rpx + env(safe-area-inset-top));
+  background: #FFFFFF;
+  color: #111111;
+}
+
+.home-header {
+  padding: 18rpx 0 34rpx;
+}
+
+.title {
+  font-size: 48rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+.week-panel {
+  padding: 36rpx 32rpx 34rpx;
+  border: 1rpx solid #DADDE2;
+  border-radius: 38rpx;
+  background: #ECEEF2;
+}
+
+.week-head {
+  margin-bottom: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.week-title {
+  font-size: 30rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.week-progress {
+  color: #E26424;
+  font-size: 25rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10rpx;
+}
+
+.day-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.day-dot {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #6B6F76;
+  background: #F2F3F6;
+  font-size: 26rpx;
+  font-weight: 900;
+}
+
+.day-dot.active {
+  color: #FFFFFF;
+  background: #E26424;
+  box-shadow: 0 14rpx 28rpx rgba(226, 100, 36, 0.28);
+}
+
+.day-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.day-label {
+  color: #6B6F76;
+  font-size: 22rpx;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.stats-grid {
+  margin-top: 40rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24rpx;
+}
+
+.stat-card {
+  min-height: 260rpx;
+  padding: 28rpx;
+  border: 1rpx solid #DADDE2;
+  border-radius: 36rpx;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stat-mark {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.stat-mark .lucide-icon {
+  width: 31rpx;
+  height: 31rpx;
+}
+
+.stat-mark.energy {
+  color: #F06F38;
+  background: #FBE2D8;
+}
+
+.stat-mark.cool {
+  color: #258DE9;
+  background: #DCEFFC;
+}
+
+.stat-mark.power {
+  color: #D14AC7;
+  background: #F3D8EF;
+}
+
+.stat-number {
+  margin-top: 28rpx;
+  font-size: 42rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.stat-number.energy {
+  color: #F06F38;
+}
+
+.stat-number.cool {
+  color: #258DE9;
+}
+
+.stat-number.power {
+  color: #D14AC7;
+}
+
+.stat-unit {
+  margin-top: 9rpx;
+  color: #5E6269;
+  font-size: 24rpx;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.stat-label {
+  margin-top: auto;
+  padding-top: 22rpx;
+  color: #5E6269;
+  font-size: 23rpx;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.records-section {
+  margin-top: 42rpx;
+}
+
+.section-head {
+  width: 100%;
+  margin-bottom: 24rpx;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.section-title {
+  font-size: 30rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.all-button {
+  justify-self: end;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  color: #5E6269;
+  font-size: 24rpx;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6rpx;
+}
+
+.all-button .lucide-icon {
+  width: 25rpx;
+  height: 25rpx;
+}
+
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.record-card {
+  min-height: 136rpx;
+  padding: 26rpx 28rpx;
+  border: 1rpx solid #DADDE2;
+  border-radius: 36rpx;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 26rpx;
+}
+
+.record-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.record-dot.energy {
+  background: #F06F38;
+}
+
+.record-dot.cool {
+  background: #258DE9;
+}
+
+.record-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.record-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.record-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 30rpx;
+  line-height: 1.18;
+  font-weight: 900;
+}
+
+.record-tag {
+  padding: 5rpx 12rpx;
+  border-radius: 18rpx;
+  flex-shrink: 0;
+  font-size: 21rpx;
+  line-height: 1.1;
+  font-weight: 900;
+}
+
+.record-tag.energy {
+  color: #F06F38;
+  border: 1rpx solid #F8B08A;
+  background: #FFF3EE;
+}
+
+.record-tag.cool {
+  color: #258DE9;
+  border: 1rpx solid #8AC5F7;
+  background: #EFF8FF;
+}
+
+.record-meta {
+  margin-top: 12rpx;
+  color: #5E6269;
+  font-size: 25rpx;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.row-arrow {
+  width: 34rpx;
+  height: 34rpx;
+  color: #5E6269;
+  flex-shrink: 0;
+}
+
+.start-training {
+  position: fixed;
+  left: 28rpx;
+  right: 28rpx;
+  bottom: calc(24rpx + env(safe-area-inset-bottom));
+  z-index: 20;
+  height: 78rpx;
+  border-radius: 40rpx;
+  color: #FFFFFF;
+  background: #E26424;
+  box-shadow: 0 14rpx 34rpx rgba(226, 100, 36, 0.24);
+  font-size: 29rpx;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.start-training .lucide-icon {
+  width: 30rpx;
+  height: 30rpx;
+}

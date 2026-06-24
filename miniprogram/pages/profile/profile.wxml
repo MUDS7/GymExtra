@@ -1,0 +1,69 @@
+<view class="profile-page">
+  <view class="profile-header">
+    <view class="page-title">我的</view>
+    <view class="notice-button" bindtap="onActionTap" data-name="通知">
+      <view class="lucide-icon icon-bell"></view>
+      <view class="notice-dot"></view>
+    </view>
+  </view>
+
+  <view class="profile-card">
+    <view class="avatar-wrap">
+      <view class="avatar-letter">{{user.avatar}}</view>
+      <view class="avatar-badge">
+        <view class="lucide-icon icon-flame"></view>
+      </view>
+    </view>
+    <view class="profile-info">
+      <view class="nickname">{{user.nickname}}</view>
+      <view class="user-id">ID: {{user.id}}</view>
+      <view class="level">
+        <view class="lucide-icon icon-zap"></view>
+        <text>{{user.level}}</text>
+      </view>
+    </view>
+    <view class="edit-button" bindtap="onActionTap" data-name="编辑资料">编辑</view>
+  </view>
+
+  <view class="stats-grid">
+    <view class="profile-stat {{item.tone}}" wx:for="{{stats}}" wx:key="label">
+      <view class="profile-stat-value">{{item.value}}</view>
+      <view class="profile-stat-unit">{{item.unit}}</view>
+      <view class="profile-stat-label">{{item.label}}</view>
+    </view>
+  </view>
+
+  <view class="achievement-section">
+    <view class="section-head">
+      <view class="section-title">成就</view>
+      <view class="all-button" bindtap="onActionTap" data-name="全部成就">
+        <text>全部</text>
+        <view class="lucide-icon icon-chevron-right"></view>
+      </view>
+    </view>
+    <view class="achievement-grid">
+      <view class="achievement-item" wx:for="{{achievements}}" wx:key="name">
+        <view class="achievement-icon {{item.tone}} {{item.earned ? '' : 'locked'}}">
+          <view class="lucide-icon icon-award"></view>
+        </view>
+        <view class="achievement-name {{item.earned ? '' : 'locked-text'}}">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="menu-section" wx:for="{{menuGroups}}" wx:for-item="group" wx:key="group">
+    <view class="menu-group-title">{{group.group}}</view>
+    <view class="menu-card">
+      <view class="menu-item" wx:for="{{group.items}}" wx:for-item="entry" wx:key="label" bindtap="onActionTap" data-name="{{entry.label}}">
+        <view class="menu-mark {{entry.tone}}">
+          <view class="lucide-icon {{entry.icon}}"></view>
+        </view>
+        <view class="menu-main">
+          <view class="menu-title">{{entry.label}}</view>
+          <view class="menu-desc" wx:if="{{entry.desc}}">{{entry.desc}}</view>
+        </view>
+        <view class="lucide-icon icon-chevron-right menu-arrow"></view>
+      </view>
+    </view>
+  </view>
+</view>

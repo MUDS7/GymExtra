@@ -1,0 +1,58 @@
+<view class="group-page">
+  <view class="home-header">
+    <view class="title">群组</view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">我的群组</view>
+      <button class="all-button" bindtap="onActionTap" data-name="全部群组">
+        全部 <view class="lucide-icon icon-chevron-right text-button-icon"></view>
+      </button>
+    </view>
+    <view class="group-list">
+      <view class="group-card" wx:for="{{groups}}" wx:key="id" bindtap="onActionTap" data-name="{{item.name}}">
+        <view class="group-icon {{item.tone}}">
+          <view class="lucide-icon icon-users"></view>
+        </view>
+        <view class="group-main">
+          <view class="group-title">{{item.name}}</view>
+          <view class="group-meta">
+            <text>{{item.members}} 成员</text>
+            <view class="group-badge {{item.active ? 'active' : 'calm'}}">
+              <view class="lucide-icon {{item.active ? 'icon-flame' : 'icon-zap'}} badge-icon"></view>
+              {{item.badge}}
+            </view>
+          </view>
+        </view>
+        <view class="lucide-icon icon-chevron-right row-arrow"></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="rank-section">
+    <view class="section-head">
+      <view class="section-title with-icon">
+        <view class="lucide-icon icon-trophy trophy-icon"></view>
+        本周排行
+      </view>
+      <view class="section-note">力量训练精英组</view>
+    </view>
+    <view class="rank-card">
+      <view class="rank-row {{item.isMe ? 'is-me' : ''}}" wx:for="{{rankList}}" wx:key="rank">
+        <view class="rank-medal {{item.medal}}">{{item.rank}}</view>
+        <view class="avatar-letter {{item.isMe ? 'me' : ''}}">{{item.avatar}}</view>
+        <view class="rank-main">
+          <view class="rank-name">{{item.isMe ? '我（我）' : item.name}}</view>
+          <view class="rank-streak">连续 {{item.streak}} 天</view>
+        </view>
+        <view class="rank-score">{{item.score}}</view>
+      </view>
+    </view>
+  </view>
+
+  <button class="discover-button" bindtap="onActionTap" data-name="发现更多群组">
+    <view class="lucide-icon icon-search"></view>
+    <text>发现更多群组</text>
+  </button>
+</view>
