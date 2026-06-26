@@ -32,14 +32,25 @@ const categories = [
 
 function buildActions(categoryId, keyword = "") {
   const normalizedKeyword = keyword.trim().toLowerCase();
+  const actionGroups = normalizedKeyword
+    ? Object.entries(CATEGORY_ACTIONS)
+    : [[categoryId, CATEGORY_ACTIONS[categoryId] || []]];
 
-  return (CATEGORY_ACTIONS[categoryId] || [])
-    .filter((name) => !normalizedKeyword || name.toLowerCase().includes(normalizedKeyword))
-    .map((name, index) => ({
-      id: `${categoryId}-${index}`,
-      name,
-      image: PLACEHOLDER_IMAGE
-    }));
+  const actions = [];
+
+  actionGroups.forEach(([groupId, actionNames]) => {
+    actionNames.forEach((name, index) => {
+      if (!normalizedKeyword || name.toLowerCase().includes(normalizedKeyword)) {
+        actions.push({
+          id: `${groupId}-${index}`,
+          name,
+          image: PLACEHOLDER_IMAGE
+        });
+      }
+    });
+  });
+
+  return actions;
 }
 
 Page({
