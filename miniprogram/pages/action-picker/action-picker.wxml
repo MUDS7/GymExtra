@@ -1,0 +1,54 @@
+<view class="action-picker-page">
+  <view class="picker-top" style="height: {{headerHeight}}px;">
+    <view class="picker-toolbar" style="top: {{toolbarTop}}px;">
+      <button class="close-button" bindtap="onCloseTap" aria-label="关闭">
+        <view class="close-mark"></view>
+      </button>
+      <view class="search-box">
+        <view class="lucide-icon icon-search search-icon"></view>
+        <input
+          class="search-input"
+          value="{{keyword}}"
+          placeholder="输入动作名字搜索"
+          placeholder-class="search-placeholder"
+          confirm-type="search"
+          bindinput="onSearchInput"
+        />
+      </view>
+    </view>
+  </view>
+
+  <view class="picker-body" style="height: calc(100vh - {{headerHeight}}px);">
+    <scroll-view class="category-rail" scroll-y enhanced show-scrollbar="{{false}}">
+      <view
+        wx:for="{{categories}}"
+        wx:key="id"
+        class="category-item {{activeCategory === item.id ? 'active' : ''}}"
+        bindtap="onCategoryTap"
+        data-id="{{item.id}}"
+        data-name="{{item.name}}"
+      >
+        {{item.name}}
+      </view>
+    </scroll-view>
+
+    <scroll-view class="action-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="action-content">
+        <view class="group-title">{{activeCategoryName}}</view>
+        <view class="action-grid" wx:if="{{actions.length}}">
+          <button
+            wx:for="{{actions}}"
+            wx:key="id"
+            class="action-card"
+            bindtap="onActionTap"
+            data-name="{{item.name}}"
+          >
+            <image class="action-image" src="{{item.image}}" mode="aspectFit"></image>
+            <view class="action-name">{{item.name}}</view>
+          </button>
+        </view>
+        <view wx:else class="empty-state">暂无匹配动作</view>
+      </view>
+    </scroll-view>
+  </view>
+</view>

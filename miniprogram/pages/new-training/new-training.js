@@ -23,9 +23,8 @@ Page({
   },
 
   onAddActionTap() {
-    wx.showToast({
-      title: "添加动作待接入",
-      icon: "none"
+    wx.navigateTo({
+      url: "/pages/action-picker/action-picker"
     });
   }
 });

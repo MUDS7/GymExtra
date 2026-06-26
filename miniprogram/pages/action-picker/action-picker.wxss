@@ -1,0 +1,279 @@
+.action-picker-page {
+  width: 100vw;
+  min-height: 100vh;
+  color: #111111;
+  background: #FFFFFF;
+  overflow: hidden;
+}
+
+.picker-top {
+  position: relative;
+  width: 100vw;
+  background: #FFFFFF;
+}
+
+.picker-toolbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 76rpx;
+  padding: 0 28rpx;
+  display: flex;
+  align-items: center;
+}
+
+.close-button {
+  flex: 0 0 50rpx;
+  width: 48rpx;
+  height: 48rpx;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-mark {
+  position: relative;
+  width: 38rpx;
+  height: 38rpx;
+}
+
+.close-mark::before,
+.close-mark::after {
+  position: absolute;
+  left: 17rpx;
+  top: 2rpx;
+  content: "";
+  width: 5rpx;
+  height: 36rpx;
+  border-radius: 4rpx;
+  background: #0A0A0A;
+}
+
+.close-mark::before {
+  transform: rotate(45deg);
+}
+
+.close-mark::after {
+  transform: rotate(-45deg);
+}
+
+.search-box {
+  flex: 1;
+  height: 72rpx;
+  width: 0;
+  min-width: 0;
+  margin-left: 26rpx;
+  padding: 0 28rpx;
+  border-radius: 36rpx;
+  background: #FFFFFF;
+  box-shadow: 0 12rpx 40rpx rgba(15, 23, 42, 0.09);
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  flex: 0 0 32rpx;
+  width: 32rpx;
+  height: 32rpx;
+  color: #8E8E93;
+}
+
+.search-input {
+  flex: 1;
+  height: 62rpx;
+  margin-left: 12rpx;
+  min-width: 0;
+  color: #111111;
+  font-size: 26rpx;
+  line-height: 62rpx;
+}
+
+.search-placeholder {
+  color: #A6A6AA;
+}
+
+.picker-body {
+  width: 100vw;
+  display: flex;
+  overflow: hidden;
+}
+
+.category-rail {
+  flex: 0 0 140rpx;
+  width: 140rpx;
+  height: 100%;
+  background: #F6F6F7;
+  box-shadow: 18rpx 0 42rpx rgba(15, 23, 42, 0.06);
+}
+
+.category-item {
+  position: relative;
+  height: 80rpx;
+  padding-left: 36rpx;
+  color: #757579;
+  font-size: 29rpx;
+  line-height: 80rpx;
+  font-weight: 500;
+}
+
+.category-item.active {
+  color: #111111;
+  background: #FFFFFF;
+  font-weight: 900;
+}
+
+.category-item.active::before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  content: "";
+  width: 6rpx;
+  height: 80rpx;
+  background: #E26424;
+}
+
+.category-item.active::after {
+  position: absolute;
+  left: 36rpx;
+  right: 16rpx;
+  bottom: 0;
+  content: "";
+  height: 1rpx;
+  background: #E0E0E0;
+}
+
+.action-scroll {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  height: 100%;
+  background: #FFFFFF;
+}
+
+.action-content {
+  min-width: 0;
+  padding: 16rpx 20rpx 48rpx 24rpx;
+}
+
+.group-title {
+  margin: 6rpx 0 26rpx;
+  font-size: 37rpx;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.action-grid {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.action-card {
+  flex: 0 0 calc((100% - 18rpx) / 2);
+  min-width: 0;
+  width: calc((100% - 18rpx) / 2);
+  height: 264rpx;
+  margin: 0;
+  padding: 20rpx 16rpx 24rpx;
+  border: 1rpx solid #EFEFEF;
+  border-radius: 22rpx;
+  background: #FFFFFF;
+  box-shadow: 0 10rpx 28rpx rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.action-card:nth-child(2n + 1) {
+  margin-right: 18rpx;
+}
+
+.action-card:nth-child(n + 3) {
+  margin-top: 24rpx;
+}
+
+.action-image {
+  width: 176rpx;
+  height: 156rpx;
+  flex-shrink: 0;
+}
+
+.action-name {
+  min-width: 0;
+  width: 100%;
+  margin-top: 16rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #222222;
+  font-size: 28rpx;
+  line-height: 1.2;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 360px) {
+  .picker-toolbar {
+    padding-left: 22rpx;
+    padding-right: 22rpx;
+  }
+
+  .search-box {
+    margin-left: 18rpx;
+    padding: 0 22rpx;
+  }
+
+  .category-rail {
+    flex-basis: 124rpx;
+    width: 124rpx;
+  }
+
+  .category-item {
+    padding-left: 30rpx;
+    font-size: 27rpx;
+  }
+
+  .category-item.active::after {
+    left: 30rpx;
+  }
+
+  .action-content {
+    padding-left: 18rpx;
+    padding-right: 16rpx;
+  }
+
+  .action-card {
+    flex-basis: calc((100% - 16rpx) / 2);
+    width: calc((100% - 16rpx) / 2);
+    height: 246rpx;
+    padding: 18rpx 12rpx 20rpx;
+  }
+
+  .action-card:nth-child(2n + 1) {
+    margin-right: 16rpx;
+  }
+
+  .action-card:nth-child(n + 3) {
+    margin-top: 20rpx;
+  }
+
+  .action-image {
+    width: 150rpx;
+    height: 132rpx;
+  }
+
+  .action-name {
+    font-size: 26rpx;
+  }
+}
+
+.empty-state {
+  margin-top: 160rpx;
+  color: #8E8E93;
+  font-size: 28rpx;
+  text-align: center;
+}
