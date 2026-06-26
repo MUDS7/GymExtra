@@ -1,6 +1,12 @@
 <view class="new-training-page">
   <view class="top-row">
-    <view class="timer">00:00</view>
+    <input
+      class="timer"
+      value="{{timer}}"
+      placeholder="00:00"
+      placeholder-class="timer-placeholder"
+      bindinput="onTimerInput"
+    />
     <view class="finish-button" bindtap="onFinishTap">完成</view>
   </view>
 
@@ -15,10 +21,40 @@
     />
   </view>
 
-  <view class="action-panel">
-    <button class="add-action" bindtap="onAddActionTap">
-      <view class="add-icon">+</view>
-      <view class="add-label">加动作</view>
-    </button>
+  <view wx:if="{{actions.length}}" class="training-summary">
+    <view>{{summary.setText}}　{{summary.actionText}}</view>
+    <view>{{summary.volumeText}}</view>
+  </view>
+
+  <view class="action-panel {{actions.length ? 'has-actions' : ''}}">
+    <scroll-view wx:if="{{actions.length}}" class="training-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="training-list">
+        <view class="training-card" wx:for="{{actions}}" wx:key="uid">
+          <image class="training-image" src="{{item.image}}" mode="aspectFit"></image>
+          <view class="training-main">
+            <view class="training-name">{{item.name}}</view>
+            <view class="training-meta">{{item.metaText}}</view>
+          </view>
+          <view class="training-side">
+            <button
+              class="delete-button"
+              catchtap="onActionDeleteTap"
+              data-index="{{index}}"
+              data-name="{{item.name}}"
+              aria-label="删除动作"
+            >
+              <view class="delete-icon"></view>
+            </button>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="panel-add {{actions.length ? 'with-list' : ''}}">
+      <button class="add-action" bindtap="onAddActionTap">
+        <view class="add-icon">+</view>
+        <view class="add-label">加动作</view>
+      </button>
+    </view>
   </view>
 </view>

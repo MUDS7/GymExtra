@@ -105,11 +105,15 @@ Page({
   },
 
   onActionTap(event) {
-    const { name } = event.currentTarget.dataset;
+    const { id } = event.currentTarget.dataset;
+    const selectedAction = this.data.actions.find((item) => item.id === id);
+    const pages = getCurrentPages();
+    const previousPage = pages.length > 1 ? pages[pages.length - 2] : null;
 
-    wx.showToast({
-      title: `${name} 待接入`,
-      icon: "none"
-    });
+    if (selectedAction && previousPage && typeof previousPage.addTrainingAction === "function") {
+      previousPage.addTrainingAction(selectedAction);
+    }
+
+    wx.navigateBack();
   }
 });
