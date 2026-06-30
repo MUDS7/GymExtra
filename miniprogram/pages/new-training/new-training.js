@@ -1,4 +1,5 @@
 const { DEFAULT_ACTION_ICON_PATH } = require("../../data/actions");
+const trainingService = require("../../services/trainings");
 
 function formatVolume(value) {
   return Number(value || 0).toFixed(1);
@@ -65,7 +66,8 @@ Page({
     timer: "00:00",
     title: "",
     actions: [],
-    summary: buildSummary([])
+    summary: buildSummary([]),
+    saving: false
   },
 
   onTimerInput(event) {
@@ -80,17 +82,51 @@ Page({
     });
   },
 
-  onFinishTap() {
-    const pages = getCurrentPages();
-
-    if (pages.length > 1) {
-      wx.navigateBack();
+  async onFinishTap() {
+    if (this.data.saving) {
       return;
     }
 
-    wx.switchTab({
-      url: "/pages/train/train"
-    });
+    this.setData({ saving: true });
+    wx.showLoading({ title: "保存中", mask: true });
+
+    try {
+      await trainingService.saveTraining({
+        title: this.data.title,
+        timer: this.data.timer,
+        actions: this.data.actions.map((action) => ({
+          id: action.id,
+          name: action.name,
+          iconPath: action.iconPath,
+          sets: action.sets.map((set) => ({
+            weight: set.weight,
+            reps: set.reps,
+            completed: set.completed
+          }))
+        }))
+      });
+
+      wx.hideLoading();
+      wx.showToast({ title: "训练已保存", icon: "success" });
+
+      setTimeout(() => {
+        const pages = getCurrentPages();
+
+        if (pages.length > 1) {
+          wx.navigateBack();
+          return;
+        }
+
+        wx.switchTab({ url: "/pages/train/train" });
+      }, 500);
+    } catch (error) {
+      wx.hideLoading();
+      this.setData({ saving: false });
+      wx.showToast({
+        title: error.message || "保存失败，请重试",
+        icon: "none"
+      });
+    }
   },
 
   updateActions(actions) {

@@ -1,0 +1,28 @@
+{
+  "envId": "cloud1-d0g045i05d14e02d0",
+  "framework": {
+    "plugins": {
+      "trainingDatabase": {
+        "use": "@cloudbase/framework-plugin-database",
+        "inputs": {
+          "collections": [
+            {
+              "collectionName": "trainings",
+              "description": "用户训练记录",
+              "createIndexes": [
+                {
+                  "name": "userId_1_completedAt_-1",
+                  "unique": false,
+                  "keys": [
+                    { "name": "userId", "direction": "1" },
+                    { "name": "completedAt", "direction": "-1" }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

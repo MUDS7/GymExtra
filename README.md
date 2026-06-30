@@ -39,3 +39,9 @@ cloudfunctions/         云函数目录
 保存为每条动作的 `iconPath`。本地动作表仅作为云端不可用时的兜底数据。
 
 微信小程序不提供读取用户个人“微信号”的 API，因此不能把微信号本身作为 ID；`openid` 才是适用于此场景的官方稳定身份标识。
+
+## 数据库索引
+
+`cloudbaserc.json` 为 `trainings` 集合声明了 `userId ASC + completedAt DESC` 联合索引。它支持按用户查询，也支持将某个用户的训练记录按完成时间倒序排列。
+
+使用 `npx @cloudbase/cli framework deploy` 部署索引；也可以在微信开发者工具的“云开发 → 数据库 → trainings → 索引管理”中创建相同索引。
