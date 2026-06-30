@@ -29,21 +29,42 @@
   <view class="action-panel {{actions.length ? 'has-actions' : ''}}">
     <scroll-view wx:if="{{actions.length}}" class="training-scroll" scroll-y enhanced show-scrollbar="{{false}}">
       <view class="training-list">
-        <view class="training-card" wx:for="{{actions}}" wx:key="uid">
-          <image class="training-image" src="{{item.image}}" mode="aspectFit"></image>
-          <view class="training-main">
-            <view class="training-name">{{item.name}}</view>
-            <view class="training-meta">{{item.metaText}}</view>
+        <view class="training-card {{item.expanded ? 'expanded' : ''}}" wx:for="{{actions}}" wx:key="uid">
+          <view class="training-header" bindtap="onActionCardTap" data-index="{{index}}">
+            <image class="training-image" src="{{item.image}}" mode="aspectFit"></image>
+            <view class="training-main">
+              <view class="training-name">{{item.name}}</view>
+              <view class="training-meta">{{item.metaText}}</view>
+            </view>
+            <view class="training-side">
+              <button class="delete-button" catchtap="onActionDeleteTap" data-index="{{index}}" data-name="{{item.name}}" aria-label="删除动作">
+                <view class="delete-icon"></view>
+              </button>
+            </view>
           </view>
-          <view class="training-side">
-            <button
-              class="delete-button"
-              catchtap="onActionDeleteTap"
-              data-index="{{index}}"
-              data-name="{{item.name}}"
-              aria-label="删除动作"
-            >
-              <view class="delete-icon"></view>
+
+          <view wx:if="{{item.expanded}}" class="training-detail">
+            <view class="set-list">
+              <view class="set-row" wx:for="{{item.sets}}" wx:for-item="set" wx:for-index="setIndex" wx:key="uid">
+                <view class="set-number">{{setIndex + 1}}</view>
+                <view class="set-field">
+                  <text class="set-unit">kg</text>
+                  <input class="set-input" type="digit" value="{{set.weight}}" placeholder="{{set.weightEditing ? '' : '0'}}" data-action-index="{{index}}" data-set-index="{{setIndex}}" data-field="weight" bindfocus="onSetInputFocus" bindinput="onSetInput" bindblur="onSetInputBlur" />
+                </view>
+                <view class="set-field">
+                  <text class="set-unit">次</text>
+                  <input class="set-input" type="number" value="{{set.reps}}" placeholder="{{set.repsEditing ? '' : '0'}}" data-action-index="{{index}}" data-set-index="{{setIndex}}" data-field="reps" bindfocus="onSetInputFocus" bindinput="onSetInput" bindblur="onSetInputBlur" />
+                </view>
+                <button class="set-status {{set.completed ? 'completed' : ''}}" catchtap="onSetStatusTap" data-action-index="{{index}}" data-set-index="{{setIndex}}" aria-label="切换完成状态">
+                  <view class="set-status-icon {{set.completed ? 'is-check' : 'is-cross'}}"></view>
+                </button>
+                <button class="set-delete" catchtap="onSetDeleteTap" data-action-index="{{index}}" data-set-index="{{setIndex}}" aria-label="删除本组">
+                  <view class="delete-icon set-delete-icon"></view>
+                </button>
+              </view>
+            </view>
+            <button class="add-set-button" catchtap="onAddSetTap" data-index="{{index}}">
+              <text class="add-set-icon">＋</text><text>新增一组</text>
             </button>
           </view>
         </view>

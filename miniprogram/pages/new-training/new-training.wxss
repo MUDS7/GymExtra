@@ -120,13 +120,22 @@
 .training-card {
   width: 100%;
   min-height: 178rpx;
-  padding: 28rpx 28rpx 26rpx;
   border-radius: 32rpx;
   background: #FFFFFF;
+  overflow: hidden;
+}
+
+.training-header {
+  min-height: 178rpx;
+  padding: 28rpx 28rpx 26rpx;
   display: grid;
   grid-template-columns: 132rpx minmax(0, 1fr) 58rpx;
   align-items: center;
   column-gap: 24rpx;
+}
+
+.training-card.expanded .training-header {
+  border-bottom: 1rpx solid #F0F0F2;
 }
 
 .training-image {
@@ -185,6 +194,190 @@
   mask-position: center;
   -webkit-mask-size: contain;
   mask-size: contain;
+}
+
+.training-detail {
+  width: 100%;
+  padding: 28rpx 24rpx;
+  overflow: hidden;
+}
+
+.set-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.set-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.set-number {
+  flex: 0 0 54rpx;
+  width: 54rpx;
+  height: 86rpx;
+  border-radius: 18rpx;
+  color: #68686D;
+  background: #F2F2F4;
+  font-size: 26rpx;
+  line-height: 86rpx;
+  font-weight: 700;
+  text-align: center;
+}
+
+.set-field {
+  position: relative;
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  height: 86rpx;
+  border: 2rpx solid #F2D0C2;
+  border-radius: 18rpx;
+  background: #FFF7F3;
+}
+
+.set-unit {
+  position: absolute;
+  top: 10rpx;
+  left: 14rpx;
+  z-index: 1;
+  color: #B36A49;
+  font-size: 19rpx;
+  line-height: 1;
+}
+
+.set-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 86rpx;
+  padding: 20rpx 12rpx 4rpx;
+  color: #26262A;
+  font-size: 31rpx;
+  line-height: 62rpx;
+  font-weight: 700;
+  text-align: center;
+}
+
+.set-status {
+  flex: 0 0 78rpx;
+  width: 78rpx;
+  min-width: 78rpx;
+  height: 86rpx;
+  margin: 0;
+  border-radius: 18rpx;
+  color: #D93025;
+  background: #FFF0EE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.set-status.completed {
+  color: #FFFFFF;
+  background: #E26424;
+}
+
+.set-status-icon {
+  position: relative;
+  display: block;
+  flex: none;
+}
+
+.set-status-icon.is-check {
+  width: 46rpx;
+  height: 38rpx;
+}
+
+.set-status-icon.is-check::before,
+.set-status-icon.is-check::after {
+  content: "";
+  position: absolute;
+  height: 6rpx;
+  border-radius: 4rpx;
+  background: #FFFFFF;
+  transform-origin: left center;
+}
+
+.set-status-icon.is-check::before {
+  top: 14rpx;
+  left: 3rpx;
+  width: 18rpx;
+  transform: rotate(45deg);
+}
+
+.set-status-icon.is-check::after {
+  top: 27rpx;
+  left: 15rpx;
+  width: 35rpx;
+  transform: rotate(-45deg);
+}
+
+.set-status-icon.is-cross {
+  width: 34rpx;
+  height: 34rpx;
+}
+
+.set-status-icon.is-cross::before,
+.set-status-icon.is-cross::after {
+  content: "";
+  position: absolute;
+  top: 14rpx;
+  left: 1rpx;
+  width: 32rpx;
+  height: 5rpx;
+  border-radius: 3rpx;
+  background: #D93025;
+}
+
+.set-status-icon.is-cross::before {
+  transform: rotate(45deg);
+}
+
+.set-status-icon.is-cross::after {
+  transform: rotate(-45deg);
+}
+
+.set-delete {
+  flex: 0 0 68rpx;
+  width: 68rpx;
+  min-width: 68rpx;
+  height: 86rpx;
+  margin: 0;
+  border-radius: 18rpx;
+  background: #F6F6F7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.set-delete-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.add-set-button {
+  width: 100%;
+  height: 78rpx;
+  margin: 28rpx 0 0;
+  border-radius: 20rpx;
+  color: #E26424;
+  background: #FFF3EE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  font-size: 27rpx;
+  line-height: 78rpx;
+  font-weight: 700;
+}
+
+.add-set-icon {
+  font-size: 34rpx;
+  font-weight: 500;
 }
 
 .panel-add {
