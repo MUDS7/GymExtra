@@ -5,20 +5,25 @@
       value="{{timer}}"
       placeholder="00:00"
       placeholder-class="timer-placeholder"
+      disabled="{{readonly}}"
       bindinput="onTimerInput"
     />
-    <view class="finish-button" bindtap="onFinishTap">{{saving ? '保存中' : '完成'}}</view>
+    <view wx:if="{{!readonly}}" class="finish-button" bindtap="onFinishTap">{{saving ? '保存中' : '完成'}}</view>
   </view>
 
-  <view class="title-row">
-    <view class="pen-icon"></view>
-    <input
-      class="title-input"
-      value="{{title}}"
-      placeholder="点击输入训练标题"
-      placeholder-class="title-placeholder"
-      bindinput="onTitleInput"
-    />
+  <view class="title-row {{readonly ? 'readonly' : ''}}">
+    <view wx:if="{{!readonly}}" class="pen-icon"></view>
+    <view class="title-content">
+      <input
+        class="title-input"
+        value="{{title}}"
+        placeholder="点击输入训练标题"
+        placeholder-class="title-placeholder"
+        disabled="{{readonly}}"
+        bindinput="onTitleInput"
+      />
+      <view wx:if="{{readonly && recordedAt}}" class="recorded-at">记录于 {{recordedAt}}</view>
+    </view>
   </view>
 
   <view wx:if="{{actions.length}}" class="training-summary">
@@ -37,7 +42,7 @@
               <view class="training-meta">{{item.metaText}}</view>
             </view>
             <view class="training-side">
-              <button class="delete-button" catchtap="onActionDeleteTap" data-index="{{index}}" data-name="{{item.name}}" aria-label="删除动作">
+              <button wx:if="{{!readonly}}" class="delete-button" catchtap="onActionDeleteTap" data-index="{{index}}" data-name="{{item.name}}" aria-label="删除动作">
                 <view class="delete-icon"></view>
               </button>
             </view>
@@ -49,21 +54,21 @@
                 <view class="set-number">{{setIndex + 1}}</view>
                 <view class="set-field">
                   <text class="set-unit">kg</text>
-                  <input class="set-input" type="digit" value="{{set.weight}}" placeholder="{{set.weightEditing ? '' : '0'}}" data-action-index="{{index}}" data-set-index="{{setIndex}}" data-field="weight" bindfocus="onSetInputFocus" bindinput="onSetInput" bindblur="onSetInputBlur" />
+                  <input class="set-input" type="digit" value="{{set.weight}}" placeholder="{{set.weightEditing ? '' : '0'}}" disabled="{{readonly}}" data-action-index="{{index}}" data-set-index="{{setIndex}}" data-field="weight" bindfocus="onSetInputFocus" bindinput="onSetInput" bindblur="onSetInputBlur" />
                 </view>
                 <view class="set-field">
                   <text class="set-unit">次</text>
-                  <input class="set-input" type="number" value="{{set.reps}}" placeholder="{{set.repsEditing ? '' : '0'}}" data-action-index="{{index}}" data-set-index="{{setIndex}}" data-field="reps" bindfocus="onSetInputFocus" bindinput="onSetInput" bindblur="onSetInputBlur" />
+                  <input class="set-input" type="number" value="{{set.reps}}" placeholder="{{set.repsEditing ? '' : '0'}}" disabled="{{readonly}}" data-action-index="{{index}}" data-set-index="{{setIndex}}" data-field="reps" bindfocus="onSetInputFocus" bindinput="onSetInput" bindblur="onSetInputBlur" />
                 </view>
-                <button class="set-status {{set.completed ? 'completed' : ''}}" catchtap="onSetStatusTap" data-action-index="{{index}}" data-set-index="{{setIndex}}" aria-label="切换完成状态">
+                <button class="set-status {{set.completed ? 'completed' : ''}} {{readonly ? 'readonly' : ''}}" catchtap="onSetStatusTap" data-action-index="{{index}}" data-set-index="{{setIndex}}" aria-label="完成状态">
                   <view class="set-status-icon {{set.completed ? 'is-check' : 'is-cross'}}"></view>
                 </button>
-                <button class="set-delete" catchtap="onSetDeleteTap" data-action-index="{{index}}" data-set-index="{{setIndex}}" aria-label="删除本组">
+                <button wx:if="{{!readonly}}" class="set-delete" catchtap="onSetDeleteTap" data-action-index="{{index}}" data-set-index="{{setIndex}}" aria-label="删除本组">
                   <view class="delete-icon set-delete-icon"></view>
                 </button>
               </view>
             </view>
-            <button class="add-set-button" catchtap="onAddSetTap" data-index="{{index}}">
+            <button wx:if="{{!readonly}}" class="add-set-button" catchtap="onAddSetTap" data-index="{{index}}">
               <text class="add-set-icon">＋</text><text>新增一组</text>
             </button>
           </view>
@@ -71,7 +76,7 @@
       </view>
     </scroll-view>
 
-    <view class="panel-add {{actions.length ? 'with-list' : ''}}">
+    <view wx:if="{{!readonly}}" class="panel-add {{actions.length ? 'with-list' : ''}}">
       <button class="add-action" bindtap="onAddActionTap">
         <view class="add-icon">+</view>
         <view class="add-label">加动作</view>

@@ -32,6 +32,59 @@ function formatDuration(value) {
   return Number.isFinite(minutes) ? `${Math.max(0, Math.ceil(minutes))} 分钟` : timer;
 }
 
+function getCurrentWeekRange() {
+  const now = new Date();
+  const mondayOffset = (now.getDay() + 6) % 7;
+  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset);
+  const weekEnd = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 7);
+
+  return { weekStart, weekEnd };
+}
+
+function parseDurationSeconds(value) {
+  const timer = String(value || "00:00").trim();
+  const parts = timer.split(":").map(Number);
+
+  if (parts.length === 2 && parts.every(Number.isFinite)) {
+    return Math.max(0, parts[0] * 60 + parts[1]);
+  }
+
+  const minutes = Number(timer);
+  return Number.isFinite(minutes) ? Math.max(0, minutes * 60) : 0;
+}
+
+function buildWeeklyDashboard(trainings, weekStart) {
+  const activeDays = new Set();
+  let totalSeconds = 0;
+
+  trainings.forEach((training) => {
+    const createdAt = new Date(training.createdAt);
+
+    if (!Number.isNaN(createdAt.getTime())) {
+      const dayStart = new Date(createdAt.getFullYear(), createdAt.getMonth(), createdAt.getDate());
+      const dayIndex = Math.floor((dayStart.getTime() - weekStart.getTime()) / 86400000);
+
+      if (dayIndex >= 0 && dayIndex < 7) {
+        activeDays.add(dayIndex);
+      }
+    }
+
+    totalSeconds += parseDurationSeconds(training.timer);
+  });
+
+  const labels = ["一", "二", "三", "四", "五", "六", "日"];
+
+  return {
+    weekDays: labels.map((label, index) => ({ label, active: activeDays.has(index) })),
+    trainedDays: activeDays.size,
+    stats: [
+      { label: "本周训练", value: String(trainings.length), unit: "次", tone: "energy", icon: "icon-zap" },
+      { label: "累计时长", value: String(Math.ceil(totalSeconds / 60)), unit: "分钟", tone: "cool", icon: "icon-clock" },
+      { label: "消耗热量", value: "0", unit: "千卡", tone: "power", icon: "icon-flame" }
+    ]
+  };
+}
+
 function toWorkout(training) {
   return {
     id: training.uuid || training._id,
@@ -47,18 +100,19 @@ function toWorkout(training) {
 Page({
   data: {
     weekDays: [
-      { label: "一", active: true },
-      { label: "二", active: true },
+      { label: "一", active: false },
+      { label: "二", active: false },
       { label: "三", active: false },
-      { label: "四", active: true },
-      { label: "五", active: true },
+      { label: "四", active: false },
+      { label: "五", active: false },
       { label: "六", active: false },
       { label: "日", active: false }
     ],
+    trainedDays: 0,
     stats: [
-      { label: "本周训练", value: "4", unit: "次", tone: "energy", icon: "icon-zap" },
-      { label: "累计时长", value: "180", unit: "分钟", tone: "cool", icon: "icon-clock" },
-      { label: "消耗热量", value: "1,240", unit: "千卡", tone: "power", icon: "icon-flame" }
+      { label: "本周训练", value: "0", unit: "次", tone: "energy", icon: "icon-zap" },
+      { label: "累计时长", value: "0", unit: "分钟", tone: "cool", icon: "icon-clock" },
+      { label: "消耗热量", value: "0", unit: "千卡", tone: "power", icon: "icon-flame" }
     ],
     recentWorkouts: []
   },
@@ -76,8 +130,17 @@ Page({
         return;
       }
 
-      const trainings = await trainingService.getRecentTrainings();
-      this.setData({ recentWorkouts: trainings.map(toWorkout) });
+      const { weekStart, weekEnd } = getCurrentWeekRange();
+      const [recentTrainings, weeklyTrainings] = await Promise.all([
+        trainingService.getRecentTrainings(),
+        trainingService.getWeeklyTrainings(weekStart, weekEnd)
+      ]);
+      const weeklyDashboard = buildWeeklyDashboard(weeklyTrainings, weekStart);
+
+      this.setData({
+        recentWorkouts: recentTrainings.map(toWorkout),
+        ...weeklyDashboard
+      });
     } catch (error) {
       console.error("加载最近训练记录失败", error);
       wx.showToast({
@@ -88,7 +151,14 @@ Page({
   },
 
   onActionTap(event) {
-    const { action, name } = event.currentTarget.dataset;
+    const { action, name, trainingId } = event.currentTarget.dataset;
+
+    if (action === "viewTraining" && trainingId) {
+      wx.navigateTo({
+        url: `/pages/new-training/new-training?mode=readonly&id=${encodeURIComponent(trainingId)}`
+      });
+      return;
+    }
 
     if (action === "newTraining") {
       wx.navigateTo({

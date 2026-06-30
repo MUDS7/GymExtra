@@ -49,6 +49,21 @@
   column-gap: 18rpx;
 }
 
+.title-row.readonly {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.title-content {
+  min-width: 0;
+}
+
+.recorded-at {
+  margin-top: -2rpx;
+  color: #929297;
+  font-size: 23rpx;
+  line-height: 1.4;
+}
+
 .pen-icon {
   width: 28rpx;
   height: 28rpx;
@@ -64,6 +79,7 @@
 }
 
 .title-input {
+  width: 100%;
   height: 56rpx;
   min-width: 0;
   color: #2B2B2B;
@@ -280,6 +296,10 @@
 .set-status.completed {
   color: #FFFFFF;
   background: #E26424;
+}
+
+.set-status.readonly {
+  pointer-events: none;
 }
 
 .set-status-icon {

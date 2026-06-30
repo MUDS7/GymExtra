@@ -160,4 +160,78 @@ async function getRecentTrainings() {
   }
 }
 
-module.exports = { saveTraining, getRecentTrainings };
+async function getTrainingDetail(event) {
+  try {
+    const { OPENID } = cloud.getWXContext();
+    if (!OPENID) {
+      throw new Error("无法获取当前用户身份");
+    }
+
+    const trainingId = String(event.trainingId || "").trim();
+    if (!trainingId) {
+      throw new Error("缺少训练记录 ID");
+    }
+
+    const result = await db.collection(COLLECTION).doc(trainingId).get();
+    const training = result.data;
+
+    if (!training || training.userId !== OPENID) {
+      throw new Error("训练记录不存在");
+    }
+
+    return {
+      success: true,
+      data: training
+    };
+  } catch (error) {
+    console.error("获取训练详情失败", error);
+    return {
+      success: false,
+      message: error.message || "获取训练详情失败"
+    };
+  }
+}
+
+async function getWeeklyTrainings(event) {
+  try {
+    const { OPENID } = cloud.getWXContext();
+    if (!OPENID) {
+      throw new Error("无法获取当前用户身份");
+    }
+
+    const weekStart = new Date(event.weekStart);
+    const weekEnd = new Date(event.weekEnd);
+
+    if (Number.isNaN(weekStart.getTime()) || Number.isNaN(weekEnd.getTime()) || weekStart >= weekEnd) {
+      throw new Error("本周时间范围无效");
+    }
+
+    const _ = db.command;
+    const result = await db.collection(COLLECTION)
+      .aggregate()
+      .match({
+        userId: OPENID,
+        createdAt: _.gte(weekStart).lt(weekEnd)
+      })
+      .sort({ createdAt: 1 })
+      .project({
+        uuid: 1,
+        timer: 1,
+        createdAt: 1
+      })
+      .end();
+
+    return {
+      success: true,
+      data: result.list
+    };
+  } catch (error) {
+    console.error("获取本周训练记录失败", error);
+    return {
+      success: false,
+      message: error.message || "获取本周训练记录失败"
+    };
+  }
+}
+
+module.exports = { saveTraining, getRecentTrainings, getTrainingDetail, getWeeklyTrainings };

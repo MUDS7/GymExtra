@@ -5,6 +5,17 @@ function formatVolume(value) {
   return Number(value || 0).toFixed(1);
 }
 
+function formatRecordedAt(value) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const pad = (number) => String(number).padStart(2, "0");
+  return `${date.getFullYear()}年${pad(date.getMonth() + 1)}月${pad(date.getDate())}日 ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 function createSet(values = {}) {
   return {
     uid: `set-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
@@ -47,6 +58,20 @@ function createTrainingAction(action) {
   });
 }
 
+function createReadonlyTrainingAction(action) {
+  return refreshAction({
+    uid: `saved-action-${action.order || action.actionId || Date.now()}`,
+    id: action.actionId,
+    name: action.name || "未命名动作",
+    iconPath: action.iconPath || DEFAULT_ACTION_ICON_PATH,
+    expanded: true,
+    sets: (Array.isArray(action.sets) ? action.sets : []).map((set, index) => createSet({
+      ...set,
+      uid: `saved-set-${action.order || 0}-${set.order || index + 1}`
+    }))
+  });
+}
+
 function buildSummary(actions) {
   const totalSets = actions.reduce((sum, item) => sum + item.setsCount, 0);
   const completedSets = actions.reduce((sum, item) => sum + item.completedSets, 0);
@@ -67,7 +92,43 @@ Page({
     title: "",
     actions: [],
     summary: buildSummary([]),
-    saving: false
+    saving: false,
+    readonly: false,
+    loading: false,
+    recordedAt: ""
+  },
+
+  onLoad(options) {
+    if (options.mode === "readonly" && options.id) {
+      this.loadTrainingDetail(decodeURIComponent(options.id));
+    }
+  },
+
+  async loadTrainingDetail(trainingId) {
+    this.setData({ readonly: true, loading: true });
+    wx.showLoading({ title: "加载中", mask: true });
+
+    try {
+      const training = await trainingService.getTrainingDetail(trainingId);
+      const actions = (Array.isArray(training.actions) ? training.actions : []).map(createReadonlyTrainingAction);
+
+      this.setData({
+        timer: training.timer || "00:00",
+        title: training.title || "未命名训练",
+        recordedAt: formatRecordedAt(training.createdAt),
+        actions,
+        summary: buildSummary(actions),
+        loading: false
+      });
+      wx.hideLoading();
+    } catch (error) {
+      wx.hideLoading();
+      this.setData({ loading: false });
+      wx.showToast({
+        title: error.message || "详情加载失败",
+        icon: "none"
+      });
+    }
   },
 
   onTimerInput(event) {
@@ -83,7 +144,7 @@ Page({
   },
 
   async onFinishTap() {
-    if (this.data.saving) {
+    if (this.data.readonly || this.data.saving) {
       return;
     }
 
@@ -253,6 +314,10 @@ Page({
   },
 
   onSetStatusTap(event) {
+    if (this.data.readonly) {
+      return;
+    }
+
     const actionPosition = Number(event.currentTarget.dataset.actionIndex);
     const setPosition = Number(event.currentTarget.dataset.setIndex);
 
@@ -274,6 +339,10 @@ Page({
   },
 
   onAddSetTap(event) {
+    if (this.data.readonly) {
+      return;
+    }
+
     const index = Number(event.currentTarget.dataset.index);
 
     if (!this.data.actions[index]) {
@@ -289,6 +358,10 @@ Page({
   },
 
   onSetDeleteTap(event) {
+    if (this.data.readonly) {
+      return;
+    }
+
     const actionPosition = Number(event.currentTarget.dataset.actionIndex);
     const setPosition = Number(event.currentTarget.dataset.setIndex);
     const action = this.data.actions[actionPosition];
@@ -331,6 +404,10 @@ Page({
   },
 
   onActionDeleteTap(event) {
+    if (this.data.readonly) {
+      return;
+    }
+
     const { index, name } = event.currentTarget.dataset;
     const deleteIndex = Number(index);
 

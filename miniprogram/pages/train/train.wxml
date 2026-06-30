@@ -6,7 +6,7 @@
   <view class="week-panel">
     <view class="week-head">
       <view class="week-title">本周训练</view>
-      <view class="week-progress">4 / 7 天</view>
+      <view class="week-progress">{{trainedDays}} / 7 天</view>
     </view>
     <view class="week-days">
       <view class="day-item" wx:for="{{weekDays}}" wx:key="label">
@@ -40,7 +40,7 @@
     </view>
 
     <view class="record-list">
-      <view class="record-card" wx:for="{{recentWorkouts}}" wx:key="id" bindtap="onActionTap" data-name="{{item.name}}">
+      <view class="record-card" wx:for="{{recentWorkouts}}" wx:key="id" bindtap="onActionTap" data-action="viewTraining" data-training-id="{{item.id}}" data-name="{{item.name}}">
         <view class="record-dot {{item.tone}}"></view>
         <view class="record-main">
           <view class="record-title-row">
