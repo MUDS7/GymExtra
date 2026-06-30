@@ -87,6 +87,14 @@ Page({
       return;
     }
 
+    if (!Array.isArray(this.data.actions) || this.data.actions.length === 0) {
+      wx.showToast({
+        title: "记录为空",
+        icon: "none"
+      });
+      return;
+    }
+
     this.setData({ saving: true });
     wx.showLoading({ title: "保存中", mask: true });
 

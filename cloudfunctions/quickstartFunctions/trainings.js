@@ -126,4 +126,38 @@ async function saveTraining(event) {
   }
 }
 
-module.exports = { saveTraining };
+async function getRecentTrainings() {
+  try {
+    const { OPENID } = cloud.getWXContext();
+    if (!OPENID) {
+      throw new Error("无法获取当前用户身份");
+    }
+
+    const result = await db.collection(COLLECTION)
+      .aggregate()
+      .match({ userId: OPENID })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .project({
+        uuid: 1,
+        title: 1,
+        timer: 1,
+        setsCount: 1,
+        createdAt: 1
+      })
+      .end();
+
+    return {
+      success: true,
+      data: result.list
+    };
+  } catch (error) {
+    console.error("获取最近训练记录失败", error);
+    return {
+      success: false,
+      message: error.message || "获取最近训练记录失败"
+    };
+  }
+}
+
+module.exports = { saveTraining, getRecentTrainings };

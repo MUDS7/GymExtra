@@ -178,6 +178,8 @@ exports.main = async (event, context) => {
       return await actionService.getActions();
     case "saveTraining":
       return await trainingService.saveTraining(event);
+    case "getRecentTrainings":
+      return await trainingService.getRecentTrainings();
     case "getOpenId":
       return await getOpenId();
     case "getMiniProgramCode":

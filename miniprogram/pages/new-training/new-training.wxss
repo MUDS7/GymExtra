@@ -251,13 +251,14 @@
 
 .set-input {
   display: block;
+  box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  height: 86rpx;
-  padding: 20rpx 12rpx 4rpx;
+  height: 100%;
+  padding: 0 12rpx;
   color: #26262A;
   font-size: 31rpx;
-  line-height: 62rpx;
+  line-height: 86rpx;
   font-weight: 700;
   text-align: center;
 }

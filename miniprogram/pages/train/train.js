@@ -1,3 +1,49 @@
+const trainingService = require("../../services/trainings");
+
+function formatTrainingDate(value) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const daysAgo = Math.floor((startOfToday.getTime() - startOfDate.getTime()) / 86400000);
+
+  if (daysAgo === 0) return "今天";
+  if (daysAgo === 1) return "昨天";
+  if (daysAgo > 1 && daysAgo < 7) return `${daysAgo} 天前`;
+
+  return `${date.getMonth() + 1} 月 ${date.getDate()} 日`;
+}
+
+function formatDuration(value) {
+  const timer = String(value || "00:00").trim();
+  const parts = timer.split(":").map(Number);
+
+  if (parts.length === 2 && parts.every(Number.isFinite)) {
+    const minutes = parts[0] + parts[1] / 60;
+    return `${Math.max(0, Math.ceil(minutes))} 分钟`;
+  }
+
+  const minutes = Number(timer);
+  return Number.isFinite(minutes) ? `${Math.max(0, Math.ceil(minutes))} 分钟` : timer;
+}
+
+function toWorkout(training) {
+  return {
+    id: training.uuid || training._id,
+    name: training.title || "未命名训练",
+    date: formatTrainingDate(training.createdAt),
+    duration: formatDuration(training.timer),
+    sets: Number(training.setsCount || 0),
+    tag: "力量",
+    tone: "energy"
+  };
+}
+
 Page({
   data: {
     weekDays: [
@@ -14,44 +60,31 @@ Page({
       { label: "累计时长", value: "180", unit: "分钟", tone: "cool", icon: "icon-clock" },
       { label: "消耗热量", value: "1,240", unit: "千卡", tone: "power", icon: "icon-flame" }
     ],
-    recentWorkouts: [
-      {
-        id: 1,
-        name: "胸肌 + 三头",
-        date: "今天",
-        duration: "52 分钟",
-        sets: 18,
-        tag: "力量",
-        tone: "energy"
-      },
-      {
-        id: 2,
-        name: "背部 + 二头",
-        date: "昨天",
-        duration: "48 分钟",
-        sets: 16,
-        tag: "力量",
-        tone: "energy"
-      },
-      {
-        id: 3,
-        name: "有氧间歇跑",
-        date: "3 天前",
-        duration: "35 分钟",
-        sets: 6,
-        tag: "有氧",
-        tone: "cool"
-      },
-      {
-        id: 4,
-        name: "肩部 + 核心",
-        date: "4 天前",
-        duration: "45 分钟",
-        sets: 14,
-        tag: "力量",
-        tone: "energy"
+    recentWorkouts: []
+  },
+
+  onShow() {
+    this.loadRecentWorkouts();
+  },
+
+  async loadRecentWorkouts() {
+    try {
+      const app = getApp();
+      const loginResult = await app.login();
+
+      if (!loginResult.registered) {
+        return;
       }
-    ]
+
+      const trainings = await trainingService.getRecentTrainings();
+      this.setData({ recentWorkouts: trainings.map(toWorkout) });
+    } catch (error) {
+      console.error("加载最近训练记录失败", error);
+      wx.showToast({
+        title: error.message || "最近记录加载失败",
+        icon: "none"
+      });
+    }
   },
 
   onActionTap(event) {
