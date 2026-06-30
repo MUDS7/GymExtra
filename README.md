@@ -23,4 +23,14 @@ cloudfunctions/         云函数目录
 
 使用微信开发者工具打开项目根目录，确认 `project.config.json` 中的 `appid` 与小程序账号一致后即可预览。
 
-如需使用云开发，在 `miniprogram/app.js` 中配置 `globalData.env`。
+如需使用云开发，请复制 `miniprogram/config/env.example.js` 为
+`miniprogram/config/env.local.js`，并在本地配置 `cloudEnvId`。本地配置文件已
+加入 `.gitignore`，不会提交到 Git。
+
+## 微信登录
+
+项目使用云函数上下文提供的 `openid` 作为本小程序内的唯一用户 ID。首次进入时，用户需要主动选择微信头像并确认昵称；注册后每次冷启动都会静默识别 `openid` 并自动登录。
+
+使用前请在微信开发者工具中开通云开发，然后上传并部署 `quickstartFunctions` 云函数（选择“云端安装依赖”）。`users` 集合会在首次登录时自动创建。
+
+微信小程序不提供读取用户个人“微信号”的 API，因此不能把微信号本身作为 ID；`openid` 才是适用于此场景的官方稳定身份标识。

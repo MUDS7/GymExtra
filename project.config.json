@@ -46,7 +46,7 @@
   },
   "appid": "wx72f02b20e281c2d7",
   "projectname": "gymextra",
-  "libVersion": "2.20.1",
+  "libVersion": "2.21.2",
   "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
   "condition": {
     "search": {

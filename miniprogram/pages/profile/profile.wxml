@@ -9,7 +9,8 @@
 
   <view class="profile-card">
     <view class="avatar-wrap">
-      <view class="avatar-letter">{{user.avatar}}</view>
+      <image wx:if="{{user.avatarUrl}}" class="avatar-letter avatar-image" src="{{user.avatarUrl}}" mode="aspectFill"></image>
+      <view wx:else class="avatar-letter">{{user.avatar}}</view>
       <view class="avatar-badge">
         <view class="lucide-icon icon-flame"></view>
       </view>

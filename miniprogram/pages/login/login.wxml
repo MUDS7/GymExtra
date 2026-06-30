@@ -1,0 +1,32 @@
+<view class="login-page">
+  <view class="brand-mark">G</view>
+  <view class="title">欢迎来到 GymExtra</view>
+  <view class="subtitle">建立你的训练档案，以后打开即可自动登录</view>
+
+  <view wx:if="{{checking}}" class="checking">正在识别微信登录身份…</view>
+
+  <view wx:else class="register-card">
+    <button class="avatar-button" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <image class="avatar" src="{{avatarUrl}}" mode="aspectFill"></image>
+      <view class="avatar-hint">点击选择微信头像</view>
+    </button>
+
+    <view class="field-label">昵称</view>
+    <input
+      class="nickname-input"
+      type="nickname"
+      value="{{nickname}}"
+      maxlength="20"
+      placeholder="填写微信昵称"
+      bindinput="onNicknameInput"
+    />
+
+    <button class="submit-button" loading="{{submitting}}" disabled="{{submitting}}" bindtap="onSubmit">
+      注册并进入
+    </button>
+
+    <view class="privacy-note">
+      小程序无法读取你的微信号。我们使用微信为本小程序生成的唯一 OpenID 作为账户 ID，仅保存你主动选择的头像和昵称。
+    </view>
+  </view>
+</view>

@@ -37,6 +37,38 @@ Page({
     ]
   },
 
+  onShow() {
+    const app = getApp();
+    const cachedUser = app.globalData.userInfo || wx.getStorageSync("userInfo");
+
+    if (cachedUser) {
+      this.showUser(cachedUser);
+      return;
+    }
+
+    app.login({ redirectToRegister: false }).then((result) => {
+      if (!result.registered) {
+        wx.reLaunch({ url: "/pages/login/login" });
+        return;
+      }
+      this.showUser(result.user);
+    }).catch(() => {
+      wx.showToast({ title: "用户信息加载失败", icon: "none" });
+    });
+  },
+
+  showUser(user) {
+    this.setData({
+      user: {
+        nickname: user.nickname,
+        id: user.id,
+        level: "GymExtra 会员",
+        avatar: user.nickname.slice(0, 1).toUpperCase(),
+        avatarUrl: user.avatarUrl
+      }
+    });
+  },
+
   onActionTap(event) {
     const { name } = event.currentTarget.dataset;
 

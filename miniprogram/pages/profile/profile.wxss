@@ -78,6 +78,11 @@
   font-weight: 900;
 }
 
+.avatar-image {
+  display: block;
+  background: #F3F4F6;
+}
+
 .avatar-badge {
   position: absolute;
   right: -4rpx;

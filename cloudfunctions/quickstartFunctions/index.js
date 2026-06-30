@@ -4,6 +4,7 @@ cloud.init({
 });
 
 const db = cloud.database();
+const userService = require("./user");
 // 获取openid
 const getOpenId = async () => {
   // 获取基础信息
@@ -167,6 +168,10 @@ const deleteRecord = async (event) => {
 // 云函数入口函数
 exports.main = async (event, context) => {
   switch (event.type) {
+    case "login":
+      return await userService.login();
+    case "registerUser":
+      return await userService.register(event);
     case "getOpenId":
       return await getOpenId();
     case "getMiniProgramCode":

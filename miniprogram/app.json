@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/train/train",
+    "pages/login/login",
     "pages/new-training/new-training",
     "pages/action-picker/action-picker",
     "pages/index/index",
