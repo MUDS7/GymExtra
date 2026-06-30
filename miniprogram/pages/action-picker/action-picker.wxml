@@ -44,7 +44,7 @@
             data-id="{{item.id}}"
             data-name="{{item.name}}"
           >
-            <image class="action-image" src="{{item.image}}" mode="aspectFit"></image>
+            <image class="action-image" src="{{item.iconPath}}" mode="aspectFit"></image>
             <view class="action-name">{{item.name}}</view>
           </button>
         </view>

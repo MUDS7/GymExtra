@@ -31,7 +31,7 @@
       <view class="training-list">
         <view class="training-card {{item.expanded ? 'expanded' : ''}}" wx:for="{{actions}}" wx:key="uid">
           <view class="training-header" bindtap="onActionCardTap" data-index="{{index}}">
-            <image class="training-image" src="{{item.image}}" mode="aspectFit"></image>
+            <image class="training-image" src="{{item.iconPath}}" mode="aspectFit"></image>
             <view class="training-main">
               <view class="training-name">{{item.name}}</view>
               <view class="training-meta">{{item.metaText}}</view>

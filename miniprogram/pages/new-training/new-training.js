@@ -1,4 +1,4 @@
-const DEFAULT_ACTION_IMAGE = "/assets/500px-Bench-press-1.png";
+const { DEFAULT_ACTION_ICON_PATH } = require("../../data/actions");
 
 function formatVolume(value) {
   return Number(value || 0).toFixed(1);
@@ -40,7 +40,7 @@ function createTrainingAction(action) {
     uid: `${action.id || "action"}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     id: action.id,
     name: action.name || "未命名动作",
-    image: action.image || DEFAULT_ACTION_IMAGE,
+    iconPath: action.iconPath || action.image || DEFAULT_ACTION_ICON_PATH,
     expanded: false,
     sets: sourceSets.map((item) => (item.uid ? { ...item } : createSet(item)))
   });

@@ -1,23 +1,7 @@
-const PLACEHOLDER_IMAGE = "/assets/500px-Bench-press-1.png";
+const { ACTION_TABLE } = require("../../data/actions");
+const actionService = require("../../services/actions");
 
-const CATEGORY_ACTIONS = {
-  chest: [
-    "杠铃卧推",
-    "暂停卧推",
-    "宽距杠铃卧推",
-    "上斜杠铃卧推",
-    "下斜杠铃卧推",
-    "杠铃片夹胸",
-    "抬腿杠铃卧推"
-  ],
-  back: ["高位下拉", "坐姿划船", "杠铃划船", "引体向上"],
-  legs: ["深蹲", "腿举", "弓步蹲", "腿屈伸"],
-  shoulders: ["肩推", "侧平举", "俯身飞鸟", "前平举"],
-  biceps: ["杠铃弯举", "哑铃弯举", "锤式弯举", "牧师凳弯举"],
-  triceps: ["绳索下压", "窄距卧推", "臂屈伸", "仰卧臂屈伸"],
-  glutes: ["臀桥", "臀推", "绳索后踢腿", "保加利亚分腿蹲"],
-  core: ["卷腹", "平板支撑", "俄罗斯转体", "悬垂举腿"]
-};
+let actionTable = ACTION_TABLE;
 
 const categories = [
   { id: "chest", name: "胸" },
@@ -32,25 +16,12 @@ const categories = [
 
 function buildActions(categoryId, keyword = "") {
   const normalizedKeyword = keyword.trim().toLowerCase();
-  const actionGroups = normalizedKeyword
-    ? Object.entries(CATEGORY_ACTIONS)
-    : [[categoryId, CATEGORY_ACTIONS[categoryId] || []]];
 
-  const actions = [];
-
-  actionGroups.forEach(([groupId, actionNames]) => {
-    actionNames.forEach((name, index) => {
-      if (!normalizedKeyword || name.toLowerCase().includes(normalizedKeyword)) {
-        actions.push({
-          id: `${groupId}-${index}`,
-          name,
-          image: PLACEHOLDER_IMAGE
-        });
-      }
-    });
+  return actionTable.filter((action) => {
+    const matchesCategory = normalizedKeyword || action.categoryId === categoryId;
+    const matchesKeyword = !normalizedKeyword || action.name.toLowerCase().includes(normalizedKeyword);
+    return matchesCategory && matchesKeyword;
   });
-
-  return actions;
 }
 
 Page({
@@ -66,6 +37,16 @@ Page({
 
   onLoad() {
     this.setHeaderMetrics();
+    this.loadActions();
+  },
+
+  loadActions() {
+    actionService.getActions().then((actions) => {
+      actionTable = actions;
+      this.setData({
+        actions: buildActions(this.data.activeCategory, this.data.keyword)
+      });
+    });
   },
 
   setHeaderMetrics() {
@@ -105,7 +86,7 @@ Page({
   },
 
   onActionTap(event) {
-    const { id } = event.currentTarget.dataset;
+    const id = Number(event.currentTarget.dataset.id);
     const selectedAction = this.data.actions.find((item) => item.id === id);
     const pages = getCurrentPages();
     const previousPage = pages.length > 1 ? pages[pages.length - 2] : null;

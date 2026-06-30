@@ -5,6 +5,7 @@ cloud.init({
 
 const db = cloud.database();
 const userService = require("./user");
+const actionService = require("./actions");
 // 获取openid
 const getOpenId = async () => {
   // 获取基础信息
@@ -172,6 +173,8 @@ exports.main = async (event, context) => {
       return await userService.login();
     case "registerUser":
       return await userService.register(event);
+    case "getActions":
+      return await actionService.getActions();
     case "getOpenId":
       return await getOpenId();
     case "getMiniProgramCode":
