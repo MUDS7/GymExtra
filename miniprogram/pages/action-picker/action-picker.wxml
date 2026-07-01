@@ -23,7 +23,7 @@
       <view
         wx:for="{{categories}}"
         wx:key="id"
-        class="category-item {{activeCategory === item.id ? 'active' : ''}}"
+        class="category-item {{item.id === 'cardio' ? 'category-item-long' : ''}} {{activeCategory === item.id ? 'active' : ''}}"
         bindtap="onCategoryTap"
         data-id="{{item.id}}"
         data-name="{{item.name}}"

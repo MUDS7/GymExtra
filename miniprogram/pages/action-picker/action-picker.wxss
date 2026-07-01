@@ -118,6 +118,12 @@
   font-weight: 500;
 }
 
+.category-item-long {
+  padding-left: 24rpx;
+  font-size: 26rpx;
+  white-space: nowrap;
+}
+
 .category-item.active {
   color: #111111;
   background: #FFFFFF;

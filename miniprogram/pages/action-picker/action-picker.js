@@ -11,7 +11,8 @@ const categories = [
   { id: "biceps", name: "二头" },
   { id: "triceps", name: "三头" },
   { id: "glutes", name: "臀部" },
-  { id: "core", name: "核心" }
+  { id: "core", name: "核心" },
+  { id: "cardio", name: "有氧运动" }
 ];
 
 function buildActions(categoryId, keyword = "") {
