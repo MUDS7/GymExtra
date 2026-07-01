@@ -3,6 +3,7 @@
     "pages/train/train",
     "pages/login/login",
     "pages/new-training/new-training",
+    "pages/training-records/training-records",
     "pages/action-picker/action-picker",
     "pages/index/index",
     "pages/profile/profile"

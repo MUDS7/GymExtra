@@ -167,6 +167,13 @@ Page({
       return;
     }
 
+    if (action === "allTrainings") {
+      wx.navigateTo({
+        url: "/pages/training-records/training-records"
+      });
+      return;
+    }
+
     wx.showToast({
       title: `${name} 待接入`,
       icon: "none"

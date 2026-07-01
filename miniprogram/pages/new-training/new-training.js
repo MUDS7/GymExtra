@@ -19,8 +19,8 @@ function formatRecordedAt(value) {
 function createSet(values = {}) {
   return {
     uid: `set-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
-    weight: values.weight === undefined ? "" : String(values.weight),
-    reps: values.reps === undefined ? "" : String(values.reps),
+    weight: values.weight === undefined ? "" : String(values.weight ?? 0),
+    reps: values.reps === undefined ? "" : String(values.reps ?? 0),
     completed: Boolean(values.completed)
   };
 }

@@ -160,6 +160,45 @@ async function getRecentTrainings() {
   }
 }
 
+async function getAllTrainings(event) {
+  try {
+    const { OPENID } = cloud.getWXContext();
+    if (!OPENID) {
+      throw new Error("无法获取当前用户身份");
+    }
+
+    const page = Math.max(0, Math.floor(Number(event.page) || 0));
+    const pageSize = Math.min(50, Math.max(1, Math.floor(Number(event.pageSize) || 20)));
+    const result = await db.collection(COLLECTION)
+      .aggregate()
+      .match({ userId: OPENID })
+      .sort({ createdAt: -1 })
+      .skip(page * pageSize)
+      .limit(pageSize + 1)
+      .project({
+        uuid: 1,
+        title: 1,
+        timer: 1,
+        setsCount: 1,
+        createdAt: 1
+      })
+      .end();
+    const list = result.list || [];
+
+    return {
+      success: true,
+      data: list.slice(0, pageSize),
+      hasMore: list.length > pageSize
+    };
+  } catch (error) {
+    console.error("获取全部训练记录失败", error);
+    return {
+      success: false,
+      message: error.message || "获取全部训练记录失败"
+    };
+  }
+}
+
 async function getTrainingDetail(event) {
   try {
     const { OPENID } = cloud.getWXContext();
@@ -234,4 +273,4 @@ async function getWeeklyTrainings(event) {
   }
 }
 
-module.exports = { saveTraining, getRecentTrainings, getTrainingDetail, getWeeklyTrainings };
+module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, getWeeklyTrainings };

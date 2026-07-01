@@ -33,7 +33,7 @@
   <view class="records-section">
     <view class="section-head">
       <view class="section-title">最近记录</view>
-      <button class="all-button" bindtap="onActionTap" data-name="全部记录">
+      <button class="all-button" bindtap="onActionTap" data-action="allTrainings" data-name="全部记录">
         <text>全部</text>
         <view class="lucide-icon icon-chevron-right"></view>
       </button>

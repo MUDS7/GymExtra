@@ -35,6 +35,30 @@ function getRecentTrainings() {
   });
 }
 
+function getAllTrainings(page = 0, pageSize = 20) {
+  if (!wx.cloud) {
+    return Promise.reject(new Error("当前基础库不支持云开发"));
+  }
+
+  return wx.cloud.callFunction({
+    name: "quickstartFunctions",
+    data: {
+      type: "getAllTrainings",
+      page,
+      pageSize
+    }
+  }).then(({ result }) => {
+    if (!result || !result.success) {
+      throw new Error((result && result.message) || "获取全部训练记录失败");
+    }
+
+    return {
+      list: Array.isArray(result.data) ? result.data : [],
+      hasMore: Boolean(result.hasMore)
+    };
+  });
+}
+
 function getTrainingDetail(trainingId) {
   if (!wx.cloud) {
     return Promise.reject(new Error("当前基础库不支持云开发"));
@@ -76,4 +100,4 @@ function getWeeklyTrainings(weekStart, weekEnd) {
   });
 }
 
-module.exports = { saveTraining, getRecentTrainings, getTrainingDetail, getWeeklyTrainings };
+module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, getWeeklyTrainings };

@@ -1,0 +1,26 @@
+<view class="records-page">
+  <view class="day-group" wx:for="{{groups}}" wx:key="key">
+    <view class="day-divider">
+      <text class="day-label">{{item.label}}</text>
+      <view class="divider-line"></view>
+    </view>
+
+    <view class="record-list">
+      <view class="record-card" wx:for="{{item.records}}" wx:for-item="record" wx:key="id" bindtap="onRecordTap" data-training-id="{{record.id}}">
+        <view class="record-dot {{record.tone}}"></view>
+        <view class="record-main">
+          <view class="record-title-row">
+            <view class="record-title">{{record.name}}</view>
+            <view class="record-tag {{record.tone}}">{{record.tag}}</view>
+          </view>
+          <view class="record-meta">{{record.time}} · {{record.duration}} · {{record.sets}} 组</view>
+        </view>
+        <view class="lucide-icon icon-chevron-right row-arrow"></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{!loading && groups.length === 0}}">暂无训练记录</view>
+  <view class="loading-state" wx:if="{{loading}}">加载中...</view>
+  <view class="loading-state" wx:if="{{!loading && groups.length > 0 && !hasMore}}">已经到底了</view>
+</view>
