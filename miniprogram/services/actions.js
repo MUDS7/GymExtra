@@ -1,4 +1,5 @@
 const { ACTION_TABLE } = require("../data/actions");
+const { cacheActionIcons } = require("./action-icon-cache");
 
 function getActions() {
   if (!wx.cloud) {
@@ -13,7 +14,7 @@ function getActions() {
       throw new Error((result && result.message) || "云端动作表读取失败");
     }
 
-    return result.data;
+    return cacheActionIcons(result.data);
   }).catch((error) => {
     console.warn("云端动作表不可用，使用本地动作表", error);
     return ACTION_TABLE;
