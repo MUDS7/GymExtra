@@ -1,4 +1,5 @@
 const trainingService = require("../../services/trainings");
+const { getTrainingTags } = require("../../utils/training-tags");
 
 const PAGE_SIZE = 20;
 
@@ -57,14 +58,16 @@ function groupTrainings(trainings) {
       groups.push(group);
     }
 
+    const tags = getTrainingTags(training);
+
     group.records.push({
       id: training.uuid || training._id,
       name: training.title || "未命名训练",
       time: formatTime(date),
       duration: formatDuration(training.timer),
       sets: Number(training.setsCount || 0),
-      tag: "力量",
-      tone: "energy"
+      tags,
+      tone: tags.length === 1 ? tags[0].tone : "energy"
     });
   });
 

@@ -45,7 +45,9 @@
         <view class="record-main">
           <view class="record-title-row">
             <view class="record-title">{{item.name}}</view>
-            <view class="record-tag {{item.tone}}">{{item.tag}}</view>
+            <view class="record-tags">
+              <view class="record-tag {{tag.tone}}" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="label">{{tag.label}}</view>
+            </view>
           </view>
           <view class="record-meta">{{item.date}} · {{item.duration}} · {{item.sets}} 组</view>
         </view>

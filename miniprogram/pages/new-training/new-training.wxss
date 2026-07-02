@@ -218,6 +218,66 @@
   overflow: hidden;
 }
 
+.duration-editor {
+  padding: 0 16rpx 8rpx;
+}
+
+.duration-title {
+  color: #8C8C91;
+  font-size: 24rpx;
+  line-height: 34rpx;
+  text-align: center;
+}
+
+.duration-picker {
+  position: relative;
+  width: 100%;
+  height: 264rpx;
+  margin-top: 6rpx;
+}
+
+.duration-option {
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  color: #252529;
+}
+
+.duration-number {
+  font-size: 42rpx;
+  line-height: 88rpx;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.duration-unit {
+  color: #8B6A5B;
+  font-size: 23rpx;
+}
+
+.cardio-status {
+  width: 100%;
+  height: 72rpx;
+  margin: 8rpx 0 0;
+  border-radius: 20rpx;
+  color: #E26424;
+  background: #FFF3EE;
+  font-size: 26rpx;
+  line-height: 72rpx;
+  font-weight: 700;
+}
+
+.cardio-status.completed {
+  color: #FFFFFF;
+  background: #E26424;
+}
+
+.cardio-status.readonly {
+  pointer-events: none;
+}
+
 .set-list {
   display: flex;
   flex-direction: column;

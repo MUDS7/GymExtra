@@ -1,4 +1,5 @@
 const trainingService = require("../../services/trainings");
+const { getTrainingTags } = require("../../utils/training-tags");
 
 function formatTrainingDate(value) {
   const date = new Date(value);
@@ -86,14 +87,16 @@ function buildWeeklyDashboard(trainings, weekStart) {
 }
 
 function toWorkout(training) {
+  const tags = getTrainingTags(training);
+
   return {
     id: training.uuid || training._id,
     name: training.title || "未命名训练",
     date: formatTrainingDate(training.createdAt),
     duration: formatDuration(training.timer),
     sets: Number(training.setsCount || 0),
-    tag: "力量",
-    tone: "energy"
+    tags,
+    tone: tags.length === 1 ? tags[0].tone : "energy"
   };
 }
 

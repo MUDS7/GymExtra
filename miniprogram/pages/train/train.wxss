@@ -249,12 +249,21 @@
 }
 
 .record-title {
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 30rpx;
   line-height: 1.18;
   font-weight: 900;
+}
+
+.record-tags {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-shrink: 0;
 }
 
 .record-tag {

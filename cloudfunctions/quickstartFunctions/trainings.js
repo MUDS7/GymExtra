@@ -46,6 +46,11 @@ function normalizeSet(set, index) {
 }
 
 function normalizeAction(action, index) {
+  const categoryId = String((action && action.categoryId) || "").slice(0, 50);
+  const durationValue = toOptionalNumber(action && action.durationMinutes);
+  const durationMinutes = categoryId === "cardio" && durationValue !== null
+    ? Math.min(1439, Math.max(0, Math.floor(durationValue)))
+    : null;
   const sets = Array.isArray(action && action.sets)
     ? action.sets.slice(0, 100).map(normalizeSet)
     : [];
@@ -60,6 +65,8 @@ function normalizeAction(action, index) {
 
   return {
     actionId: action && action.id !== undefined ? action.id : null,
+    categoryId,
+    durationMinutes,
     name: String((action && action.name) || "未命名动作").trim().slice(0, 100),
     iconPath: String((action && action.iconPath) || "").slice(0, 500),
     order: index + 1,
@@ -142,6 +149,9 @@ async function getRecentTrainings() {
         uuid: 1,
         title: 1,
         timer: 1,
+        actionsCount: 1,
+        actionCategories: "$actions.categoryId",
+        actionNames: "$actions.name",
         setsCount: 1,
         createdAt: 1
       })
@@ -179,6 +189,9 @@ async function getAllTrainings(event) {
         uuid: 1,
         title: 1,
         timer: 1,
+        actionsCount: 1,
+        actionCategories: "$actions.categoryId",
+        actionNames: "$actions.name",
         setsCount: 1,
         createdAt: 1
       })

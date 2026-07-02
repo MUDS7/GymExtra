@@ -1,5 +1,66 @@
-const { DEFAULT_ACTION_ICON_PATH } = require("../../data/actions");
+const { ACTION_TABLE, DEFAULT_ACTION_ICON_PATH } = require("../../data/actions");
 const trainingService = require("../../services/trainings");
+
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, "0"));
+
+function getActionCategory(action) {
+  if (action.categoryId) {
+    return action.categoryId;
+  }
+
+  const definition = ACTION_TABLE.find((item) => item.id === action.id || item.id === action.actionId || item.name === action.name);
+  return definition ? definition.categoryId : "";
+}
+
+function normalizeDuration(value, fallback = 30) {
+  if (value === "" || value === null || value === undefined) {
+    return fallback;
+  }
+
+  const duration = Math.floor(Number(value));
+  return Number.isFinite(duration) && duration >= 0 ? Math.min(duration, 1439) : fallback;
+}
+
+function formatDuration(value) {
+  const duration = normalizeDuration(value, 0);
+  const hours = Math.floor(duration / 60);
+  const minutes = duration % 60;
+
+  if (hours && minutes) return `${hours}小时${minutes}分钟`;
+  if (hours) return `${hours}小时`;
+  return `${minutes}分钟`;
+}
+
+function parseTimerSeconds(value) {
+  const timer = String(value || "00:00").trim();
+  const parts = timer.split(":").map(Number);
+
+  if (parts.length === 2 && parts.every(Number.isFinite)) {
+    return Math.max(0, Math.floor(parts[0] * 60 + parts[1]));
+  }
+
+  const minutes = Number(timer);
+  return Number.isFinite(minutes) ? Math.max(0, Math.floor(minutes * 60)) : 0;
+}
+
+function formatTimer(seconds) {
+  const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = safeSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
+function getCardioDurationMinutes(actions) {
+  return (Array.isArray(actions) ? actions : []).reduce(
+    (sum, action) => sum + (
+      action.isCardio && action.sets && action.sets[0] && action.sets[0].completed
+        ? normalizeDuration(action.durationMinutes, 0)
+        : 0
+    ),
+    0
+  );
+}
 
 function formatVolume(value) {
   return Number(value || 0).toFixed(1);
@@ -34,23 +95,34 @@ function refreshAction(action) {
     0
   );
 
+  const durationMinutes = normalizeDuration(action.durationMinutes, action.isCardio ? 30 : 0);
+
   return {
     ...action,
+    durationMinutes,
+    durationPickerValue: [Math.floor(durationMinutes / 60), durationMinutes % 60],
     setsCount: sets.length,
     completedSets,
     completedVolume,
     plannedVolume,
-    metaText: `${sets.length}组 · ${completedSets}组完成`,
+    metaText: action.isCardio
+      ? `${formatDuration(durationMinutes)} · ${completedSets ? "已完成" : "未完成"}`
+      : `${sets.length}组 · ${completedSets}组完成`,
     volumeText: `${formatVolume(completedVolume)}/${formatVolume(plannedVolume)}`
   };
 }
 
 function createTrainingAction(action) {
+  const categoryId = getActionCategory(action);
+  const isCardio = categoryId === "cardio";
   const sourceSets = Array.isArray(action.sets) && action.sets.length ? action.sets : [createSet({ weight: action.weight })];
 
   return refreshAction({
     uid: `${action.id || "action"}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     id: action.id,
+    categoryId,
+    isCardio,
+    durationMinutes: normalizeDuration(action.durationMinutes, isCardio ? 30 : 0),
     name: action.name || "未命名动作",
     iconPath: action.iconPath || action.image || DEFAULT_ACTION_ICON_PATH,
     expanded: false,
@@ -59,13 +131,23 @@ function createTrainingAction(action) {
 }
 
 function createReadonlyTrainingAction(action) {
+  const categoryId = getActionCategory(action);
+  const isCardio = categoryId === "cardio";
+
+  const sourceSets = Array.isArray(action.sets) && action.sets.length
+    ? action.sets
+    : (isCardio ? [createSet()] : []);
+
   return refreshAction({
     uid: `saved-action-${action.order || action.actionId || Date.now()}`,
     id: action.actionId,
+    categoryId,
+    isCardio,
+    durationMinutes: normalizeDuration(action.durationMinutes, isCardio ? 30 : 0),
     name: action.name || "未命名动作",
     iconPath: action.iconPath || DEFAULT_ACTION_ICON_PATH,
     expanded: true,
-    sets: (Array.isArray(action.sets) ? action.sets : []).map((set, index) => createSet({
+    sets: sourceSets.map((set, index) => createSet({
       ...set,
       uid: `saved-set-${action.order || 0}-${set.order || index + 1}`
     }))
@@ -95,7 +177,9 @@ Page({
     saving: false,
     readonly: false,
     loading: false,
-    recordedAt: ""
+    recordedAt: "",
+    hourOptions: HOUR_OPTIONS,
+    minuteOptions: MINUTE_OPTIONS
   },
 
   onLoad(options) {
@@ -165,8 +249,10 @@ Page({
         timer: this.data.timer,
         actions: this.data.actions.map((action) => ({
           id: action.id,
+          categoryId: action.categoryId,
           name: action.name,
           iconPath: action.iconPath,
+          durationMinutes: action.isCardio ? action.durationMinutes : null,
           sets: action.sets.map((set) => ({
             weight: set.weight,
             reps: set.reps,
@@ -199,9 +285,14 @@ Page({
   },
 
   updateActions(actions) {
+    const previousCardioMinutes = getCardioDurationMinutes(this.data.actions);
+    const nextCardioMinutes = getCardioDurationMinutes(actions);
+    const cardioDeltaSeconds = (nextCardioMinutes - previousCardioMinutes) * 60;
+
     this.setData({
       actions,
-      summary: buildSummary(actions)
+      summary: buildSummary(actions),
+      timer: formatTimer(parseTimerSeconds(this.data.timer) + cardioDeltaSeconds)
     });
   },
 
@@ -225,6 +316,25 @@ Page({
     const actions = this.data.actions.slice();
     actions[index] = { ...actions[index], expanded: !actions[index].expanded };
     this.setData({ actions });
+  },
+
+  onDurationChange(event) {
+    if (this.data.readonly) {
+      return;
+    }
+
+    const index = Number(event.currentTarget.dataset.index);
+    const action = this.data.actions[index];
+    const value = event.detail.value || [];
+
+    if (!action || !action.isCardio) {
+      return;
+    }
+
+    const durationMinutes = Number(value[0] || 0) * 60 + Number(value[1] || 0);
+    const actions = this.data.actions.slice();
+    actions[index] = refreshAction({ ...action, durationMinutes });
+    this.updateActions(actions);
   },
 
   getSetInputContext(event) {

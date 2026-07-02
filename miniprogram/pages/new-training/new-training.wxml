@@ -49,7 +49,32 @@
           </view>
 
           <view wx:if="{{item.expanded}}" class="training-detail">
-            <view class="set-list">
+            <view wx:if="{{item.isCardio}}" class="duration-editor">
+              <view class="duration-title">运动时长</view>
+              <picker-view
+                class="duration-picker"
+                value="{{item.durationPickerValue}}"
+                indicator-style="height: 88rpx; border-top: 2rpx solid #F2D0C2; border-bottom: 2rpx solid #F2D0C2; border-radius: 18rpx; background: rgba(255,247,243,.55);"
+                mask-style="background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,.35) 36%, rgba(255,255,255,.35) 64%, #fff 100%);"
+                bindchange="onDurationChange"
+                data-index="{{index}}"
+              >
+                <picker-view-column>
+                  <view class="duration-option" wx:for="{{hourOptions}}" wx:for-item="hour" wx:key="*this">
+                    <text class="duration-number">{{hour}}</text><text class="duration-unit">小时</text>
+                  </view>
+                </picker-view-column>
+                <picker-view-column>
+                  <view class="duration-option" wx:for="{{minuteOptions}}" wx:for-item="minute" wx:key="*this">
+                    <text class="duration-number">{{minute}}</text><text class="duration-unit">分钟</text>
+                  </view>
+                </picker-view-column>
+              </picker-view>
+              <button class="cardio-status {{item.sets[0].completed ? 'completed' : ''}} {{readonly ? 'readonly' : ''}}" catchtap="onSetStatusTap" data-action-index="{{index}}" data-set-index="0">
+                {{item.sets[0].completed ? '已完成' : '标记完成'}}
+              </button>
+            </view>
+            <view wx:else class="set-list">
               <view class="set-row" wx:for="{{item.sets}}" wx:for-item="set" wx:for-index="setIndex" wx:key="uid">
                 <view class="set-number">{{setIndex + 1}}</view>
                 <view class="set-field">
@@ -68,7 +93,7 @@
                 </button>
               </view>
             </view>
-            <button wx:if="{{!readonly}}" class="add-set-button" catchtap="onAddSetTap" data-index="{{index}}">
+            <button wx:if="{{!readonly && !item.isCardio}}" class="add-set-button" catchtap="onAddSetTap" data-index="{{index}}">
               <text class="add-set-icon">＋</text><text>新增一组</text>
             </button>
           </view>

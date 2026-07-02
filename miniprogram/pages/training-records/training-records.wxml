@@ -11,7 +11,9 @@
         <view class="record-main">
           <view class="record-title-row">
             <view class="record-title">{{record.name}}</view>
-            <view class="record-tag {{record.tone}}">{{record.tag}}</view>
+            <view class="record-tags">
+              <view class="record-tag {{tag.tone}}" wx:for="{{record.tags}}" wx:for-item="tag" wx:key="label">{{tag.label}}</view>
+            </view>
           </view>
           <view class="record-meta">{{record.time}} · {{record.duration}} · {{record.sets}} 组</view>
         </view>

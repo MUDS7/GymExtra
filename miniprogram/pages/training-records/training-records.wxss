@@ -58,6 +58,10 @@
   background: #F06F38;
 }
 
+.record-dot.cool {
+  background: #258DE9;
+}
+
 .record-main {
   min-width: 0;
   flex: 1;
@@ -70,12 +74,21 @@
 }
 
 .record-title {
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 30rpx;
   line-height: 1.18;
   font-weight: 900;
+}
+
+.record-tags {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-shrink: 0;
 }
 
 .record-tag {
@@ -91,6 +104,12 @@
   color: #F06F38;
   border: 1rpx solid #F8B08A;
   background: #FFF3EE;
+}
+
+.record-tag.cool {
+  color: #258DE9;
+  border: 1rpx solid #8AC5F7;
+  background: #EFF8FF;
 }
 
 .record-meta {
