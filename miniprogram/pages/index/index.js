@@ -25,13 +25,6 @@ Page({
         badge: "活动进行中",
         tone: "vital"
       }
-    ],
-    rankList: [
-      { rank: 1, name: "Chen Wei", score: "3,480", streak: 28, avatar: "C", medal: "gold" },
-      { rank: 2, name: "Liu Yang", score: "3,210", streak: 21, avatar: "L", medal: "silver" },
-      { rank: 3, name: "Zhang Hao", score: "2,980", streak: 18, avatar: "Z", medal: "bronze" },
-      { rank: 4, name: "我", score: "2,640", streak: 14, avatar: "我", isMe: true },
-      { rank: 5, name: "Wang Fang", score: "2,400", streak: 12, avatar: "W" }
     ]
   },
 

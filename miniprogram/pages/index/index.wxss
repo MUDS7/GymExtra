@@ -1,9 +1,12 @@
 .group-page {
+  box-sizing: border-box;
   min-height: 100vh;
-  padding: 32rpx 28rpx 156rpx;
+  padding: 32rpx 28rpx 26px;
   padding-top: calc(32rpx + env(safe-area-inset-top));
   background: #FFFFFF;
   color: #111111;
+  display: flex;
+  flex-direction: column;
 }
 
 .home-header {
@@ -17,33 +20,28 @@
 }
 
 .section {
-  margin-top: 0;
-}
-
-.rank-section {
-  margin-top: 42rpx;
+  margin-top: 20rpx;
+  flex: 1;
 }
 
 .section-head {
+  width: 100%;
   margin-bottom: 24rpx;
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 
 .section-title {
+  flex: 1;
   font-size: 30rpx;
   line-height: 1;
   font-weight: 900;
 }
 
-.section-title.with-icon {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
 .all-button {
+  margin-left: 0;
+  margin-right: 0;
+  flex-shrink: 0;
   color: #5E6269;
   font-size: 25rpx;
   line-height: 1;
@@ -56,19 +54,6 @@
 .text-button-icon {
   width: 25rpx;
   height: 25rpx;
-}
-
-.section-note {
-  color: #5E6269;
-  font-size: 25rpx;
-  line-height: 1;
-  font-weight: 600;
-}
-
-.trophy-icon {
-  width: 32rpx;
-  height: 32rpx;
-  color: #D9B300;
 }
 
 .group-list {
@@ -179,122 +164,6 @@
   height: 34rpx;
   color: #5E6269;
   flex-shrink: 0;
-}
-
-.rank-card {
-  overflow: hidden;
-  border: 1rpx solid #DADDE2;
-  border-radius: 34rpx;
-  background: #FFFFFF;
-}
-
-.rank-row {
-  min-height: 116rpx;
-  padding: 0 32rpx;
-  border-bottom: 1rpx solid #DADDE2;
-  display: flex;
-  align-items: center;
-  gap: 24rpx;
-}
-
-.rank-row:last-child {
-  border-bottom: 0;
-}
-
-.rank-row.is-me {
-  position: relative;
-  background: #FEF1EB;
-}
-
-.rank-row.is-me::before {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 5rpx;
-  background: #F06F38;
-  content: "";
-}
-
-.rank-medal {
-  width: 52rpx;
-  height: 52rpx;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: #5E6269;
-  font-size: 23rpx;
-  line-height: 1;
-  font-weight: 900;
-  flex-shrink: 0;
-}
-
-.rank-medal.gold {
-  color: #111111;
-  background: #E7C900;
-}
-
-.rank-medal.silver {
-  color: #111111;
-  background: #C3C7CD;
-}
-
-.rank-medal.bronze {
-  color: #111111;
-  background: #D07943;
-}
-
-.avatar-letter {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: #111111;
-  background: #F1F2F5;
-  font-size: 24rpx;
-  line-height: 1;
-  font-weight: 900;
-  flex-shrink: 0;
-}
-
-.avatar-letter.me {
-  color: #FFFFFF;
-  background: #E26424;
-}
-
-.rank-main {
-  min-width: 0;
-  flex: 1;
-}
-
-.rank-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 26rpx;
-  line-height: 1.15;
-  font-weight: 900;
-}
-
-.rank-row.is-me .rank-name,
-.rank-row.is-me .rank-score {
-  color: #E26424;
-}
-
-.rank-streak {
-  margin-top: 6rpx;
-  color: #5E6269;
-  font-size: 22rpx;
-  line-height: 1.15;
-  font-weight: 600;
-}
-
-.rank-score {
-  color: #111111;
-  font-size: 30rpx;
-  line-height: 1;
-  font-weight: 900;
 }
 
 .discover-button {
