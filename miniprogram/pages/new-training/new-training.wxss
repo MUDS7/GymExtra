@@ -236,6 +236,27 @@
   margin-top: 6rpx;
 }
 
+.duration-readonly {
+  height: 176rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+}
+
+.duration-readonly-number {
+  color: #E26424;
+  font-size: 42rpx;
+  line-height: 1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.duration-readonly-unit {
+  color: #8B6A5B;
+  font-size: 23rpx;
+}
+
 .duration-option {
   height: 88rpx;
   display: flex;

@@ -51,7 +51,14 @@
           <view wx:if="{{item.expanded}}" class="training-detail">
             <view wx:if="{{item.isCardio}}" class="duration-editor">
               <view class="duration-title">运动时长</view>
+              <view wx:if="{{readonly}}" class="duration-readonly">
+                <text class="duration-readonly-number">{{item.durationPickerValue[0]}}</text>
+                <text class="duration-readonly-unit">小时</text>
+                <text class="duration-readonly-number">{{item.durationPickerValue[1]}}</text>
+                <text class="duration-readonly-unit">分钟</text>
+              </view>
               <picker-view
+                wx:else
                 class="duration-picker"
                 value="{{item.durationPickerValue}}"
                 indicator-style="height: 88rpx; border-top: 2rpx solid #F2D0C2; border-bottom: 2rpx solid #F2D0C2; border-radius: 18rpx; background: rgba(255,247,243,.55);"
