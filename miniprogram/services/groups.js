@@ -24,4 +24,13 @@ function getGroupDetail(groupId) {
   return callGroupFunction("getGroupDetail", { groupId });
 }
 
-module.exports = { getMyGroups, getGroupDetail };
+function searchGroups(keyword) {
+  return callGroupFunction("searchGroups", { keyword })
+    .then((data) => Array.isArray(data) ? data : []);
+}
+
+function applyToGroup(groupId) {
+  return callGroupFunction("applyToGroup", { groupId });
+}
+
+module.exports = { getMyGroups, getGroupDetail, searchGroups, applyToGroup };

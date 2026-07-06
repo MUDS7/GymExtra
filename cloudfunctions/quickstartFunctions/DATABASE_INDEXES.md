@@ -6,6 +6,8 @@
 | --- | --- | --- |
 | `group_members` | `userId` 升序、`status` 升序、`groupId` 升序 | 查询用户加入的群组 |
 | `group_members` | `groupId` 升序、`status` 升序、`displayOrder` 升序 | 查询群组成员 |
+| `group_applications` | `userId` 升序、`status` 升序、`groupId` 升序 | 查询用户已提交的群申请 |
+| `group_applications` | `groupId` 升序、`status` 升序、`createdAt` 降序 | 查询相关群组的申请列表 |
 | `group_goals` | `groupId` 升序、`status` 升序、`periodStart` 降序 | 查询当前群目标 |
 | `group_daily_activities` | `groupId` 升序、`activityDateKey` 降序、`sharedToGroup` 升序、`displayOrder` 升序 | 查询今日训练墙 |
 | `group_challenges` | `groupId` 升序、`status` 升序、`startAt` 降序 | 查询进行中的挑战 |

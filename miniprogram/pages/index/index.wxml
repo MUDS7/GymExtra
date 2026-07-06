@@ -30,8 +30,48 @@
     </view>
   </view>
 
-  <button class="discover-button" bindtap="onActionTap" data-name="发现更多群组">
+  <button class="discover-button" bindtap="openDiscoverModal">
     <view class="lucide-icon icon-search"></view>
     <text>发现更多群组</text>
   </button>
+</view>
+
+<view wx:if="{{showDiscoverModal}}" class="discover-modal-mask">
+  <view class="discover-modal" role="dialog" aria-label="申请加入群组">
+    <view class="discover-modal-close" role="button" aria-label="关闭" bindtap="closeDiscoverModal">×</view>
+    <view class="discover-modal-title">申请加入群组</view>
+    <input
+      class="discover-modal-input"
+      value="{{discoverKeyword}}"
+      placeholder="请输入群组名称或群号"
+      placeholder-class="discover-modal-placeholder"
+      focus="{{showDiscoverModal}}"
+      maxlength="50"
+      bindinput="onDiscoverInput"
+      bindconfirm="searchDiscoverGroups"
+      confirm-type="search"
+    />
+    <view class="search-status" wx:if="{{searchLoading}}">正在搜索...</view>
+    <scroll-view class="search-results" scroll-y wx:elif="{{searchResults.length > 0}}">
+      <view class="search-result-item" wx:for="{{searchResults}}" wx:key="id">
+        <view class="search-result-info">
+          <view class="search-result-name">{{item.name}}</view>
+          <view class="search-result-number">群号：{{item.groupNo}}</view>
+        </view>
+        <view
+          wx:if="{{!item.relationStatus}}"
+          class="result-apply-button"
+          role="button"
+          bindtap="applyToGroup"
+          data-id="{{item.id}}"
+        >{{item.actionText}}</view>
+        <view wx:else class="result-apply-button disabled">{{item.actionText}}</view>
+      </view>
+    </scroll-view>
+    <view class="search-status" wx:elif="{{hasSearched}}">没有找到匹配的群组</view>
+    <view class="discover-modal-actions">
+      <button class="modal-button cancel-button" bindtap="closeDiscoverModal">取消</button>
+      <button class="modal-button apply-button" loading="{{searchLoading}}" disabled="{{searchLoading}}" bindtap="searchDiscoverGroups">搜索</button>
+    </view>
+  </view>
 </view>

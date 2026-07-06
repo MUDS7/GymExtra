@@ -5,6 +5,7 @@ const db = cloud.database();
 const COLLECTIONS = [
   "groups",
   "group_members",
+  "group_applications",
   "group_goals",
   "group_daily_activities",
   "group_challenges",
@@ -353,6 +354,107 @@ async function getMyGroups() {
   }
 }
 
+async function searchGroups(event) {
+  try {
+    const userId = getIdentity();
+    const keyword = String(event.keyword || "").trim().toLowerCase();
+    if (!keyword) throw new Error("请输入群组名称或群号");
+
+    await seedBaseData(userId);
+    const [result, membershipResult, applicationResult] = await Promise.all([
+      db.collection("groups").limit(100).get(),
+      db.collection("group_members").where({ userId }).limit(100).get(),
+      db.collection("group_applications").where({ userId }).limit(100).get()
+    ]);
+    const joinedGroupIds = new Set(membershipResult.data
+      .filter((item) => item.status === "active")
+      .map((item) => item.groupId));
+    const appliedGroupIds = new Set(applicationResult.data
+      .filter((item) => item.status === "pending" || item.status === "approved")
+      .map((item) => item.groupId));
+    const groups = result.data
+      .filter((group) => group.status === "active" && group.visibility === "public")
+      .filter((group) => {
+        const groupNo = String(group.groupNo || group._id || "").toLowerCase();
+        const name = String(group.name || "").toLowerCase();
+        return groupNo.includes(keyword) || name.includes(keyword);
+      })
+      .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0))
+      .slice(0, 20)
+      .map((group) => ({
+        id: group._id,
+        groupNo: String(group.groupNo || group._id),
+        name: group.name,
+        relationStatus: joinedGroupIds.has(group._id)
+          ? "joined"
+          : (appliedGroupIds.has(group._id) ? "applied" : ""),
+        actionText: joinedGroupIds.has(group._id)
+          ? "已加入"
+          : (appliedGroupIds.has(group._id) ? "已申请" : "申请")
+      }));
+
+    return { success: true, data: groups };
+  } catch (error) {
+    console.error("搜索群组失败", error);
+    return { success: false, message: error.message || "搜索群组失败" };
+  }
+}
+
+async function applyToGroup(event) {
+  try {
+    const userId = getIdentity();
+    const groupId = String(event.groupId || "").trim();
+    if (!groupId) throw new Error("缺少群组 ID");
+
+    await ensureCollections();
+    const [groupResult, membershipResult] = await Promise.all([
+      db.collection("groups").doc(groupId).get(),
+      db.collection("group_members").where({ userId }).limit(100).get()
+    ]);
+    const group = groupResult.data;
+    if (!group || group.status !== "active" || group.visibility !== "public") {
+      throw new Error("群组不存在或暂不可申请");
+    }
+
+    const joined = membershipResult.data.some((item) => (
+      item.groupId === groupId && item.status === "active"
+    ));
+    if (joined) {
+      return { success: true, data: { status: "joined", actionText: "已加入" } };
+    }
+
+    const applicationId = `${groupId}-user-${safeId(userId)}`;
+    const applicationRef = db.collection("group_applications").doc(applicationId);
+    try {
+      const existing = (await applicationRef.get()).data;
+      if (existing && (existing.status === "pending" || existing.status === "approved")) {
+        return { success: true, data: { status: "applied", actionText: "已申请" } };
+      }
+    } catch (error) {
+      // 没有历史申请时继续创建。
+    }
+
+    const now = new Date();
+    await applicationRef.set({
+      data: {
+        groupId,
+        groupName: group.name,
+        userId,
+        status: "pending",
+        createdAt: now,
+        updatedAt: now,
+        reviewedAt: null,
+        reviewedBy: null
+      }
+    });
+
+    return { success: true, data: { status: "applied", actionText: "已申请" } };
+  } catch (error) {
+    console.error("申请加入群组失败", error);
+    return { success: false, message: error.message || "申请加入群组失败" };
+  }
+}
+
 function formatChallengeDate(endAt) {
   const end = new Date(endAt);
   const remainingDays = Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400000));
@@ -460,4 +562,4 @@ async function getGroupDetail(event) {
   }
 }
 
-module.exports = { getMyGroups, getGroupDetail };
+module.exports = { getMyGroups, getGroupDetail, searchGroups, applyToGroup };

@@ -189,6 +189,10 @@ exports.main = async (event, context) => {
       return await trainingService.getWeeklyTrainings(event);
     case "getMyGroups":
       return await groupService.getMyGroups();
+    case "searchGroups":
+      return await groupService.searchGroups(event);
+    case "applyToGroup":
+      return await groupService.applyToGroup(event);
     case "getGroupDetail":
       return await groupService.getGroupDetail(event);
     case "getOpenId":
