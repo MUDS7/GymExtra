@@ -36,6 +36,18 @@ function toOptionalNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+function parseTimerSeconds(value) {
+  const timer = String(value || "00:00").trim();
+  const parts = timer.split(":").map(Number);
+
+  if (parts.length === 2 && parts.every(Number.isFinite)) {
+    return Math.max(0, Math.floor(parts[0] * 60 + parts[1]));
+  }
+
+  const minutes = Number(timer);
+  return Number.isFinite(minutes) ? Math.max(0, Math.floor(minutes * 60)) : 0;
+}
+
 function normalizeSet(set, index) {
   return {
     order: index + 1,
@@ -78,6 +90,61 @@ function normalizeAction(action, index) {
   };
 }
 
+function getCategoryPresentation(categoryId) {
+  const categories = {
+    cardio: { name: "有氧", tagClass: "blue" },
+    stretch: { name: "拉伸", tagClass: "purple" },
+    strength: { name: "力量", tagClass: "orange" }
+  };
+  return categories[categoryId] || { name: "训练", tagClass: "orange" };
+}
+
+async function publishGroupActivity(training) {
+  if (!training.groupId || !training.sharedToGroup) return;
+
+  try {
+    await db.createCollection("group_daily_activities");
+  } catch (error) {
+    // 集合已经存在时继续写入。
+  }
+
+  let profile = null;
+  try {
+    profile = (await db.collection("users").doc(training.userId).get()).data;
+  } catch (error) {
+    // 用户资料缺失时仍可发布训练，页面显示默认昵称。
+  }
+
+  const primaryCategory = training.categoryIds[0] || "";
+  const category = getCategoryPresentation(primaryCategory);
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, "0");
+
+  await db.collection("group_daily_activities").doc(training.uuid).set({
+    data: {
+      groupId: training.groupId,
+      userId: training.userId,
+      activityDate: now,
+      activityDateKey: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+      displayOrder: 0,
+      profileSnapshot: {
+        nickname: profile && profile.nickname ? profile.nickname : "群成员",
+        avatarUrl: profile && profile.avatarUrl ? profile.avatarUrl : ""
+      },
+      trainingId: training.uuid,
+      trainingTitle: training.title,
+      durationMinutes: training.durationMinutes,
+      categoryId: primaryCategory,
+      categoryName: category.name,
+      tagClass: category.tagClass,
+      checkInStatus: "done",
+      stateText: "已完成",
+      sharedToGroup: true,
+      createdAt: now
+    }
+  });
+}
+
 async function saveTraining(event) {
   try {
     await ensureCollection();
@@ -97,13 +164,22 @@ async function saveTraining(event) {
     const completedSets = actions.reduce((sum, action) => sum + action.completedSets, 0);
     const plannedVolume = actions.reduce((sum, action) => sum + action.plannedVolume, 0);
     const completedVolume = actions.reduce((sum, action) => sum + action.completedVolume, 0);
+    const timer = String(event.timer || "00:00").trim().slice(0, 20);
+    const durationSeconds = parseTimerSeconds(timer);
+    const groupId = String(event.groupId || "").trim().slice(0, 100) || null;
     const id = createUuid();
     const data = {
       uuid: id,
       userId: OPENID,
       _openid: OPENID,
+      groupId,
       title: String(event.title || "").trim().slice(0, 100) || "未命名训练",
-      timer: String(event.timer || "00:00").trim().slice(0, 20),
+      timer,
+      durationSeconds,
+      durationMinutes: Math.ceil(durationSeconds / 60),
+      categoryIds: [...new Set(actions.map((action) => action.categoryId).filter(Boolean))],
+      status: "completed",
+      sharedToGroup: Boolean(groupId && event.sharedToGroup),
       actionsCount: actions.length,
       setsCount,
       completedSets,
@@ -115,6 +191,12 @@ async function saveTraining(event) {
     };
 
     await db.collection(COLLECTION).doc(id).set({ data });
+
+    try {
+      await publishGroupActivity(data);
+    } catch (error) {
+      console.error("同步群组训练墙失败", error);
+    }
 
     return {
       success: true,
@@ -149,6 +231,9 @@ async function getRecentTrainings() {
         uuid: 1,
         title: 1,
         timer: 1,
+        groupId: 1,
+        durationMinutes: 1,
+        categoryIds: 1,
         actionsCount: 1,
         actionCategories: "$actions.categoryId",
         actionNames: "$actions.name",
@@ -189,6 +274,9 @@ async function getAllTrainings(event) {
         uuid: 1,
         title: 1,
         timer: 1,
+        groupId: 1,
+        durationMinutes: 1,
+        categoryIds: 1,
         actionsCount: 1,
         actionCategories: "$actions.categoryId",
         actionNames: "$actions.name",
@@ -269,6 +357,8 @@ async function getWeeklyTrainings(event) {
       .project({
         uuid: 1,
         timer: 1,
+        groupId: 1,
+        durationMinutes: 1,
         createdAt: 1
       })
       .end();

@@ -1,4 +1,5 @@
 const { cloudEnvId } = require("./config/env.local");
+const { callCloudFunction } = require("./services/network");
 
 App({
   globalData: {
@@ -35,7 +36,7 @@ App({
       return this.loginPromise;
     }
 
-    this.loginPromise = wx.cloud.callFunction({
+    this.loginPromise = callCloudFunction({
       name: "quickstartFunctions",
       data: { type: "login" }
     }).then(({ result }) => {

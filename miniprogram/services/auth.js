@@ -1,5 +1,7 @@
+const { callCloudFunction, uploadCloudFile } = require("./network");
+
 function call(type, data = {}) {
-  return wx.cloud.callFunction({
+  return callCloudFunction({
     name: "quickstartFunctions",
     data: { type, ...data }
   }).then(({ result }) => {
@@ -12,7 +14,7 @@ function call(type, data = {}) {
 
 function uploadAvatar(tempFilePath, userId) {
   const cloudPath = `avatars/${userId}/${Date.now()}.jpg`;
-  return wx.cloud.uploadFile({ cloudPath, filePath: tempFilePath });
+  return uploadCloudFile({ cloudPath, filePath: tempFilePath });
 }
 
 function registerUser(data) {

@@ -1,12 +1,13 @@
 const { ACTION_TABLE } = require("../data/actions");
 const { cacheActionIcons } = require("./action-icon-cache");
+const { callCloudFunction } = require("./network");
 
 function getActions() {
   if (!wx.cloud) {
     return Promise.resolve(ACTION_TABLE);
   }
 
-  return wx.cloud.callFunction({
+  return callCloudFunction({
     name: "quickstartFunctions",
     data: { type: "getActions" }
   }).then(({ result }) => {

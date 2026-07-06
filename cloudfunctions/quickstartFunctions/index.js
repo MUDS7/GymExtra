@@ -7,6 +7,7 @@ const db = cloud.database();
 const userService = require("./user");
 const actionService = require("./actions");
 const trainingService = require("./trainings");
+const groupService = require("./groups");
 // 获取openid
 const getOpenId = async () => {
   // 获取基础信息
@@ -186,6 +187,10 @@ exports.main = async (event, context) => {
       return await trainingService.getTrainingDetail(event);
     case "getWeeklyTrainings":
       return await trainingService.getWeeklyTrainings(event);
+    case "getMyGroups":
+      return await groupService.getMyGroups();
+    case "getGroupDetail":
+      return await groupService.getGroupDetail(event);
     case "getOpenId":
       return await getOpenId();
     case "getMiniProgramCode":

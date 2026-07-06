@@ -1,9 +1,11 @@
+const { callCloudFunction } = require("./network");
+
 function saveTraining(data) {
   if (!wx.cloud) {
     return Promise.reject(new Error("当前基础库不支持云开发"));
   }
 
-  return wx.cloud.callFunction({
+  return callCloudFunction({
     name: "quickstartFunctions",
     data: {
       type: "saveTraining",
@@ -23,7 +25,7 @@ function getRecentTrainings() {
     return Promise.reject(new Error("当前基础库不支持云开发"));
   }
 
-  return wx.cloud.callFunction({
+  return callCloudFunction({
     name: "quickstartFunctions",
     data: { type: "getRecentTrainings" }
   }).then(({ result }) => {
@@ -40,7 +42,7 @@ function getAllTrainings(page = 0, pageSize = 20) {
     return Promise.reject(new Error("当前基础库不支持云开发"));
   }
 
-  return wx.cloud.callFunction({
+  return callCloudFunction({
     name: "quickstartFunctions",
     data: {
       type: "getAllTrainings",
@@ -64,7 +66,7 @@ function getTrainingDetail(trainingId) {
     return Promise.reject(new Error("当前基础库不支持云开发"));
   }
 
-  return wx.cloud.callFunction({
+  return callCloudFunction({
     name: "quickstartFunctions",
     data: {
       type: "getTrainingDetail",
@@ -84,7 +86,7 @@ function getWeeklyTrainings(weekStart, weekEnd) {
     return Promise.reject(new Error("当前基础库不支持云开发"));
   }
 
-  return wx.cloud.callFunction({
+  return callCloudFunction({
     name: "quickstartFunctions",
     data: {
       type: "getWeeklyTrainings",

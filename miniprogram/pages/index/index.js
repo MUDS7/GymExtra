@@ -1,31 +1,27 @@
+const groupService = require("../../services/groups");
+
 Page({
   data: {
-    groups: [
-      {
-        id: 1,
-        name: "力量训练精英组",
-        members: 128,
-        active: true,
-        badge: "今日打卡 · 36人",
-        tone: "energy"
-      },
-      {
-        id: 2,
-        name: "早起跑步打卡",
-        members: 253,
-        active: false,
-        badge: "连续 12 天",
-        tone: "cool"
-      },
-      {
-        id: 3,
-        name: "减脂百天计划",
-        members: 87,
-        active: true,
-        badge: "活动进行中",
-        tone: "vital"
-      }
-    ]
+    groups: [],
+    loading: false
+  },
+
+  onShow() {
+    this.loadGroups();
+  },
+
+  async loadGroups() {
+    if (this.data.loading) return;
+    this.setData({ loading: true });
+
+    try {
+      const groups = await groupService.getMyGroups();
+      this.setData({ groups, loading: false });
+    } catch (error) {
+      console.error("群组列表加载失败", error);
+      this.setData({ loading: false });
+      wx.showToast({ title: error.message || "群组加载失败", icon: "none" });
+    }
   },
 
   onGroupTap(event) {

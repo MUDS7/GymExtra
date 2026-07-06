@@ -2,24 +2,20 @@
   <view class="topbar" style="padding-top: {{headerTop}}px;">
     <view class="back-button" bindtap="onBack" role="button" aria-label="返回">‹</view>
     <view class="page-title">群组</view>
-    <view class="group-picker" bindtap="onActionTap" data-name="切换群组">
-      <text class="flame">🔥</text>
-      <text class="picker-name">{{groupName}}</text>
-      <text class="picker-arrow">⌄</text>
-    </view>
+    <text class="group-name">{{groupName}}</text>
   </view>
 
   <view class="content">
-    <view class="goal-card panel">
+    <view class="goal-card panel" wx:if="{{goal}}">
       <view class="goal-left">
         <view class="goal-heading">
           <view class="medal">☆</view>
           <view>
             <view class="goal-title-line">
-              <text class="goal-title">本周群目标</text>
-              <text class="goal-slogan">团结就是力量</text>
+              <text class="goal-title">{{goal.title}}</text>
+              <text class="goal-slogan">{{goal.slogan}}</text>
             </view>
-            <view class="goal-copy">全员累计运动 <text class="orange-number">1000</text> 分钟</view>
+            <view class="goal-copy">全员累计运动 <text class="orange-number">{{goal.targetValue}}</text> {{goal.unit}}</view>
           </view>
         </view>
         <view class="attendance-row">
@@ -27,12 +23,12 @@
             <view class="avatar-head"></view><view class="avatar-body"></view>
           </view>
         </view>
-        <view class="attendance-text">5 / 8 人已打卡</view>
+        <view class="attendance-text">{{goal.checkedInMemberCount}} / {{goal.eligibleMemberCount}} 人已打卡</view>
       </view>
       <view class="goal-progress">
-        <view class="ring"><view class="ring-inner"><text class="ring-number">62%</text><text class="ring-label">已完成</text></view></view>
+        <view class="ring" style="background: conic-gradient(#e95d12 0 {{goal.percent}}%, #fae5d8 {{goal.percent}}% 100%);"><view class="ring-inner"><text class="ring-number">{{goal.percent}}%</text><text class="ring-label">已完成</text></view></view>
         <view class="progress-label">累计运动</view>
-        <view><text class="progress-number">620</text><text> / 1000 分钟</text></view>
+        <view class="progress-value"><text class="progress-number">{{goal.currentValue}}</text><text> / {{goal.targetValue}} {{goal.unit}}</text></view>
       </view>
     </view>
 
@@ -51,24 +47,24 @@
       </view>
     </view>
 
-    <view class="rank-grid">
+    <view class="rank-grid" wx:if="{{rankings}}">
       <view class="rank-card panel" bindtap="onActionTap" data-name="连续打卡榜">
         <view class="rank-title"><text>🔥</text> 连续打卡榜 <text class="rank-arrow">›</text></view>
-        <view class="rank-value">8 <text>天</text></view><view class="rank-user">@小鹿爱健身 <text class="no-one">No.1</text></view>
+        <view class="rank-value">{{rankings.streak.value}} <text>{{rankings.streak.unit}}</text></view><view class="rank-user">@{{rankings.streak.name}} <text class="no-one">No.1</text></view>
       </view>
       <view class="rank-card panel" bindtap="onActionTap" data-name="本周活跃">
         <view class="rank-title"><text>📈</text> 本周活跃 <text class="rank-arrow">›</text></view>
-        <view class="rank-value">15 <text>人</text></view><view class="rank-user">参与率 88%</view>
+        <view class="rank-value">{{rankings.activity.value}} <text>人</text></view><view class="rank-user">参与率 {{rankings.activity.rate}}%</view>
       </view>
       <view class="rank-card panel" bindtap="onActionTap" data-name="进步榜">
         <view class="rank-title"><text>🏆</text> 进步榜 <text class="rank-arrow">›</text></view>
-        <view class="rank-value">+120 <text>分钟</text></view><view class="rank-user">@晨光微汗</view>
+        <view class="rank-value">+{{rankings.progress.value}} <text>{{rankings.progress.unit}}</text></view><view class="rank-user">@{{rankings.progress.name}}</view>
       </view>
     </view>
 
-    <view class="challenge panel">
-      <view class="challenge-copy"><view class="challenge-label">群挑战 <text>进行中</text></view><view class="challenge-title">7天打卡挑战 💪</view><view class="challenge-date">结束于 6月6日（还有 3 天）</view></view>
-      <view class="my-progress"><view>我的进度 <text>5 / 7 天</text></view><view class="progress-dots"><i></i><i></i><i></i><i></i><i class="off"></i><i class="off"></i></view></view>
+    <view class="challenge panel" wx:if="{{challenge}}">
+      <view class="challenge-copy"><view class="challenge-label">群挑战 <text>{{challenge.statusText}}</text></view><view class="challenge-title">{{challenge.title}}</view><view class="challenge-date">{{challenge.dateText}}</view></view>
+      <view class="my-progress"><view>我的进度 <text>{{challenge.currentValue}} / {{challenge.targetValue}} 天</text></view><view class="progress-dots"><i wx:for="{{challenge.progressDots}}" wx:key="index" class="{{item ? '' : 'off'}}"></i></view></view>
       <view class="check-button" bindtap="onActionTap" data-name="去打卡" role="button" aria-label="去打卡">去打卡</view>
     </view>
 
