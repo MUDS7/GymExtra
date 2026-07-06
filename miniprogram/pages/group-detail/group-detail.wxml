@@ -1,0 +1,101 @@
+<view class="detail-page">
+  <view class="topbar" style="padding-top: {{headerTop}}px;">
+    <view class="back-button" bindtap="onBack" role="button" aria-label="返回">‹</view>
+    <view class="page-title">群组</view>
+    <view class="group-picker" bindtap="onActionTap" data-name="切换群组">
+      <text class="flame">🔥</text>
+      <text class="picker-name">{{groupName}}</text>
+      <text class="picker-arrow">⌄</text>
+    </view>
+  </view>
+
+  <view class="content">
+    <view class="goal-card panel">
+      <view class="goal-left">
+        <view class="goal-heading">
+          <view class="medal">☆</view>
+          <view>
+            <view class="goal-title-line">
+              <text class="goal-title">本周群目标</text>
+              <text class="goal-slogan">团结就是力量</text>
+            </view>
+            <view class="goal-copy">全员累计运动 <text class="orange-number">1000</text> 分钟</view>
+          </view>
+        </view>
+        <view class="attendance-row">
+          <view wx:for="{{attendance}}" wx:key="index" class="attendance-avatar {{item ? 'checked' : ''}}">
+            <view class="avatar-head"></view><view class="avatar-body"></view>
+          </view>
+        </view>
+        <view class="attendance-text">5 / 8 人已打卡</view>
+      </view>
+      <view class="goal-progress">
+        <view class="ring"><view class="ring-inner"><text class="ring-number">62%</text><text class="ring-label">已完成</text></view></view>
+        <view class="progress-label">累计运动</view>
+        <view><text class="progress-number">620</text><text> / 1000 分钟</text></view>
+      </view>
+    </view>
+
+    <view class="wall panel">
+      <view class="section-head">
+        <text class="section-title">今日训练墙</text>
+        <view class="more" bindtap="onActionTap" data-name="全部训练">全部 <text>›</text></view>
+      </view>
+      <view class="member-row" wx:for="{{members}}" wx:key="name">
+        <view class="avatar-placeholder"><view class="avatar-head large"></view><view class="avatar-body large"></view></view>
+        <view class="member-main">
+          <view class="member-name-line"><text class="member-name">{{item.name}}</text><text class="tag {{item.tagClass}}">{{item.tag}}</text></view>
+          <view class="member-training">{{item.training}} · {{item.duration}} 分钟</view>
+        </view>
+        <view class="member-state {{item.stateClass}}">{{item.state}} <text class="state-icon">{{item.stateClass === 'done' ? '✓' : item.stateClass === 'missed' ? '!' : '–'}}</text></view>
+      </view>
+    </view>
+
+    <view class="rank-grid">
+      <view class="rank-card panel" bindtap="onActionTap" data-name="连续打卡榜">
+        <view class="rank-title"><text>🔥</text> 连续打卡榜 <text class="rank-arrow">›</text></view>
+        <view class="rank-value">8 <text>天</text></view><view class="rank-user">@小鹿爱健身 <text class="no-one">No.1</text></view>
+      </view>
+      <view class="rank-card panel" bindtap="onActionTap" data-name="本周活跃">
+        <view class="rank-title"><text>📈</text> 本周活跃 <text class="rank-arrow">›</text></view>
+        <view class="rank-value">15 <text>人</text></view><view class="rank-user">参与率 88%</view>
+      </view>
+      <view class="rank-card panel" bindtap="onActionTap" data-name="进步榜">
+        <view class="rank-title"><text>🏆</text> 进步榜 <text class="rank-arrow">›</text></view>
+        <view class="rank-value">+120 <text>分钟</text></view><view class="rank-user">@晨光微汗</view>
+      </view>
+    </view>
+
+    <view class="challenge panel">
+      <view class="challenge-copy"><view class="challenge-label">群挑战 <text>进行中</text></view><view class="challenge-title">7天打卡挑战 💪</view><view class="challenge-date">结束于 6月6日（还有 3 天）</view></view>
+      <view class="my-progress"><view>我的进度 <text>5 / 7 天</text></view><view class="progress-dots"><i></i><i></i><i></i><i></i><i class="off"></i><i class="off"></i></view></view>
+      <view class="check-button" bindtap="onActionTap" data-name="去打卡" role="button" aria-label="去打卡">去打卡</view>
+    </view>
+
+    <view class="templates panel">
+      <view class="section-head"><text class="section-title">训练模板</text><view class="more" bindtap="onActionTap" data-name="全部模板">全部 <text>›</text></view></view>
+      <view class="template-grid">
+        <view class="template-row" wx:for="{{templates}}" wx:key="name">
+          <view class="template-placeholder"><text>图片</text></view>
+          <view class="template-copy"><view class="template-name">{{item.name}}</view><view class="template-meta">{{item.duration}} 分钟 · {{item.focus}}</view><view class="template-used">{{item.used}} 人使用</view></view>
+          <view class="copy-button" bindtap="onActionTap" data-name="复制模板" role="button" aria-label="复制{{item.name}}">复制模板</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="fake-tabbar">
+    <view class="tab-item" bindtap="onTabTap" data-url="/pages/train/train">
+      <image class="tab-icon" src="/images/icons/lucide/dumbbell-tab.png" mode="aspectFit"></image>
+      <text>训练</text>
+    </view>
+    <view class="tab-item active" bindtap="onTabTap" data-url="/pages/index/index">
+      <image class="tab-icon" src="/images/icons/lucide/users-tab-active.png" mode="aspectFit"></image>
+      <text>群组</text>
+    </view>
+    <view class="tab-item" bindtap="onTabTap" data-url="/pages/profile/profile">
+      <image class="tab-icon" src="/images/icons/lucide/user-tab.png" mode="aspectFit"></image>
+      <text>我的</text>
+    </view>
+  </view>
+</view>

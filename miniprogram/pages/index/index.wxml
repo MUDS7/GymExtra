@@ -11,7 +11,7 @@
       </view>
     </view>
     <view class="group-list">
-      <view class="group-card" wx:for="{{groups}}" wx:key="id" bindtap="onActionTap" data-name="{{item.name}}">
+      <view class="group-card" wx:for="{{groups}}" wx:key="id" bindtap="onGroupTap" data-id="{{item.id}}" data-name="{{item.name}}">
         <view class="group-icon {{item.tone}}">
           <view class="lucide-icon icon-users"></view>
         </view>

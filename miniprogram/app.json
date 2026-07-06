@@ -6,6 +6,7 @@
     "pages/training-records/training-records",
     "pages/action-picker/action-picker",
     "pages/index/index",
+    "pages/group-detail/group-detail",
     "pages/profile/profile"
   ],
   "window": {

@@ -28,6 +28,14 @@ Page({
     ]
   },
 
+  onGroupTap(event) {
+    const { id, name } = event.currentTarget.dataset;
+
+    wx.navigateTo({
+      url: `/pages/group-detail/group-detail?id=${id}&name=${encodeURIComponent(name)}`
+    });
+  },
+
   onActionTap(event) {
     const { name } = event.currentTarget.dataset;
 
