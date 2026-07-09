@@ -76,6 +76,10 @@ function groupTrainings(trainings) {
 
 Page({
   data: {
+    navTitle: "\u5168\u90e8\u8bb0\u5f55",
+    navTop: 24,
+    navBarHeight: 32,
+    navHeight: 64,
     groups: [],
     loading: false,
     hasMore: true
@@ -85,7 +89,22 @@ Page({
   page: 0,
 
   onLoad() {
+    this.setNavMetrics();
     this.loadRecords(true);
+  },
+
+  setNavMetrics() {
+    const menuButton = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null;
+    const systemInfo = wx.getSystemInfoSync ? wx.getSystemInfoSync() : {};
+    const statusBarHeight = systemInfo.statusBarHeight || 24;
+    const navTop = menuButton && menuButton.top ? menuButton.top : statusBarHeight + 6;
+    const navBarHeight = menuButton && menuButton.height ? menuButton.height : 32;
+
+    this.setData({
+      navTop,
+      navBarHeight,
+      navHeight: navTop + navBarHeight + 8
+    });
   },
 
   onReachBottom() {
@@ -143,5 +162,16 @@ Page({
     wx.navigateTo({
       url: `/pages/new-training/new-training?mode=readonly&id=${encodeURIComponent(trainingId)}`
     });
+  },
+
+  onBackTap() {
+    const pages = getCurrentPages();
+
+    if (pages.length > 1) {
+      wx.navigateBack({ delta: 1 });
+      return;
+    }
+
+    wx.switchTab({ url: "/pages/train/train" });
   }
 });

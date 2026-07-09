@@ -1,8 +1,48 @@
 .records-page {
   min-height: 100vh;
-  padding: 28rpx 28rpx calc(56rpx + env(safe-area-inset-bottom));
+  padding: 0 28rpx calc(56rpx + env(safe-area-inset-bottom));
   color: #111111;
   background: #FFFFFF;
+}
+
+.records-nav {
+  position: relative;
+  margin: 0 -28rpx 26rpx;
+  padding-left: 16rpx;
+  padding-right: 16rpx;
+  background: #FFFFFF;
+}
+
+.records-back {
+  position: absolute;
+  left: 12rpx;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.records-back-mark {
+  width: 24rpx;
+  height: 24rpx;
+  border-left: 5rpx solid #0A0A0A;
+  border-bottom: 5rpx solid #0A0A0A;
+  transform: rotate(45deg);
+}
+
+.records-nav-title {
+  position: absolute;
+  left: 160rpx;
+  right: 160rpx;
+  bottom: 8px;
+  overflow: visible;
+  color: #111111;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 32rpx;
+  font-weight: 500;
 }
 
 .day-group + .day-group {
@@ -44,7 +84,7 @@
   background: #FFFFFF;
   display: flex;
   align-items: center;
-  gap: 26rpx;
+  gap: 22rpx;
 }
 
 .record-dot {
@@ -70,7 +110,6 @@
 .record-title-row {
   display: flex;
   align-items: center;
-  gap: 12rpx;
 }
 
 .record-title {
@@ -89,6 +128,13 @@
   align-items: center;
   gap: 8rpx;
   flex-shrink: 0;
+}
+
+.record-side {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
 }
 
 .record-tag {

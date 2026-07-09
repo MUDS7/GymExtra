@@ -1,4 +1,11 @@
 <view class="records-page">
+  <view class="records-nav" style="height: {{navHeight}}px; padding-top: {{navTop}}px;">
+    <button class="records-back" style="top: {{navTop}}px; height: {{navBarHeight}}px; width: {{navBarHeight}}px;" bindtap="onBackTap" aria-label="返回">
+      <view class="records-back-mark"></view>
+    </button>
+    <view class="records-nav-title" style="height: {{navBarHeight}}px; line-height: {{navBarHeight}}px;">{{navTitle}}</view>
+  </view>
+
   <view class="day-group" wx:for="{{groups}}" wx:key="key">
     <view class="day-divider">
       <text class="day-label">{{item.label}}</text>
@@ -11,13 +18,15 @@
         <view class="record-main">
           <view class="record-title-row">
             <view class="record-title">{{record.name}}</view>
-            <view class="record-tags">
-              <view class="record-tag {{tag.tone}}" wx:for="{{record.tags}}" wx:for-item="tag" wx:key="label">{{tag.label}}</view>
-            </view>
           </view>
           <view class="record-meta">{{record.time}} · {{record.duration}} · {{record.sets}} 组</view>
         </view>
-        <view class="lucide-icon icon-chevron-right row-arrow"></view>
+        <view class="record-side">
+          <view class="record-tags">
+            <view class="record-tag {{tag.tone}}" wx:for="{{record.tags}}" wx:for-item="tag" wx:key="label">{{tag.label}}</view>
+          </view>
+          <view class="lucide-icon icon-chevron-right row-arrow"></view>
+        </view>
       </view>
     </view>
   </view>
