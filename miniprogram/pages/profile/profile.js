@@ -1,3 +1,18 @@
+const { getUserStats } = require("../../services/user-stats");
+
+function formatStats(stats = {}) {
+  const totalTrainingCount = Number(stats.totalTrainingCount) || 0;
+  const continuousCheckInDays = Number(stats.continuousCheckInDays) || 0;
+  const totalDurationSeconds = Number(stats.totalDurationSeconds) || 0;
+  const totalHours = Math.ceil(totalDurationSeconds / 3600);
+
+  return [
+    { label: "累计训练", value: String(totalTrainingCount), unit: "次", tone: "energy" },
+    { label: "连续打卡", value: String(continuousCheckInDays), unit: "天", tone: "vital" },
+    { label: "累计时长", value: String(totalHours), unit: "小时", tone: "cool" }
+  ];
+}
+
 Page({
   data: {
     user: {
@@ -6,16 +21,12 @@ Page({
       level: "Lv.8 精英训练者",
       avatar: "A"
     },
-    stats: [
-      { label: "累计训练", value: "86", unit: "次", tone: "energy" },
-      { label: "连续打卡", value: "14", unit: "天", tone: "vital" },
-      { label: "累计时长", value: "72", unit: "小时", tone: "cool" }
-    ],
-    achievements: [
-      { name: "初心者", earned: true, tone: "energy" },
-      { name: "坚持一周", earned: true, tone: "vital" },
-      { name: "百次勇士", earned: false, tone: "muted" },
-      { name: "马拉松级", earned: false, tone: "muted" }
+    stats: formatStats(),
+    templates: [
+      { name: "力量模板", icon: "icon-zap", tone: "energy" },
+      { name: "燃脂模板", icon: "icon-flame", tone: "power" },
+      { name: "打卡模板", icon: "icon-calendar", tone: "cool" },
+      { name: "进阶模板", icon: "icon-trophy", tone: "gold" }
     ],
     menuGroups: [
       {
@@ -23,7 +34,7 @@ Page({
         items: [
           { label: "训练趋势", desc: "查看你的进步曲线", icon: "icon-trending-up", tone: "energy" },
           { label: "训练日历", desc: "按月查看打卡记录", icon: "icon-calendar", tone: "cool" },
-          { label: "我的成就", desc: "已获得 2 / 10 枚", icon: "icon-award", tone: "gold" }
+          { label: "我的模板", desc: "快速复用常用训练", icon: "icon-award", tone: "gold" }
         ]
       },
       {
@@ -43,6 +54,7 @@ Page({
 
     if (cachedUser) {
       this.showUser(cachedUser);
+      this.loadUserStats();
       return;
     }
 
@@ -52,6 +64,7 @@ Page({
         return;
       }
       this.showUser(result.user);
+      this.loadUserStats();
     }).catch(() => {
       wx.showToast({ title: "用户信息加载失败", icon: "none" });
     });
@@ -66,6 +79,15 @@ Page({
         avatar: user.nickname.slice(0, 1).toUpperCase(),
         avatarUrl: user.avatarUrl
       }
+    });
+  },
+
+  loadUserStats() {
+    getUserStats().then((stats) => {
+      this.setData({ stats: formatStats(stats) });
+    }).catch((error) => {
+      console.error("用户统计加载失败", error);
+      wx.showToast({ title: "统计数据加载失败", icon: "none" });
     });
   },
 

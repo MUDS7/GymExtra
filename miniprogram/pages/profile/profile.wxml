@@ -34,20 +34,20 @@
     </view>
   </view>
 
-  <view class="achievement-section">
+  <view class="template-section">
     <view class="section-head">
-      <view class="section-title">成就</view>
-      <view class="all-button" bindtap="onActionTap" data-name="全部成就">
+      <view class="section-title">模板</view>
+      <view class="all-button" bindtap="onActionTap" data-name="全部模板">
         <text>全部</text>
         <view class="lucide-icon icon-chevron-right"></view>
       </view>
     </view>
-    <view class="achievement-grid">
-      <view class="achievement-item" wx:for="{{achievements}}" wx:key="name">
-        <view class="achievement-icon {{item.tone}} {{item.earned ? '' : 'locked'}}">
-          <view class="lucide-icon icon-award"></view>
+    <view class="template-grid">
+      <view class="template-item" wx:for="{{templates}}" wx:key="name" bindtap="onActionTap" data-name="{{item.name}}">
+        <view class="template-icon {{item.tone}}">
+          <view class="lucide-icon {{item.icon}}"></view>
         </view>
-        <view class="achievement-name {{item.earned ? '' : 'locked-text'}}">{{item.name}}</view>
+        <view class="template-name">{{item.name}}</view>
       </view>
     </view>
   </view>

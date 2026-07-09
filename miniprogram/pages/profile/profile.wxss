@@ -220,7 +220,7 @@
   font-weight: 700;
 }
 
-.achievement-section {
+.template-section {
   margin-top: 46rpx;
 }
 
@@ -252,20 +252,20 @@
   height: 25rpx;
 }
 
-.achievement-grid {
+.template-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 26rpx;
 }
 
-.achievement-item {
+.template-item {
   min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.achievement-icon {
+.template-icon {
   width: 118rpx;
   height: 118rpx;
   border: 1rpx solid #DADDE2;
@@ -274,35 +274,47 @@
   place-items: center;
 }
 
-.achievement-icon .lucide-icon {
+.template-icon .lucide-icon {
   width: 45rpx;
   height: 45rpx;
 }
 
-.achievement-icon.energy {
+.template-icon.energy {
   color: #F06F38;
   border-color: #F4B18C;
   background: #FFF0EA;
   box-shadow: 0 10rpx 24rpx rgba(240, 111, 56, 0.14);
 }
 
-.achievement-icon.vital {
+.template-icon.vital {
   color: #44BF72;
   border-color: #9EE3B7;
   background: #EAF8EF;
   box-shadow: 0 10rpx 24rpx rgba(68, 191, 114, 0.14);
 }
 
-.achievement-icon.muted {
-  color: #A5A9AF;
-  background: #F3F4F7;
+.template-icon.cool {
+  color: #258DE9;
+  border-color: #A8D8FF;
+  background: #E9F4FF;
+  box-shadow: 0 10rpx 24rpx rgba(37, 141, 233, 0.14);
 }
 
-.achievement-icon.locked {
-  opacity: 0.86;
+.template-icon.gold {
+  color: #D9A900;
+  border-color: #F4DC7A;
+  background: #FFF7D7;
+  box-shadow: 0 10rpx 24rpx rgba(217, 169, 0, 0.14);
 }
 
-.achievement-name {
+.template-icon.power {
+  color: #D14AC7;
+  border-color: #E9A8E2;
+  background: #F8E9F6;
+  box-shadow: 0 10rpx 24rpx rgba(209, 74, 199, 0.14);
+}
+
+.template-name {
   width: 100%;
   margin-top: 17rpx;
   overflow: hidden;
@@ -313,11 +325,6 @@
   font-size: 24rpx;
   line-height: 1.1;
   font-weight: 800;
-}
-
-.locked-text {
-  color: #5E6269;
-  font-weight: 600;
 }
 
 .menu-section {

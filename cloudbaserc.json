@@ -19,6 +19,10 @@
                   ]
                 }
               ]
+            },
+            {
+              "collectionName": "user_stats",
+              "description": "用户统计数据"
             }
           ]
         }

@@ -8,6 +8,7 @@ const userService = require("./user");
 const actionService = require("./actions");
 const trainingService = require("./trainings");
 const groupService = require("./groups");
+const userStatsService = require("./userStats");
 // 获取openid
 const getOpenId = async () => {
   // 获取基础信息
@@ -189,6 +190,8 @@ exports.main = async (event, context) => {
       return await trainingService.deleteTraining(event);
     case "getWeeklyTrainings":
       return await trainingService.getWeeklyTrainings(event);
+    case "getUserStats":
+      return await userStatsService.getUserStats();
     case "getMyGroups":
       return await groupService.getMyGroups();
     case "searchGroups":

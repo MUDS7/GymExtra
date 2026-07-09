@@ -1,5 +1,6 @@
 const cloud = require("wx-server-sdk");
 const crypto = require("crypto");
+const userStatsService = require("./userStats");
 
 const db = cloud.database();
 const COLLECTION = "trainings";
@@ -316,6 +317,7 @@ async function saveTraining(event) {
     const completedActionMinutes = getCompletedActionMinutes(actions);
     const groupId = String(event.groupId || "").trim().slice(0, 100) || null;
     const id = createUuid();
+    const now = new Date();
     const data = {
       uuid: id,
       userId: OPENID,
@@ -339,6 +341,12 @@ async function saveTraining(event) {
     };
 
     await db.collection(COLLECTION).doc(id).set({ data });
+
+    try {
+      await userStatsService.syncAfterTrainingSaved(data, now);
+    } catch (error) {
+      console.error("同步用户训练统计失败", error);
+    }
 
     try {
       await publishGroupActivity(data);
@@ -500,6 +508,12 @@ async function deleteTraining(event) {
     }
 
     await db.collection(COLLECTION).doc(trainingId).remove();
+
+    try {
+      await userStatsService.syncAfterTrainingDeleted(OPENID);
+    } catch (error) {
+      console.error("同步删除用户训练统计失败", error);
+    }
 
     try {
       await db.collection("group_daily_activities")
