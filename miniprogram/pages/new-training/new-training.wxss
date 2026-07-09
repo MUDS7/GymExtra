@@ -6,6 +6,7 @@
 }
 
 .top-row {
+  position: relative;
   height: 72rpx;
   padding: 0 34rpx 0 36rpx;
   display: flex;
@@ -37,6 +38,32 @@
   line-height: 52rpx;
   font-weight: 700;
   text-align: center;
+}
+
+.training-delete-button {
+  position: absolute;
+  top: 8rpx;
+  right: 34rpx;
+  width: 56rpx;
+  height: 56rpx;
+  margin: 0;
+  padding: 0;
+  border-radius: 14rpx;
+  color: #D93025;
+  background: #FFF0EE;
+  flex: 0 0 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.training-delete-button.disabled {
+  background: #FFF6F5;
+}
+
+.training-delete-icon {
+  width: 30rpx;
+  height: 30rpx;
 }
 
 .title-row {

@@ -185,6 +185,8 @@ exports.main = async (event, context) => {
       return await trainingService.getAllTrainings(event);
     case "getTrainingDetail":
       return await trainingService.getTrainingDetail(event);
+    case "deleteTraining":
+      return await trainingService.deleteTraining(event);
     case "getWeeklyTrainings":
       return await trainingService.getWeeklyTrainings(event);
     case "getMyGroups":
@@ -195,6 +197,8 @@ exports.main = async (event, context) => {
       return await groupService.applyToGroup(event);
     case "getGroupDetail":
       return await groupService.getGroupDetail(event);
+    case "getGroupLeaderboard":
+      return await groupService.getGroupLeaderboard(event);
     case "getOpenId":
       return await getOpenId();
     case "getMiniProgramCode":
@@ -209,5 +213,10 @@ exports.main = async (event, context) => {
       return await insertRecord(event);
     case "deleteRecord":
       return await deleteRecord(event);
+    default:
+      return {
+        success: false,
+        message: `未知云函数类型：${event.type || ""}`
+      };
   }
 };

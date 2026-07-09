@@ -1,0 +1,6 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "今日训练榜",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#FFFFFF"
+}

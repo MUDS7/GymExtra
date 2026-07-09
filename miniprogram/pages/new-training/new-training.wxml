@@ -9,6 +9,9 @@
       bindinput="onTimerInput"
     />
     <view wx:if="{{!readonly}}" class="finish-button" bindtap="onFinishTap">{{saving ? '保存中' : '完成'}}</view>
+    <view wx:if="{{readonly}}" class="training-delete-button {{deleting || loading ? 'disabled' : ''}}" bindtap="onTrainingDeleteTap" aria-label="删除记录">
+      <view class="delete-icon training-delete-icon"></view>
+    </view>
   </view>
 
   <view class="title-row {{readonly ? 'readonly' : ''}}">

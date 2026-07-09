@@ -480,6 +480,48 @@ async function getTrainingDetail(event) {
   }
 }
 
+async function deleteTraining(event) {
+  try {
+    const { OPENID } = cloud.getWXContext();
+    if (!OPENID) {
+      throw new Error("无法获取当前用户身份");
+    }
+
+    const trainingId = String(event.trainingId || "").trim();
+    if (!trainingId) {
+      throw new Error("缺少训练记录 ID");
+    }
+
+    const result = await db.collection(COLLECTION).doc(trainingId).get();
+    const training = result.data;
+
+    if (!training || training.userId !== OPENID) {
+      throw new Error("训练记录不存在");
+    }
+
+    await db.collection(COLLECTION).doc(trainingId).remove();
+
+    try {
+      await db.collection("group_daily_activities")
+        .where({ trainingId, userId: OPENID })
+        .remove();
+    } catch (error) {
+      console.error("同步删除群组训练墙记录失败", error);
+    }
+
+    return {
+      success: true,
+      trainingId
+    };
+  } catch (error) {
+    console.error("删除训练记录失败", error);
+    return {
+      success: false,
+      message: error.message || "删除训练记录失败"
+    };
+  }
+}
+
 async function getWeeklyTrainings(event) {
   try {
     const { OPENID } = cloud.getWXContext();
@@ -524,4 +566,4 @@ async function getWeeklyTrainings(event) {
   }
 }
 
-module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, getWeeklyTrainings };
+module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings };

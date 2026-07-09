@@ -81,6 +81,30 @@ function getTrainingDetail(trainingId) {
   });
 }
 
+function deleteTraining(trainingId) {
+  if (!wx.cloud) {
+    return Promise.reject(new Error("当前基础库不支持云开发"));
+  }
+
+  return callCloudFunction({
+    name: "quickstartFunctions",
+    data: {
+      type: "deleteTraining",
+      trainingId
+    }
+  }).then(({ result }) => {
+    if (!result) {
+      throw new Error("云函数未返回删除结果，请重新部署 quickstartFunctions");
+    }
+
+    if (!result || !result.success) {
+      throw new Error((result && result.message) || "删除训练记录失败");
+    }
+
+    return result;
+  });
+}
+
 function getWeeklyTrainings(weekStart, weekEnd) {
   if (!wx.cloud) {
     return Promise.reject(new Error("当前基础库不支持云开发"));
@@ -102,4 +126,4 @@ function getWeeklyTrainings(weekStart, weekEnd) {
   });
 }
 
-module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, getWeeklyTrainings };
+module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings };

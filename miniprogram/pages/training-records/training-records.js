@@ -93,6 +93,15 @@ Page({
     this.loadRecords(true);
   },
 
+  onShow() {
+    const app = getApp();
+
+    if (app.globalData.trainingRecordsChanged) {
+      app.globalData.trainingRecordsChanged = false;
+      this.loadRecords(true);
+    }
+  },
+
   setNavMetrics() {
     const menuButton = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null;
     const systemInfo = wx.getSystemInfoSync ? wx.getSystemInfoSync() : {};

@@ -75,12 +75,19 @@ Page({
   },
 
   onActionTap(event) {
-    const { action, name } = event.currentTarget.dataset;
+    const { action, name, rankType } = event.currentTarget.dataset;
 
     if (action === "checkIn") {
       this.pendingCheckInRefresh = true;
       wx.navigateTo({
         url: `/pages/new-training/new-training?groupId=${encodeURIComponent(this.data.groupId)}&groupName=${encodeURIComponent(this.data.groupName)}&sharedToGroup=1`
+      });
+      return;
+    }
+
+    if (action === "leaderboard") {
+      wx.navigateTo({
+        url: `/pages/group-leaderboard/group-leaderboard?groupId=${encodeURIComponent(this.data.groupId)}&groupName=${encodeURIComponent(this.data.groupName)}&leaderboardType=${encodeURIComponent(rankType || "today")}`
       });
       return;
     }

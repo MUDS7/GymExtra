@@ -19,10 +19,6 @@
           <view class="group-title">{{item.name}}</view>
           <view class="group-meta">
             <text>{{item.members}} 成员</text>
-            <view class="group-badge {{item.active ? 'active' : 'calm'}}">
-              <view class="lucide-icon {{item.active ? 'icon-flame' : 'icon-zap'}} badge-icon"></view>
-              {{item.badge}}
-            </view>
           </view>
         </view>
         <view class="lucide-icon icon-chevron-right row-arrow"></view>

@@ -127,38 +127,6 @@
   font-weight: 600;
 }
 
-.group-badge {
-  max-width: 220rpx;
-  padding: 7rpx 14rpx;
-  border-radius: 20rpx;
-  border: 1rpx solid currentColor;
-  display: flex;
-  align-items: center;
-  gap: 5rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 21rpx;
-  line-height: 1.1;
-  font-weight: 900;
-}
-
-.badge-icon {
-  width: 20rpx;
-  height: 20rpx;
-  flex-shrink: 0;
-}
-
-.group-badge.active {
-  color: #44BF72;
-  background: #DDF4E4;
-}
-
-.group-badge.calm {
-  color: #258DE9;
-  background: #EFF8FF;
-}
-
 .row-arrow {
   width: 34rpx;
   height: 34rpx;

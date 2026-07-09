@@ -53,9 +53,9 @@
     </view>
 
     <view class="wall panel">
-      <view class="section-head">
+      <view class="section-head" bindtap="onActionTap" data-action="leaderboard" data-name="今日训练墙">
         <text class="section-title">今日训练墙</text>
-        <view class="more" bindtap="onActionTap" data-name="全部训练">全部 <text>›</text></view>
+        <view class="more">全部 <text>›</text></view>
       </view>
       <view class="member-row" wx:for="{{members}}" wx:key="id">
         <image wx:if="{{item.avatarUrl}}" class="member-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
@@ -80,17 +80,17 @@
     </view>
 
     <view class="rank-grid" wx:if="{{rankings}}">
-      <view class="rank-card rank-streak panel" bindtap="onActionTap" data-name="连续打卡榜">
+      <view class="rank-card rank-streak panel" bindtap="onActionTap" data-action="leaderboard" data-rank-type="streak" data-name="连续打卡榜">
         <view class="rank-title"><text class="rank-icon">🔥</text><text class="rank-name">连续打卡榜</text><text class="rank-arrow">›</text></view>
         <view class="rank-value">{{rankings.streak.value}} <text>{{rankings.streak.unit}}</text></view>
         <view class="rank-user"><text>@{{rankings.streak.name}}</text><text class="rank-chip">No.1</text></view>
       </view>
-      <view class="rank-card rank-activity panel" bindtap="onActionTap" data-name="本周活跃">
+      <view class="rank-card rank-activity panel" bindtap="onActionTap" data-action="leaderboard" data-rank-type="activity" data-name="本周活跃">
         <view class="rank-title"><text class="rank-icon">📈</text><text class="rank-name">本周活跃</text><text class="rank-arrow">›</text></view>
         <view class="rank-value">{{rankings.activity.value}} <text>人</text></view>
         <view class="rank-user"><text>参与率</text><text class="rank-chip">{{rankings.activity.rate}}%</text></view>
       </view>
-      <view class="rank-card rank-progress panel" bindtap="onActionTap" data-name="进步榜">
+      <view class="rank-card rank-progress panel" bindtap="onActionTap" data-action="leaderboard" data-rank-type="progress" data-name="进步榜">
         <view class="rank-title"><text class="rank-icon">🏆</text><text class="rank-name">进步榜</text><text class="rank-arrow">›</text></view>
         <view class="rank-value">{{rankings.progress.value}} <text>{{rankings.progress.unit}}</text></view>
         <view class="rank-user"><text>@{{rankings.progress.name}}</text><text class="rank-chip">今日</text></view>

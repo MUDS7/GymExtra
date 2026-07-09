@@ -175,8 +175,10 @@ Page({
     actions: [],
     summary: buildSummary([]),
     saving: false,
+    deleting: false,
     readonly: false,
     loading: false,
+    trainingId: "",
     recordedAt: "",
     groupId: "",
     groupName: "",
@@ -203,7 +205,7 @@ Page({
   },
 
   async loadTrainingDetail(trainingId) {
-    this.setData({ readonly: true, loading: true });
+    this.setData({ readonly: true, loading: true, trainingId });
     wx.showLoading({ title: "加载中", mask: true });
 
     try {
@@ -298,6 +300,53 @@ Page({
         icon: "none"
       });
     }
+  },
+
+  onTrainingDeleteTap() {
+    if (!this.data.readonly || this.data.deleting || this.data.loading || !this.data.trainingId) {
+      return;
+    }
+
+    wx.showModal({
+      title: "删除记录",
+      content: "确定删除这条运动记录吗？删除后不可恢复。",
+      confirmText: "删除",
+      confirmColor: "#D93025",
+      success: async (res) => {
+        if (!res.confirm) {
+          return;
+        }
+
+        this.setData({ deleting: true });
+        wx.showLoading({ title: "删除中", mask: true });
+
+        try {
+          await trainingService.deleteTraining(this.data.trainingId);
+          const app = getApp();
+          app.globalData.trainingRecordsChanged = true;
+          wx.hideLoading();
+          wx.showToast({ title: "已删除", icon: "success" });
+
+          setTimeout(() => {
+            const pages = getCurrentPages();
+
+            if (pages.length > 1) {
+              wx.navigateBack();
+              return;
+            }
+
+            wx.switchTab({ url: "/pages/train/train" });
+          }, 500);
+        } catch (error) {
+          wx.hideLoading();
+          this.setData({ deleting: false });
+          wx.showToast({
+            title: error.message || "删除失败，请重试",
+            icon: "none"
+          });
+        }
+      }
+    });
   },
 
   updateActions(actions) {

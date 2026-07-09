@@ -153,6 +153,59 @@ function normalizeLeader(leader, fallbackUnit) {
   };
 }
 
+const LEADERBOARD_META = {
+  today: {
+    type: "today",
+    title: "今日训练榜",
+    subtitle: "今日训练墙 · 总运动时长",
+    scoreIcon: "🔥",
+    scoreLabel: "总运动时长",
+    emptyTitle: "暂无今日排名",
+    emptyCopy: "完成并分享到群组的训练会出现在这里"
+  },
+  streak: {
+    type: "streak",
+    title: "连续打卡榜",
+    subtitle: "连续打卡 · 当前连续天数",
+    scoreIcon: "🔥",
+    scoreLabel: "连续打卡",
+    emptyTitle: "暂无连续打卡排名",
+    emptyCopy: "连续完成并分享到群组的训练会出现在这里"
+  },
+  activity: {
+    type: "activity",
+    title: "本周活跃榜",
+    subtitle: "本周活跃 · 打卡天数",
+    scoreIcon: "📈",
+    scoreLabel: "本周打卡",
+    emptyTitle: "暂无本周活跃排名",
+    emptyCopy: "本周完成并分享到群组的训练会出现在这里"
+  },
+  progress: {
+    type: "progress",
+    title: "进步榜",
+    subtitle: "今日进步 · 运动时长",
+    scoreIcon: "🏆",
+    scoreLabel: "今日运动",
+    emptyTitle: "暂无进步排名",
+    emptyCopy: "今日完成并分享到群组的训练会出现在这里"
+  }
+};
+
+function getLeaderboardType(value) {
+  const type = String(value || "today").trim();
+  const aliases = {
+    checkin: "streak",
+    weekly: "activity",
+    active: "activity"
+  };
+  return LEADERBOARD_META[type] ? type : (aliases[type] || "today");
+}
+
+function getLeaderboardMeta(type) {
+  return LEADERBOARD_META[type] || LEADERBOARD_META.today;
+}
+
 function isSeedUserId(userId) {
   const value = String(userId || "");
   return value.startsWith("demo-") || value.startsWith("test-");
@@ -423,16 +476,21 @@ async function getMyGroups() {
         return null;
       }
     }));
+    const activeGroups = groups.filter(Boolean).sort((a, b) => a.sortOrder - b.sortOrder);
+    const memberCounts = await Promise.all(activeGroups.map(async (group) => {
+      const result = await db.collection("group_members")
+        .where({ groupId: group._id, status: "active" })
+        .count();
+      return Number(result.total) || 0;
+    }));
 
     return {
       success: true,
-      data: groups.filter(Boolean).sort((a, b) => a.sortOrder - b.sortOrder).map((group) => ({
+      data: activeGroups.map((group, index) => ({
         id: group._id,
         name: group.name,
         description: group.description,
-        members: group.memberCount,
-        active: group.badgeType !== "streak",
-        badge: group.badge,
+        members: memberCounts[index],
         tone: group.theme
       }))
     };
@@ -855,6 +913,260 @@ async function queryRankings(groupId) {
   return { streak, activity, progress };
 }
 
+async function queryTodayLeaderboard(groupId) {
+  const result = await db.collection("group_daily_activities")
+    .where({
+      groupId,
+      activityDateKey: dayKey(),
+      sharedToGroup: true
+    })
+    .orderBy("displayOrder", "asc")
+    .limit(1000)
+    .get();
+  const users = new Map();
+
+  (result.data || [])
+    .filter((activity) => activity.checkInStatus === "done")
+    .forEach((activity) => {
+      const userId = activity.userId;
+      if (!userId) return;
+
+      const current = users.get(userId) || {
+        id: userId,
+        name: getProfileName(activity.profileSnapshot),
+        avatarUrl: activity.profileSnapshot && activity.profileSnapshot.avatarUrl,
+        value: 0,
+        trainingCount: 0,
+        latestTraining: activity.trainingTitle || "未命名训练",
+        tag: activity.categoryName || "训练",
+        tagClass: activity.tagClass || getCategoryTone(activity.categoryId),
+        displayOrder: Number(activity.displayOrder || 0)
+      };
+
+      current.value += Number(activity.durationMinutes) || 0;
+      current.trainingCount += 1;
+      if (activity.activityDate && (!current.latestAt || new Date(activity.activityDate) > current.latestAt)) {
+        current.latestAt = new Date(activity.activityDate);
+        current.latestTraining = activity.trainingTitle || current.latestTraining;
+        current.tag = activity.categoryName || current.tag;
+        current.tagClass = activity.tagClass || current.tagClass;
+      }
+      if (current.name === "群成员") {
+        current.name = getProfileName(activity.profileSnapshot);
+      }
+      if (!current.avatarUrl && activity.profileSnapshot && activity.profileSnapshot.avatarUrl) {
+        current.avatarUrl = activity.profileSnapshot.avatarUrl;
+      }
+
+      users.set(userId, current);
+    });
+
+  return Array.from(users.values())
+    .sort((a, b) => (
+      b.value - a.value
+      || b.trainingCount - a.trainingCount
+      || a.displayOrder - b.displayOrder
+    ))
+    .map((user, index) => ({
+      id: user.id,
+      rank: index + 1,
+      name: user.name,
+      avatarUrl: user.avatarUrl || "",
+      value: Math.round(user.value),
+      unit: "分钟",
+      trainingCount: user.trainingCount,
+      latestTraining: user.latestTraining,
+      tag: user.tag,
+      tagClass: user.tagClass
+    }));
+}
+
+function getActivityTimestamp(activity) {
+  const date = activity && activity.activityDate ? new Date(activity.activityDate) : null;
+  return date && !Number.isNaN(date.getTime()) ? date.getTime() : 0;
+}
+
+function createLeaderboardUser(activity) {
+  return {
+    id: activity.userId,
+    name: getProfileName(activity.profileSnapshot),
+    avatarUrl: activity.profileSnapshot && activity.profileSnapshot.avatarUrl,
+    displayOrder: Number(activity.displayOrder || 0),
+    latestAt: 0,
+    latestTraining: activity.trainingTitle || "未命名训练",
+    tag: activity.categoryName || "训练",
+    tagClass: activity.tagClass || getCategoryTone(activity.categoryId),
+    trainingCount: 0,
+    totalMinutes: 0,
+    dateKeys: new Set()
+  };
+}
+
+function mergeLeaderboardActivity(users, activity) {
+  const userId = activity.userId;
+  if (!userId) return null;
+
+  const current = users.get(userId) || createLeaderboardUser(activity);
+  const activityTime = getActivityTimestamp(activity);
+  current.trainingCount += 1;
+  current.totalMinutes += Number(activity.durationMinutes) || 0;
+  if (activity.activityDateKey) current.dateKeys.add(activity.activityDateKey);
+  if (activityTime >= current.latestAt) {
+    current.latestAt = activityTime;
+    current.latestTraining = activity.trainingTitle || current.latestTraining;
+    current.tag = activity.categoryName || current.tag;
+    current.tagClass = activity.tagClass || current.tagClass;
+  }
+  if (current.name === "群成员") {
+    current.name = getProfileName(activity.profileSnapshot);
+  }
+  if (!current.avatarUrl && activity.profileSnapshot && activity.profileSnapshot.avatarUrl) {
+    current.avatarUrl = activity.profileSnapshot.avatarUrl;
+  }
+
+  users.set(userId, current);
+  return current;
+}
+
+function toLeaderboardRows(users, getValue, getExtra = () => ({})) {
+  return Array.from(users.values())
+    .map((user) => ({
+      ...user,
+      value: getValue(user)
+    }))
+    .filter((user) => user.value > 0)
+    .sort((a, b) => (
+      b.value - a.value
+      || b.totalMinutes - a.totalMinutes
+      || b.trainingCount - a.trainingCount
+      || b.latestAt - a.latestAt
+      || a.displayOrder - b.displayOrder
+    ))
+    .map((user, index) => ({
+      id: user.id,
+      rank: index + 1,
+      name: user.name,
+      avatarUrl: user.avatarUrl || "",
+      value: Math.round(user.value),
+      trainingCount: user.trainingCount,
+      latestTraining: user.latestTraining,
+      tag: user.tag,
+      tagClass: user.tagClass,
+      ...getExtra(user)
+    }));
+}
+
+function queryStreakLeaderboard(activities) {
+  const todayKey = dayKey();
+  const users = new Map();
+
+  activities.forEach((activity) => mergeLeaderboardActivity(users, activity));
+
+  return toLeaderboardRows(
+    users,
+    (user) => countContinuousDays(user.dateKeys, todayKey),
+    (user) => ({
+      unit: "天",
+      latestTraining: "连续打卡",
+      tag: "打卡",
+      tagClass: "orange",
+      trainingCountText: `累计 ${user.dateKeys.size} 天`
+    })
+  );
+}
+
+function queryWeeklyActivityLeaderboard(activities) {
+  const { start, end } = getWeekRange();
+  const startKey = dayKey(start);
+  const endKey = dayKey(end);
+  const users = new Map();
+
+  activities
+    .filter((activity) => activity.activityDateKey >= startKey && activity.activityDateKey < endKey)
+    .forEach((activity) => mergeLeaderboardActivity(users, activity));
+
+  return toLeaderboardRows(
+    users,
+    (user) => user.dateKeys.size,
+    (user) => ({
+      unit: "天",
+      latestTraining: `${Math.round(user.totalMinutes)} 分钟`,
+      tag: "本周",
+      tagClass: "blue",
+      trainingCountText: `共 ${user.trainingCount} 次`
+    })
+  );
+}
+
+function queryProgressLeaderboard(activities) {
+  const todayKey = dayKey();
+  const users = new Map();
+
+  activities
+    .filter((activity) => activity.activityDateKey === todayKey)
+    .forEach((activity) => mergeLeaderboardActivity(users, activity));
+
+  return toLeaderboardRows(
+    users,
+    (user) => user.totalMinutes,
+    () => ({
+      unit: "分钟",
+      tag: "今日",
+      tagClass: "purple"
+    })
+  );
+}
+
+async function queryLeaderboardByType(groupId, type) {
+  if (type === "today") {
+    return queryTodayLeaderboard(groupId);
+  }
+
+  const activities = await queryRankingActivities(groupId);
+  if (type === "streak") return queryStreakLeaderboard(activities);
+  if (type === "activity") return queryWeeklyActivityLeaderboard(activities);
+  if (type === "progress") return queryProgressLeaderboard(activities);
+  return queryTodayLeaderboard(groupId);
+}
+
+async function getGroupLeaderboard(event) {
+  try {
+    const userId = getIdentity();
+    const groupId = String(event.groupId || "").trim();
+    const leaderboardType = getLeaderboardType(event.leaderboardType || event.rankType);
+    if (!groupId) throw new Error("缺少群组 ID");
+
+    await seedBaseData(userId);
+
+    const groupResult = await db.collection("groups").doc(groupId).get();
+    const group = groupResult.data;
+    if (!group || group.status !== "active") {
+      throw new Error("群组不存在或已停用");
+    }
+
+    const membership = await getActiveMembership(groupId, userId);
+    if (!membership) throw new Error("请先加入该群组");
+
+    const rankings = await queryLeaderboardByType(groupId, leaderboardType);
+
+    return {
+      success: true,
+      data: {
+        group: {
+          id: group._id,
+          name: group.name
+        },
+        leaderboard: getLeaderboardMeta(leaderboardType),
+        rankings,
+        updatedText: "每5分钟更新一次数据"
+      }
+    };
+  } catch (error) {
+    console.error("获取群组排行榜失败", error);
+    return { success: false, message: error.message || "获取群组排行榜失败" };
+  }
+}
+
 async function getGroupDetail(event) {
   try {
     const userId = getIdentity();
@@ -947,4 +1259,4 @@ async function getGroupDetail(event) {
   }
 }
 
-module.exports = { getMyGroups, getGroupDetail, searchGroups, applyToGroup };
+module.exports = { getMyGroups, getGroupDetail, getGroupLeaderboard, searchGroups, applyToGroup };

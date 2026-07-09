@@ -24,6 +24,10 @@ function getGroupDetail(groupId) {
   return callGroupFunction("getGroupDetail", { groupId });
 }
 
+function getGroupLeaderboard(groupId, leaderboardType) {
+  return callGroupFunction("getGroupLeaderboard", { groupId, leaderboardType });
+}
+
 function searchGroups(keyword) {
   return callGroupFunction("searchGroups", { keyword })
     .then((data) => Array.isArray(data) ? data : []);
@@ -33,4 +37,4 @@ function applyToGroup(groupId) {
   return callGroupFunction("applyToGroup", { groupId });
 }
 
-module.exports = { getMyGroups, getGroupDetail, searchGroups, applyToGroup };
+module.exports = { getMyGroups, getGroupDetail, getGroupLeaderboard, searchGroups, applyToGroup };

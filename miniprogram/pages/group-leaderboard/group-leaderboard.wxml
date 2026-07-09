@@ -1,0 +1,68 @@
+<view class="leaderboard-page">
+  <view class="leaderboard-nav" style="height: {{navHeight}}px; padding-top: {{navTop}}px;">
+    <button class="leaderboard-back" style="top: {{navTop}}px; height: {{navBarHeight}}px; width: {{navBarHeight}}px;" bindtap="onBackTap" aria-label="返回">
+      <view class="leaderboard-back-mark"></view>
+    </button>
+    <view class="leaderboard-nav-title" style="height: {{navBarHeight}}px; line-height: {{navBarHeight}}px;">{{leaderboardTitle}}</view>
+  </view>
+
+  <view class="hero">
+    <view class="hero-dots dot-a"></view>
+    <view class="hero-dots dot-b"></view>
+    <view class="hero-dots dot-c"></view>
+    <view class="hero-copy">
+      <view class="hero-title">{{groupName}}</view>
+      <view class="hero-subtitle">{{leaderboardSubtitle}}</view>
+    </view>
+
+    <view class="podium">
+      <view class="podium-card {{item.rankClass}} {{item.empty ? 'is-empty' : ''}}" wx:for="{{podium}}" wx:key="id">
+        <view class="crown" wx:if="{{item.rank === 1}}">♕</view>
+        <view class="podium-avatar-wrap">
+          <image wx:if="{{item.avatarUrl}}" class="podium-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+          <view wx:else class="podium-avatar fallback"><text>{{item.initial}}</text></view>
+          <view class="rank-badge">{{item.rank}}</view>
+        </view>
+        <view class="podium-name">{{item.name}}</view>
+        <view class="podium-score"><text>{{scoreIcon}}</text>{{item.valueText}}</view>
+        <view class="podium-unit">{{scoreLabel}}({{item.unit}})</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="rank-list panel" wx:if="{{remainingRankings.length > 0}}">
+    <view class="rank-row" wx:for="{{remainingRankings}}" wx:key="id">
+      <view class="rank-number">{{item.rank}}</view>
+      <image wx:if="{{item.avatarUrl}}" class="row-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+      <view wx:else class="row-avatar fallback"><text>{{item.initial}}</text></view>
+      <view class="row-main">
+        <view class="row-name-line">
+          <text class="row-name">{{item.name}}</text>
+          <text class="row-tag {{item.tagClass}}">{{item.tag}}</text>
+        </view>
+        <view class="row-meta">{{item.latestTraining}} · {{item.trainingCountText}}</view>
+      </view>
+      <view class="row-score"><text>{{scoreIcon}}</text>{{item.valueText}}</view>
+      <view class="row-arrow">›</view>
+    </view>
+  </view>
+
+  <view class="rank-list panel skeleton-list" wx:elif="{{loading}}">
+    <view class="rank-row skeleton-row" wx:for="{{placeholderRows}}" wx:key="index">
+      <view class="skeleton-line rank-number-placeholder"></view>
+      <view class="row-avatar skeleton-block"></view>
+      <view class="row-main">
+        <view class="skeleton-line row-name-placeholder"></view>
+        <view class="skeleton-line row-meta-placeholder"></view>
+      </view>
+      <view class="skeleton-line row-score-placeholder"></view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{!loading && rankings.length === 0}}">
+    <view class="empty-title">{{emptyTitle}}</view>
+    <view class="empty-copy">{{emptyCopy}}</view>
+  </view>
+
+  <view class="update-text" wx:if="{{!loading || rankings.length > 0}}">{{updatedText}}</view>
+</view>
