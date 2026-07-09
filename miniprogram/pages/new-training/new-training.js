@@ -1,4 +1,6 @@
 const { ACTION_TABLE, DEFAULT_ACTION_ICON_PATH } = require("../../data/actions");
+const actionService = require("../../services/actions");
+const { getCachedIconPath, isCloudFile } = require("../../services/action-icon-cache");
 const trainingService = require("../../services/trainings");
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
@@ -77,6 +79,53 @@ function formatRecordedAt(value) {
   return `${date.getFullYear()}年${pad(date.getMonth() + 1)}月${pad(date.getDate())}日 ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function getPersistentIconPath(action) {
+  if (action && isCloudFile(action.iconFileID)) {
+    return action.iconFileID;
+  }
+
+  if (action && isCloudFile(action.iconPath)) {
+    return action.iconPath;
+  }
+
+  return "";
+}
+
+function getReadonlyIconSource(action, actionIconMap) {
+  const savedIconPath = action && action.iconPath ? action.iconPath : "";
+  const libraryIconPath = actionIconMap && action && action.actionId !== undefined && action.actionId !== null
+    ? actionIconMap.get(String(action.actionId)) || ""
+    : "";
+
+  if (isCloudFile(savedIconPath)) {
+    return savedIconPath;
+  }
+
+  if (isCloudFile(libraryIconPath)) {
+    return libraryIconPath;
+  }
+
+  return savedIconPath || libraryIconPath || DEFAULT_ACTION_ICON_PATH;
+}
+
+async function loadActionIconMap() {
+  try {
+    const actions = await actionService.getActions();
+    const iconMap = new Map();
+
+    actions.forEach((action) => {
+      if (action && action.id !== undefined && action.id !== null) {
+        iconMap.set(String(action.id), getPersistentIconPath(action) || action.iconPath || "");
+      }
+    });
+
+    return iconMap;
+  } catch (error) {
+    console.warn("Load action icon map failed", error);
+    return new Map();
+  }
+}
+
 function createSet(values = {}) {
   return {
     uid: `set-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
@@ -116,6 +165,7 @@ function createTrainingAction(action) {
   const categoryId = getActionCategory(action);
   const isCardio = categoryId === "cardio";
   const sourceSets = Array.isArray(action.sets) && action.sets.length ? action.sets : [createSet({ weight: action.weight })];
+  const iconPath = action.iconPath || action.image || DEFAULT_ACTION_ICON_PATH;
 
   return refreshAction({
     uid: `${action.id || "action"}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -124,19 +174,21 @@ function createTrainingAction(action) {
     isCardio,
     durationMinutes: normalizeDuration(action.durationMinutes, isCardio ? 30 : 0),
     name: action.name || "未命名动作",
-    iconPath: action.iconPath || action.image || DEFAULT_ACTION_ICON_PATH,
+    iconPath,
+    iconFileID: getPersistentIconPath(action),
     expanded: false,
     sets: sourceSets.map((item) => (item.uid ? { ...item } : createSet(item)))
   });
 }
 
-function createReadonlyTrainingAction(action) {
+async function createReadonlyTrainingAction(action, actionIconMap) {
   const categoryId = getActionCategory(action);
   const isCardio = categoryId === "cardio";
 
   const sourceSets = Array.isArray(action.sets) && action.sets.length
     ? action.sets
     : (isCardio ? [createSet()] : []);
+  const iconSource = getReadonlyIconSource(action, actionIconMap);
 
   return refreshAction({
     uid: `saved-action-${action.order || action.actionId || Date.now()}`,
@@ -145,7 +197,8 @@ function createReadonlyTrainingAction(action) {
     isCardio,
     durationMinutes: normalizeDuration(action.durationMinutes, isCardio ? 30 : 0),
     name: action.name || "未命名动作",
-    iconPath: action.iconPath || DEFAULT_ACTION_ICON_PATH,
+    iconPath: await getCachedIconPath(iconSource),
+    iconFileID: isCloudFile(iconSource) ? iconSource : "",
     expanded: true,
     sets: sourceSets.map((set, index) => createSet({
       ...set,
@@ -209,8 +262,14 @@ Page({
     wx.showLoading({ title: "加载中", mask: true });
 
     try {
-      const training = await trainingService.getTrainingDetail(trainingId);
-      const actions = (Array.isArray(training.actions) ? training.actions : []).map(createReadonlyTrainingAction);
+      const [training, actionIconMap] = await Promise.all([
+        trainingService.getTrainingDetail(trainingId),
+        loadActionIconMap()
+      ]);
+      const actions = await Promise.all(
+        (Array.isArray(training.actions) ? training.actions : [])
+          .map((action) => createReadonlyTrainingAction(action, actionIconMap))
+      );
 
       this.setData({
         timer: training.timer || "00:00",
@@ -269,7 +328,7 @@ Page({
           id: action.id,
           categoryId: action.categoryId,
           name: action.name,
-          iconPath: action.iconPath,
+          iconPath: action.iconFileID || action.iconPath,
           durationMinutes: action.isCardio ? action.durationMinutes : null,
           sets: action.sets.map((set) => ({
             weight: set.weight,

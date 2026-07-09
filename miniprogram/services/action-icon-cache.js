@@ -94,14 +94,25 @@ async function getCachedIconPath(fileID) {
   return pendingDownloads[fileID];
 }
 
-function cacheActionIcons(actions) {
-  return Promise.all(actions.map(async (action) => ({
+async function cacheActionIcon(action) {
+  const sourceIconPath = isCloudFile(action && action.iconFileID)
+    ? action.iconFileID
+    : action && action.iconPath;
+  const iconFileID = isCloudFile(sourceIconPath) ? sourceIconPath : "";
+
+  return {
     ...action,
-    iconPath: await getCachedIconPath(action.iconPath)
-  })));
+    iconFileID,
+    iconPath: await getCachedIconPath(sourceIconPath)
+  };
+}
+
+function cacheActionIcons(actions) {
+  return Promise.all(actions.map(cacheActionIcon));
 }
 
 module.exports = {
   cacheActionIcons,
-  getCachedIconPath
+  getCachedIconPath,
+  isCloudFile
 };

@@ -69,11 +69,6 @@ const GROUPS = [
   }
 ];
 
-const TEST_MEMBERS = [
-  { key: "member-1", name: "测试有氧 1" },
-  { key: "member-2", name: "测试有氧 2" },
-  { key: "member-3", name: "测试有氧 3" }
-];
 
 let collectionsReady;
 
@@ -219,7 +214,20 @@ function isSeedRecord(record) {
       || record.isDemoActivity
       || record.isTestMember
       || record.isTestActivity
+      || record.isTestGoal
       || isSeedUserId(record.userId)
+    )
+  );
+}
+
+function isTestRecord(record) {
+  const userId = String((record && record.userId) || "");
+  return Boolean(
+    record && (
+      record.isTestMember
+      || record.isTestActivity
+      || record.isTestGoal
+      || userId.startsWith("test-")
     )
   );
 }
@@ -263,32 +271,6 @@ async function createIfMissing(collection, id, data) {
   }
 }
 
-async function setTestRecord(collection, id, data) {
-  await db.collection(collection).doc(id).set({ data });
-}
-
-function atTrainingTime(date, memberIndex) {
-  const value = new Date(date);
-  value.setHours(7 + memberIndex, 30, 0, 0);
-  return value;
-}
-
-function buildCardioAction() {
-  return {
-    actionId: "test-cardio-30",
-    categoryId: "cardio",
-    durationMinutes: 30,
-    name: "有氧训练",
-    iconPath: "",
-    order: 1,
-    setsCount: 0,
-    completedSets: 0,
-    plannedVolume: 0,
-    completedVolume: 0,
-    sets: []
-  };
-}
-
 function buildDefaultChallenge(group, now = new Date()) {
   if (!group || group.badgeType !== "challenge") return null;
 
@@ -312,100 +294,6 @@ function buildDefaultChallenge(group, now = new Date()) {
       updatedAt: now
     }
   };
-}
-
-async function seedGroupTestData(group, now = new Date()) {
-  const { start, end } = getWeekRange(now);
-  const today = new Date(now);
-  const targetValue = TEST_MEMBERS.length * 30;
-  const records = [
-    setTestRecord("group_goals", `${group._id}-${dayKey(start)}`, {
-      groupId: group._id,
-      title: "本周群目标",
-      slogan: "每天 30 分钟有氧",
-      metricType: "exercise_minutes",
-      targetValue,
-      currentValue: 0,
-      unit: "分钟",
-      checkedInMemberCount: 0,
-      eligibleMemberCount: TEST_MEMBERS.length,
-      periodStart: start,
-      periodEnd: end,
-      status: "active",
-      isTestGoal: true,
-      updatedAt: now
-    })
-  ];
-
-  TEST_MEMBERS.forEach((member, memberIndex) => {
-    const userId = `test-${group._id}-${member.key}`;
-    const profileSnapshot = { nickname: member.name, avatarUrl: "" };
-    const displayOrder = memberIndex - TEST_MEMBERS.length;
-
-    records.push(setTestRecord("group_members", `${group._id}-${userId}`, {
-      groupId: group._id,
-      userId,
-      role: "member",
-      status: "active",
-      profileSnapshot,
-      checkedInToday: true,
-      displayOrder,
-      joinedAt: start,
-      lastActiveAt: now,
-      lastCheckInAt: now,
-      lastCheckInDateKey: dayKey(today),
-      continuousCheckInDays: 1,
-      isTestMember: true
-    }));
-
-    const activityDateKey = dayKey(today);
-    const trainingTime = atTrainingTime(today, memberIndex);
-    const trainingId = `${group._id}-${userId}-${activityDateKey}-cardio-30`;
-
-    records.push(setTestRecord("trainings", trainingId, {
-      uuid: trainingId,
-      userId,
-      _openid: userId,
-      groupId: group._id,
-      title: "有氧 30 分钟",
-      timer: "30:00",
-      durationSeconds: 1800,
-      durationMinutes: 30,
-      categoryIds: ["cardio"],
-      status: "completed",
-      sharedToGroup: true,
-      actionsCount: 1,
-      setsCount: 0,
-      completedSets: 0,
-      plannedVolume: 0,
-      completedVolume: 0,
-      actions: [buildCardioAction()],
-      createdAt: trainingTime,
-      completedAt: trainingTime
-    }));
-
-    records.push(setTestRecord("group_daily_activities", trainingId, {
-      groupId: group._id,
-      userId,
-      activityDate: trainingTime,
-      activityDateKey,
-      displayOrder,
-      profileSnapshot,
-      trainingId,
-      trainingTitle: "有氧 30 分钟",
-      durationMinutes: 30,
-      categoryId: "cardio",
-      categoryName: "有氧",
-      tagClass: "blue",
-      checkInStatus: "done",
-      sharedToGroup: true,
-      isTestActivity: true,
-      stateText: "已完成",
-      createdAt: trainingTime
-    }));
-  });
-
-  await Promise.all(records);
 }
 
 async function seedBaseData(userId) {
@@ -626,60 +514,50 @@ async function queryCurrentGoal(groupId) {
   const result = await db.collection("group_goals")
     .where({ groupId, status: "active" })
     .orderBy("periodStart", "desc")
-    .limit(1)
+    .limit(20)
     .get();
-  return result.data[0] || null;
+  return (result.data || []).find((goal) => !isSeedRecord(goal)) || null;
 }
 
 async function queryGoalStats(groupId, goal) {
-  const _ = db.command;
-  const $ = db.command.aggregate;
   const weekRange = getWeekRange();
   const periodStart = toValidDate(goal && goal.periodStart, weekRange.start);
   const periodEnd = toValidDate(goal && goal.periodEnd, weekRange.end);
   const todayKey = dayKey();
   const periodStartKey = dayKey(periodStart);
   const periodEndKey = dayKey(periodEnd);
-  const currentValueQuery = db.collection("group_daily_activities")
-    .aggregate()
-    .match({
-      groupId,
-      activityDateKey: _.gte(periodStartKey).lt(periodEndKey),
-      sharedToGroup: true,
-      checkInStatus: "done"
-    })
-    .group({
-      _id: null,
-      totalMinutes: $.sum("$durationMinutes")
-    })
-    .end();
 
-  const [currentValueResult, checkInResult, memberCountResult] = await Promise.all([
-    currentValueQuery,
+  const [activityResult, memberResult] = await Promise.all([
     db.collection("group_daily_activities")
-      .aggregate()
-      .match({
+      .where({
         groupId,
-        activityDateKey: todayKey,
         sharedToGroup: true,
         checkInStatus: "done"
       })
-      .group({
-        _id: "$userId"
-      })
-      .end(),
+      .orderBy("activityDateKey", "desc")
+      .limit(1000)
+      .get(),
     db.collection("group_members")
       .where({ groupId, status: "active" })
-      .count()
+      .limit(1000)
+      .get()
   ]);
 
-  const valueStats = currentValueResult.list && currentValueResult.list[0];
-  const checkedInUsers = checkInResult.list || [];
+  const activities = (activityResult.data || []).filter(isRealActivity);
+  const periodActivities = activities.filter((activity) => (
+    activity.activityDateKey >= periodStartKey
+    && activity.activityDateKey < periodEndKey
+  ));
+  const checkedInUsers = new Set(activities
+    .filter((activity) => activity.activityDateKey === todayKey)
+    .map((activity) => activity.userId)
+    .filter(Boolean));
+  const realMembers = (memberResult.data || []).filter((member) => !isTestRecord(member));
 
   return {
-    currentValue: Number(valueStats && valueStats.totalMinutes) || 0,
-    checkedInMemberCount: checkedInUsers.length,
-    eligibleMemberCount: Number(memberCountResult.total) || 0
+    currentValue: periodActivities.reduce((sum, activity) => sum + (Number(activity.durationMinutes) || 0), 0),
+    checkedInMemberCount: checkedInUsers.size,
+    eligibleMemberCount: realMembers.length
   };
 }
 
@@ -692,22 +570,22 @@ async function queryAttendanceMembers(groupId) {
       .limit(100)
       .get(),
     db.collection("group_daily_activities")
-      .aggregate()
-      .match({
+      .where({
         groupId,
         activityDateKey: todayKey,
         sharedToGroup: true,
         checkInStatus: "done"
       })
-      .group({
-        _id: "$userId"
-      })
-      .end()
+      .limit(1000)
+      .get()
   ]);
 
   const today = new Date();
-  const checkedInUserIds = new Set((checkInResult.list || []).map((item) => item._id));
+  const checkedInUserIds = new Set((checkInResult.data || [])
+    .filter(isRealActivity)
+    .map((item) => item.userId));
   return memberResult.data
+    .filter((member) => !isTestRecord(member))
     .map((member) => ({
       ...member,
       checkedInToday: Boolean(
@@ -731,12 +609,9 @@ async function queryTodayActivities(groupId) {
     .orderBy("displayOrder", "asc")
     .limit(20)
     .get();
-  return result.data.sort((a, b) => {
-    if (Boolean(a.isTestActivity) !== Boolean(b.isTestActivity)) {
-      return a.isTestActivity ? -1 : 1;
-    }
-    return Number(a.displayOrder || 0) - Number(b.displayOrder || 0);
-  });
+  return (result.data || [])
+    .filter(isRealActivity)
+    .sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0));
 }
 
 async function queryActiveChallenge(groupId) {
@@ -926,7 +801,7 @@ async function queryTodayLeaderboard(groupId) {
   const users = new Map();
 
   (result.data || [])
-    .filter((activity) => activity.checkInStatus === "done")
+    .filter(isRealActivity)
     .forEach((activity) => {
       const userId = activity.userId;
       if (!userId) return;
