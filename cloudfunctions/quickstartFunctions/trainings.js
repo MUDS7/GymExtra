@@ -99,6 +99,32 @@ function getCategoryPresentation(categoryId) {
   return categories[categoryId] || { name: "训练", tagClass: "orange" };
 }
 
+function getCompletedActionMinutes(actions) {
+  return actions.reduce((sum, action) => (
+    sum + (action.durationMinutes !== null && action.completedSets > 0 ? action.durationMinutes : 0)
+  ), 0);
+}
+
+function dayKey(date = new Date()) {
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function addDays(date, offset) {
+  const value = new Date(date);
+  value.setDate(value.getDate() + offset);
+  return value;
+}
+
+function getNextContinuousCheckInDays(member, todayKey, yesterdayKey) {
+  const currentDays = Number(member && member.continuousCheckInDays) || 0;
+  const lastKey = member && member.lastCheckInDateKey;
+
+  if (lastKey === todayKey) return Math.max(currentDays, 1);
+  if (lastKey === yesterdayKey) return currentDays + 1;
+  return 1;
+}
+
 async function publishGroupActivity(training) {
   if (!training.groupId || !training.sharedToGroup) return;
 
@@ -118,14 +144,14 @@ async function publishGroupActivity(training) {
   const primaryCategory = training.categoryIds[0] || "";
   const category = getCategoryPresentation(primaryCategory);
   const now = new Date();
-  const pad = (value) => String(value).padStart(2, "0");
+  const activityDateKey = dayKey(now);
 
   await db.collection("group_daily_activities").doc(training.uuid).set({
     data: {
       groupId: training.groupId,
       userId: training.userId,
       activityDate: now,
-      activityDateKey: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+      activityDateKey,
       displayOrder: 0,
       profileSnapshot: {
         nickname: profile && profile.nickname ? profile.nickname : "群成员",
@@ -143,6 +169,21 @@ async function publishGroupActivity(training) {
       createdAt: now
     }
   });
+
+  try {
+    const memberId = `${training.groupId}-user-${crypto.createHash("sha1").update(String(training.userId)).digest("hex")}`;
+    const member = (await db.collection("group_members").doc(memberId).get()).data;
+    await db.collection("group_members").doc(memberId).update({
+      data: {
+        checkedInToday: true,
+        lastCheckInAt: now,
+        lastCheckInDateKey: activityDateKey,
+        continuousCheckInDays: getNextContinuousCheckInDays(member, activityDateKey, dayKey(addDays(now, -1)))
+      }
+    });
+  } catch (error) {
+    console.error("同步群成员打卡状态失败", error);
+  }
 }
 
 async function saveTraining(event) {
@@ -166,6 +207,7 @@ async function saveTraining(event) {
     const completedVolume = actions.reduce((sum, action) => sum + action.completedVolume, 0);
     const timer = String(event.timer || "00:00").trim().slice(0, 20);
     const durationSeconds = parseTimerSeconds(timer);
+    const completedActionMinutes = getCompletedActionMinutes(actions);
     const groupId = String(event.groupId || "").trim().slice(0, 100) || null;
     const id = createUuid();
     const data = {
@@ -176,7 +218,7 @@ async function saveTraining(event) {
       title: String(event.title || "").trim().slice(0, 100) || "未命名训练",
       timer,
       durationSeconds,
-      durationMinutes: Math.ceil(durationSeconds / 60),
+      durationMinutes: Math.max(Math.ceil(durationSeconds / 60), completedActionMinutes),
       categoryIds: [...new Set(actions.map((action) => action.categoryId).filter(Boolean))],
       status: "completed",
       sharedToGroup: Boolean(groupId && event.sharedToGroup),

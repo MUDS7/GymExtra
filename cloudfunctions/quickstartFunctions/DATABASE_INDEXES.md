@@ -10,10 +10,12 @@
 | `group_applications` | `groupId` 升序、`status` 升序、`createdAt` 降序 | 查询相关群组的申请列表 |
 | `group_goals` | `groupId` 升序、`status` 升序、`periodStart` 降序 | 查询当前群目标 |
 | `group_daily_activities` | `groupId` 升序、`activityDateKey` 降序、`sharedToGroup` 升序、`displayOrder` 升序 | 查询今日训练墙 |
+| `group_daily_activities` | `groupId` 升序、`activityDateKey` 降序、`sharedToGroup` 升序、`checkInStatus` 升序、`userId` 升序 | 统计今日打卡人数 |
+| `group_daily_activities` | `groupId` 升序、`sharedToGroup` 升序、`checkInStatus` 升序、`activityDateKey` 降序、`userId` 升序 | 查询连续打卡榜、本周活跃和进步榜 |
+| `group_daily_activities` | `groupId` 升序、`userId` 升序、`sharedToGroup` 升序、`checkInStatus` 升序、`activityDateKey` 降序 | 统计个人群挑战进度 |
 | `group_challenges` | `groupId` 升序、`status` 升序、`startAt` 降序 | 查询进行中的挑战 |
 | `challenge_progress` | `challengeId` 升序、`userId` 升序（唯一） | 查询个人挑战进度 |
 | `training_templates` | `groupId` 升序、`status` 升序、`displayOrder` 升序 | 查询群训练模板 |
-| `group_stat_snapshots` | `groupId` 升序、`periodType` 升序、`periodStart` 降序 | 查询最新排行榜快照 |
-| `trainings` | `groupId` 升序、`completedAt` 降序、`sharedToGroup` 升序 | 聚合群组训练记录 |
+| `trainings` | `groupId` 升序、`sharedToGroup` 升序、`status` 升序、`completedAt` 降序 | 聚合本周群组累计训练时间 |
 
 成员关系建议额外建立 `groupId + userId` 唯一索引。演示初始化数据使用确定性的文档 `_id`，重复调用不会重复插入。

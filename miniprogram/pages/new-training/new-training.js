@@ -178,6 +178,9 @@ Page({
     readonly: false,
     loading: false,
     recordedAt: "",
+    groupId: "",
+    groupName: "",
+    sharedToGroup: false,
     hourOptions: HOUR_OPTIONS,
     minuteOptions: MINUTE_OPTIONS
   },
@@ -185,6 +188,17 @@ Page({
   onLoad(options) {
     if (options.mode === "readonly" && options.id) {
       this.loadTrainingDetail(decodeURIComponent(options.id));
+      return;
+    }
+
+    const groupId = options.groupId ? decodeURIComponent(options.groupId) : "";
+    if (groupId) {
+      const groupName = options.groupName ? decodeURIComponent(options.groupName) : "";
+      this.setData({
+        groupId,
+        groupName,
+        sharedToGroup: options.sharedToGroup !== "0"
+      });
     }
   },
 
@@ -247,6 +261,8 @@ Page({
       await trainingService.saveTraining({
         title: this.data.title,
         timer: this.data.timer,
+        groupId: this.data.groupId,
+        sharedToGroup: this.data.sharedToGroup,
         actions: this.data.actions.map((action) => ({
           id: action.id,
           categoryId: action.categoryId,

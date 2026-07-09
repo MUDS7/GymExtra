@@ -30,21 +30,37 @@ Page({
     this.loadGroupDetail(groupId);
   },
 
-  async loadGroupDetail(groupId) {
+  onShow() {
+    if (this.detailLoaded && this.data.groupId) {
+      this.loadGroupDetail(this.data.groupId, { silent: true });
+    }
+  },
+
+  async loadGroupDetail(groupId, options = {}) {
+    if (!options.silent) {
+      this.setData({ loading: true });
+    }
+
     try {
       const detail = await groupService.getGroupDetail(groupId);
+      const challenge = detail.challenge || (
+        options.silent && this.pendingCheckInRefresh ? this.data.challenge : null
+      );
+      this.detailLoaded = true;
+      this.pendingCheckInRefresh = false;
       this.setData({
         groupName: detail.group.name,
         goal: detail.goal,
         attendance: detail.attendance || [],
         members: detail.members || [],
         rankings: detail.rankings,
-        challenge: detail.challenge,
+        challenge,
         templates: detail.templates || [],
         loading: false
       });
     } catch (error) {
       console.error("群组详情加载失败", error);
+      this.detailLoaded = true;
       this.setData({ loading: false });
       wx.showToast({ title: error.message || "详情加载失败", icon: "none" });
     }
@@ -55,7 +71,16 @@ Page({
   },
 
   onActionTap(event) {
-    const { name } = event.currentTarget.dataset;
+    const { action, name } = event.currentTarget.dataset;
+
+    if (action === "checkIn") {
+      this.pendingCheckInRefresh = true;
+      wx.navigateTo({
+        url: `/pages/new-training/new-training?groupId=${encodeURIComponent(this.data.groupId)}&groupName=${encodeURIComponent(this.data.groupName)}&sharedToGroup=1`
+      });
+      return;
+    }
+
     wx.showToast({ title: `${name} 待接入`, icon: "none" });
   },
 
