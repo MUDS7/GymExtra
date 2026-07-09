@@ -31,6 +31,26 @@
         <view class="progress-value"><text class="progress-number">{{goal.currentValue}}</text><text> / {{goal.targetValue}} {{goal.unit}}</text></view>
       </view>
     </view>
+    <view class="goal-card panel skeleton-card" wx:elif="{{loading}}">
+      <view class="goal-left">
+        <view class="goal-heading">
+          <view class="medal skeleton-block"></view>
+          <view class="skeleton-goal-copy">
+            <view class="skeleton-line title"></view>
+            <view class="skeleton-line copy"></view>
+          </view>
+        </view>
+        <view class="attendance-row">
+          <view wx:for="{{placeholderAttendance}}" wx:key="index" class="attendance-avatar skeleton-block"></view>
+        </view>
+        <view class="skeleton-line small"></view>
+      </view>
+      <view class="goal-progress">
+        <view class="ring skeleton-block"></view>
+        <view class="skeleton-line progress"></view>
+        <view class="skeleton-line value"></view>
+      </view>
+    </view>
 
     <view class="wall panel">
       <view class="section-head">
@@ -46,6 +66,16 @@
         </view>
         <view class="member-state {{item.stateClass}}">{{item.state}} <text class="state-icon">{{item.stateClass === 'done' ? '✓' : item.stateClass === 'missed' ? '!' : '–'}}</text></view>
       </view>
+      <block wx:if="{{loading && members.length === 0}}">
+        <view class="member-row skeleton-row" wx:for="{{placeholderMembers}}" wx:key="index">
+          <view class="avatar-placeholder skeleton-block"></view>
+          <view class="member-main">
+            <view class="skeleton-line member-name-placeholder"></view>
+            <view class="skeleton-line member-training-placeholder"></view>
+          </view>
+          <view class="skeleton-line member-state-placeholder"></view>
+        </view>
+      </block>
       <view class="empty-state" wx:if="{{!loading && members.length === 0}}">暂无今日训练</view>
     </view>
 
@@ -66,11 +96,32 @@
         <view class="rank-user"><text>@{{rankings.progress.name}}</text><text class="rank-chip">今日</text></view>
       </view>
     </view>
+    <view class="rank-grid" wx:elif="{{loading}}">
+      <view class="rank-card panel skeleton-card" wx:for="{{placeholderRankings}}" wx:key="index">
+        <view class="rank-title"><text class="rank-icon skeleton-block"></text><text class="skeleton-line rank-name-placeholder"></text></view>
+        <view class="skeleton-line rank-value-placeholder"></view>
+        <view class="skeleton-line rank-user-placeholder"></view>
+      </view>
+    </view>
 
     <view class="challenge panel" wx:if="{{challenge}}">
       <view class="challenge-copy"><view class="challenge-label">群挑战 <text>{{challenge.statusText}}</text></view><view class="challenge-title">{{challenge.title}}</view><view class="challenge-date">{{challenge.dateText}}</view></view>
       <view class="my-progress"><view>我的进度 <text>{{challenge.currentValue}} / {{challenge.targetValue}} {{challenge.unit}}</text></view><view class="progress-dots"><i wx:for="{{challenge.progressDots}}" wx:key="index" class="{{item ? '' : 'off'}}"></i></view></view>
       <view class="check-button" bindtap="onActionTap" data-action="checkIn" data-name="去打卡" role="button" aria-label="去打卡">去打卡</view>
+    </view>
+    <view class="challenge panel skeleton-card" wx:elif="{{loading}}">
+      <view class="challenge-copy">
+        <view class="skeleton-line challenge-label-placeholder"></view>
+        <view class="skeleton-line challenge-title-placeholder"></view>
+        <view class="skeleton-line challenge-date-placeholder"></view>
+      </view>
+      <view class="my-progress">
+        <view class="skeleton-line challenge-progress-placeholder"></view>
+        <view class="progress-dots">
+          <i wx:for="{{placeholderAttendance}}" wx:key="index" class="off"></i>
+        </view>
+      </view>
+      <view class="check-button skeleton-block"></view>
     </view>
 
     <view class="templates panel">
@@ -82,6 +133,17 @@
           <view class="template-copy"><view class="template-name">{{item.name}}</view><view class="template-meta">{{item.duration}} 分钟 · {{item.focus}}</view><view class="template-used">{{item.used}} 人使用</view></view>
           <view class="copy-button" bindtap="onActionTap" data-name="复制模板" role="button" aria-label="复制{{item.name}}">复制模板</view>
         </view>
+        <block wx:if="{{loading && templates.length === 0}}">
+          <view class="template-row skeleton-row" wx:for="{{placeholderTemplates}}" wx:key="index">
+            <view class="template-placeholder skeleton-block"></view>
+            <view class="template-copy">
+              <view class="skeleton-line template-name-placeholder"></view>
+              <view class="skeleton-line template-meta-placeholder"></view>
+              <view class="skeleton-line template-used-placeholder"></view>
+            </view>
+            <view class="copy-button skeleton-block"></view>
+          </view>
+        </block>
         <view class="empty-state" wx:if="{{!loading && templates.length === 0}}">暂无训练模板</view>
       </view>
     </view>

@@ -11,6 +11,10 @@ Page({
     goal: null,
     rankings: null,
     challenge: null,
+    placeholderAttendance: [1, 2, 3, 4, 5, 6],
+    placeholderMembers: [1, 2, 3],
+    placeholderRankings: [1, 2, 3],
+    placeholderTemplates: [1, 2],
     loading: true
   },
 

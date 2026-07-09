@@ -110,6 +110,10 @@ function dayKey(date = new Date()) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+function safeId(value) {
+  return crypto.createHash("sha1").update(String(value)).digest("hex");
+}
+
 function addDays(date, offset) {
   const value = new Date(date);
   value.setDate(value.getDate() + offset);
@@ -125,7 +129,7 @@ function getNextContinuousCheckInDays(member, todayKey, yesterdayKey) {
   return 1;
 }
 
-async function publishGroupActivity(training) {
+async function publishSingleGroupActivityLegacy(training) {
   if (!training.groupId || !training.sharedToGroup) return;
 
   try {
@@ -184,6 +188,108 @@ async function publishGroupActivity(training) {
   } catch (error) {
     console.error("同步群成员打卡状态失败", error);
   }
+}
+
+async function getActiveGroupMemberships(userId, fallbackGroupId) {
+  let memberships = [];
+
+  try {
+    const result = await db.collection("group_members")
+      .where({ userId, status: "active" })
+      .limit(100)
+      .get();
+    memberships = result.data || [];
+  } catch (error) {
+    console.error("查询用户群成员关系失败", error);
+  }
+
+  const byGroupId = new Map();
+  memberships.forEach((membership) => {
+    if (membership && membership.groupId) {
+      byGroupId.set(String(membership.groupId), membership);
+    }
+  });
+
+  if (fallbackGroupId && !byGroupId.has(String(fallbackGroupId))) {
+    byGroupId.set(String(fallbackGroupId), {
+      groupId: String(fallbackGroupId),
+      userId,
+      _id: `${fallbackGroupId}-user-${safeId(userId)}`
+    });
+  }
+
+  return Array.from(byGroupId.values());
+}
+
+async function publishGroupActivity(training) {
+  try {
+    await db.createCollection("group_daily_activities");
+  } catch (error) {
+    // Collection may already exist.
+  }
+
+  const memberships = await getActiveGroupMemberships(
+    training.userId,
+    training.groupId && training.sharedToGroup ? training.groupId : ""
+  );
+  if (!memberships.length) return;
+
+  let profile = null;
+  try {
+    profile = (await db.collection("users").doc(training.userId).get()).data;
+  } catch (error) {
+    // Missing profile should not block publishing the workout.
+  }
+
+  const primaryCategory = training.categoryIds[0] || "";
+  const category = getCategoryPresentation(primaryCategory);
+  const now = new Date();
+  const activityDateKey = dayKey(now);
+
+  await Promise.all(memberships.map(async (membership) => {
+    const groupId = String(membership.groupId || "");
+    if (!groupId) return;
+
+    const activityId = `${training.uuid}-${safeId(groupId).slice(0, 12)}`;
+    await db.collection("group_daily_activities").doc(activityId).set({
+      data: {
+        groupId,
+        userId: training.userId,
+        activityDate: now,
+        activityDateKey,
+        displayOrder: 0,
+        profileSnapshot: {
+          nickname: profile && profile.nickname ? profile.nickname : "群成员",
+          avatarUrl: profile && profile.avatarUrl ? profile.avatarUrl : ""
+        },
+        trainingId: training.uuid,
+        trainingTitle: training.title,
+        durationMinutes: training.durationMinutes,
+        categoryId: primaryCategory,
+        categoryName: category.name,
+        tagClass: category.tagClass,
+        checkInStatus: "done",
+        stateText: "已完成",
+        sharedToGroup: true,
+        createdAt: now
+      }
+    });
+
+    try {
+      const memberId = membership._id || `${groupId}-user-${safeId(training.userId)}`;
+      const member = (await db.collection("group_members").doc(memberId).get()).data;
+      await db.collection("group_members").doc(memberId).update({
+        data: {
+          checkedInToday: true,
+          lastCheckInAt: now,
+          lastCheckInDateKey: activityDateKey,
+          continuousCheckInDays: getNextContinuousCheckInDays(member, activityDateKey, dayKey(addDays(now, -1)))
+        }
+      });
+    } catch (error) {
+      console.error("同步群成员打卡状态失败", error);
+    }
+  }));
 }
 
 async function saveTraining(event) {

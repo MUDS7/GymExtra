@@ -236,6 +236,31 @@ function buildCardioAction() {
   };
 }
 
+function buildDefaultChallenge(group, now = new Date()) {
+  if (!group || group.badgeType !== "challenge") return null;
+
+  const { start, end } = getWeekRange(now);
+  return {
+    id: `${group._id}-checkin-7-days-${dayKey(start)}`,
+    data: {
+      groupId: group._id,
+      title: "7 天群打卡挑战",
+      description: "完成本周连续打卡，和群友一起把节奏稳住。",
+      metricType: "checkin_days",
+      targetValue: 7,
+      currentValue: 0,
+      unit: "天",
+      startAt: start,
+      endAt: end,
+      status: "active",
+      createdBy: "demo-owner",
+      isDemoChallenge: true,
+      createdAt: now,
+      updatedAt: now
+    }
+  };
+}
+
 async function seedGroupTestData(group, now = new Date()) {
   const { start, end } = getWeekRange(now);
   const today = new Date(now);
@@ -335,39 +360,46 @@ async function seedBaseData(userId) {
   const now = new Date();
   const userKey = safeId(userId);
 
-  await Promise.all(GROUPS.flatMap((group) => [
-    createIfMissing("groups", group._id, {
-      name: group.name,
-      description: group.description,
-      ownerId: group.ownerId,
-      avatarUrl: group.avatarUrl,
-      coverUrl: group.coverUrl,
-      theme: group.theme,
-      status: group.status,
-      visibility: group.visibility,
-      memberCount: group.memberCount,
-      maxMembers: group.maxMembers,
-      todayCheckInCount: group.todayCheckInCount,
-      badge: group.badge,
-      badgeType: group.badgeType,
-      sortOrder: group.sortOrder,
-      schemaVersion: 1,
-      createdAt: now,
-      updatedAt: now
-    }),
-    createIfMissing("group_members", `${group._id}-user-${userKey}`, {
-      groupId: group._id,
-      userId,
-      role: "member",
-      status: "active",
-      profileSnapshot: null,
-      joinedAt: now,
-      lastActiveAt: now,
-      lastCheckInAt: null,
-      continuousCheckInDays: 0,
-      isDemoMembership: true
-    })
-  ]));
+  await Promise.all(GROUPS.flatMap((group) => {
+    const records = [
+      createIfMissing("groups", group._id, {
+        name: group.name,
+        description: group.description,
+        ownerId: group.ownerId,
+        avatarUrl: group.avatarUrl,
+        coverUrl: group.coverUrl,
+        theme: group.theme,
+        status: group.status,
+        visibility: group.visibility,
+        memberCount: group.memberCount,
+        maxMembers: group.maxMembers,
+        todayCheckInCount: group.todayCheckInCount,
+        badge: group.badge,
+        badgeType: group.badgeType,
+        sortOrder: group.sortOrder,
+        schemaVersion: 1,
+        createdAt: now,
+        updatedAt: now
+      }),
+      createIfMissing("group_members", `${group._id}-user-${userKey}`, {
+        groupId: group._id,
+        userId,
+        role: "member",
+        status: "active",
+        profileSnapshot: null,
+        joinedAt: now,
+        lastActiveAt: now,
+        lastCheckInAt: null,
+        continuousCheckInDays: 0,
+        isDemoMembership: true
+      })
+    ];
+    const challenge = buildDefaultChallenge(group, now);
+    if (challenge) {
+      records.push(createIfMissing("group_challenges", challenge.id, challenge.data));
+    }
+    return records;
+  }));
 
   // 榜单和训练墙读取真实数据库记录，不再为详情页写入测试打卡数据。
 }
@@ -548,33 +580,21 @@ async function queryGoalStats(groupId, goal) {
   const periodStart = toValidDate(goal && goal.periodStart, weekRange.start);
   const periodEnd = toValidDate(goal && goal.periodEnd, weekRange.end);
   const todayKey = dayKey();
-  const currentValueQuery = goal && goal.isTestGoal
-    ? db.collection("group_daily_activities")
-      .aggregate()
-      .match({
-        groupId,
-        activityDateKey: todayKey,
-        sharedToGroup: true,
-        checkInStatus: "done"
-      })
-      .group({
-        _id: null,
-        totalMinutes: $.sum("$durationMinutes")
-      })
-      .end()
-    : db.collection("trainings")
-      .aggregate()
-      .match({
-        groupId,
-        sharedToGroup: true,
-        status: "completed",
-        completedAt: _.gte(periodStart).lt(periodEnd)
-      })
-      .group({
-        _id: null,
-        totalMinutes: $.sum("$durationMinutes")
-      })
-      .end();
+  const periodStartKey = dayKey(periodStart);
+  const periodEndKey = dayKey(periodEnd);
+  const currentValueQuery = db.collection("group_daily_activities")
+    .aggregate()
+    .match({
+      groupId,
+      activityDateKey: _.gte(periodStartKey).lt(periodEndKey),
+      sharedToGroup: true,
+      checkInStatus: "done"
+    })
+    .group({
+      _id: null,
+      totalMinutes: $.sum("$durationMinutes")
+    })
+    .end();
 
   const [currentValueResult, checkInResult, memberCountResult] = await Promise.all([
     currentValueQuery,
