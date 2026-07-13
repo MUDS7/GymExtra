@@ -194,6 +194,14 @@ exports.main = async (event, context) => {
       return await userStatsService.getUserStats();
     case "getMyGroups":
       return await groupService.getMyGroups();
+    case "getManagedGroups":
+      return await groupService.getManagedGroups();
+    case "createGroup":
+      return await groupService.createGroup(event);
+    case "getManagedGroupDetail":
+      return await groupService.getManagedGroupDetail(event);
+    case "setManagedGroupGoal":
+      return await groupService.setManagedGroupGoal(event);
     case "searchGroups":
       return await groupService.searchGroups(event);
     case "applyToGroup":

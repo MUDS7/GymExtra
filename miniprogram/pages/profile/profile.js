@@ -34,7 +34,7 @@ Page({
         items: [
           { label: "训练趋势", desc: "查看你的进步曲线", icon: "icon-trending-up", tone: "energy" },
           { label: "训练日历", desc: "按月查看打卡记录", icon: "icon-calendar", tone: "cool" },
-          { label: "我的模板", desc: "快速复用常用训练", icon: "icon-award", tone: "gold" }
+          { label: "我的群组", desc: "管理我创建的群组", icon: "icon-users", tone: "gold" }
         ]
       },
       {
@@ -93,6 +93,11 @@ Page({
 
   onActionTap(event) {
     const { name } = event.currentTarget.dataset;
+
+    if (name === "我的群组") {
+      wx.navigateTo({ url: "/pages/group-management/group-management" });
+      return;
+    }
 
     wx.showToast({
       title: `${name} 待接入`,

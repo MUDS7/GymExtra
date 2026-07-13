@@ -4,6 +4,11 @@ const crypto = require("crypto");
 const db = cloud.database();
 const DEFAULT_WEEKLY_GOAL_MINUTES = 1000;
 const TODAY_WALL_DISPLAY_LIMIT = 5;
+const GROUP_GOAL_PRESETS = [
+  { id: "weekly-300", title: "每周训练 300 分钟", description: "轻量训练计划", targetValue: 300 },
+  { id: "weekly-600", title: "每周训练 600 分钟", description: "进阶训练计划", targetValue: 600 },
+  { id: "weekly-1000", title: "每周训练 1000 分钟", description: "高强度训练计划", targetValue: 1000 }
+];
 const COLLECTIONS = [
   "groups",
   "group_members",
@@ -28,7 +33,6 @@ const GROUPS = [
     theme: "energy",
     status: "active",
     visibility: "public",
-    memberCount: 128,
     maxMembers: 500,
     todayCheckInCount: 36,
     badge: "今日打卡 · 36人",
@@ -45,7 +49,6 @@ const GROUPS = [
     theme: "cool",
     status: "active",
     visibility: "public",
-    memberCount: 253,
     maxMembers: 500,
     todayCheckInCount: 42,
     badge: "连续 12 天",
@@ -62,7 +65,6 @@ const GROUPS = [
     theme: "vital",
     status: "active",
     visibility: "public",
-    memberCount: 87,
     maxMembers: 300,
     todayCheckInCount: 15,
     badge: "活动进行中",
@@ -360,7 +362,6 @@ async function seedBaseData(userId) {
         theme: group.theme,
         status: group.status,
         visibility: group.visibility,
-        memberCount: group.memberCount,
         maxMembers: group.maxMembers,
         todayCheckInCount: group.todayCheckInCount,
         badge: group.badge,
@@ -433,6 +434,227 @@ async function getMyGroups() {
   } catch (error) {
     console.error("获取群组列表失败", error);
     return { success: false, message: error.message || "获取群组列表失败" };
+  }
+}
+
+async function getManagedGroups() {
+  try {
+    const userId = getIdentity();
+    await ensureCollections();
+
+    const result = await db.collection("groups")
+      .where({ ownerId: userId })
+      .limit(100)
+      .get();
+    const groups = result.data || [];
+    const memberCounts = await Promise.all(groups.map(async (group) => {
+      const countResult = await db.collection("group_members")
+        .where({ groupId: group._id, status: "active" })
+        .count();
+      return Number(countResult.total) || 0;
+    }));
+
+    return {
+      success: true,
+      data: groups
+        .map((group, index) => ({
+          id: group._id,
+          name: group.name || "未命名群组",
+          description: group.description || "暂无群组简介",
+          members: memberCounts[index],
+          maxMembers: Number(group.maxMembers) || 0,
+          status: group.status === "inactive" ? "已停用" : "正常",
+          visibility: group.visibility === "private" ? "私密" : "公开",
+          tone: group.theme || "energy",
+          createdAt: group.createdAt || null,
+          sortOrder: Number(group.sortOrder) || 0
+        }))
+        .sort((a, b) => b.sortOrder - a.sortOrder)
+    };
+  } catch (error) {
+    console.error("获取我创建的群组失败", error);
+    return { success: false, message: error.message || "获取我创建的群组失败" };
+  }
+}
+
+async function createGroup(event) {
+  try {
+    const userId = getIdentity();
+    const name = String(event.name || "").trim();
+    if (!name) throw new Error("请输入群组名");
+    if (name.length > 30) throw new Error("群组名不能超过 30 个字符");
+
+    await ensureCollections();
+
+    const [sameNameResult, sameIdResult] = await Promise.all([
+      db.collection("groups").where({ name }).limit(1).get(),
+      db.collection("groups").doc(`group-${safeId(name.toLowerCase())}`).get().catch(() => null)
+    ]);
+    if ((sameNameResult.data && sameNameResult.data.length > 0) || sameIdResult) {
+      return { success: false, message: "群组名已存在，请重新输入群组名" };
+    }
+
+    const now = new Date();
+    const groupId = `group-${safeId(name.toLowerCase())}`;
+    await db.collection("groups").doc(groupId).set({
+      data: {
+        name,
+        description: "暂无群组简介",
+        ownerId: userId,
+        avatarUrl: "",
+        coverUrl: "",
+        theme: "cool",
+        status: "active",
+        visibility: "public",
+        maxMembers: 500,
+        todayCheckInCount: 0,
+        badge: "新创建的群组",
+        badgeType: "checkin",
+        sortOrder: now.getTime(),
+        schemaVersion: 1,
+        createdAt: now,
+        updatedAt: now
+      }
+    });
+    await db.collection("group_members").doc(`${groupId}-user-${safeId(userId)}`).set({
+      data: {
+        groupId,
+        userId,
+        role: "owner",
+        status: "active",
+        profileSnapshot: null,
+        joinedAt: now,
+        lastActiveAt: now,
+        lastCheckInAt: null,
+        continuousCheckInDays: 0
+      }
+    });
+
+    return { success: true, data: { id: groupId, name } };
+  } catch (error) {
+    console.error("创建群组失败", error);
+    return { success: false, message: error.message || "创建群组失败" };
+  }
+}
+
+async function getOwnedGroup(groupId, userId) {
+  const result = await db.collection("groups").doc(groupId).get();
+  const group = result.data;
+  if (!group || group.ownerId !== userId) {
+    throw new Error("无权管理该群组");
+  }
+  return group;
+}
+
+function toManagementMember(member, profile) {
+  const name = getProfileName(
+    member && member.profileSnapshot,
+    getProfileName(profile, "群成员")
+  );
+  return {
+    id: member._id,
+    name,
+    initial: String(name || "群").slice(0, 1),
+    avatarUrl: (member.profileSnapshot && member.profileSnapshot.avatarUrl) || (profile && profile.avatarUrl) || "",
+    roleText: member.role === "owner" ? "群主" : "成员"
+  };
+}
+
+function toManagementApplication(application, profile) {
+  const name = getProfileName(profile, "群成员");
+  return {
+    id: application._id,
+    name,
+    initial: String(name || "群").slice(0, 1),
+    avatarUrl: (profile && profile.avatarUrl) || "",
+    statusText: "申请加入"
+  };
+}
+
+async function getManagedGroupDetail(event) {
+  try {
+    const userId = getIdentity();
+    const groupId = String(event.groupId || "").trim();
+    if (!groupId) throw new Error("缺少群组 ID");
+
+    await ensureCollections();
+    const group = await getOwnedGroup(groupId, userId);
+    const [memberResult, applicationResult, goalResult] = await Promise.all([
+      db.collection("group_members").where({ groupId, status: "active" }).limit(100).get(),
+      db.collection("group_applications").where({ groupId }).limit(100).get(),
+      db.collection("group_goals").where({ groupId, status: "active" }).limit(20).get()
+    ]);
+    const members = (memberResult.data || []).sort((a, b) => (
+      new Date(b.joinedAt || 0).getTime() - new Date(a.joinedAt || 0).getTime()
+    ));
+    const applications = (applicationResult.data || [])
+      .filter((item) => item.status === "pending")
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    const profiles = await queryMemberProfiles([
+      ...members.map((item) => item.userId),
+      ...applications.map((item) => item.userId)
+    ]);
+    const activeGoal = (goalResult.data || []).find((goal) => !isSeedRecord(goal)) || null;
+
+    return {
+      success: true,
+      data: {
+        group: { id: group._id, name: group.name || "群组管理" },
+        goalPresets: GROUP_GOAL_PRESETS.map((preset) => ({
+          ...preset,
+          isConfigured: Boolean(activeGoal && activeGoal.presetId === preset.id),
+          buttonText: activeGoal && activeGoal.presetId === preset.id ? "已设置" : "设置"
+        })),
+        members: members.map((member) => toManagementMember(member, profiles.get(member.userId))),
+        applications: applications.map((item) => toManagementApplication(item, profiles.get(item.userId)))
+      }
+    };
+  } catch (error) {
+    console.error("获取群组管理详情失败", error);
+    return { success: false, message: error.message || "获取群组管理详情失败" };
+  }
+}
+
+async function setManagedGroupGoal(event) {
+  try {
+    const userId = getIdentity();
+    const groupId = String(event.groupId || "").trim();
+    const presetId = String(event.presetId || "").trim();
+    const preset = GROUP_GOAL_PRESETS.find((item) => item.id === presetId);
+    if (!groupId) throw new Error("缺少群组 ID");
+    if (!preset) throw new Error("无效的训练目标");
+
+    await ensureCollections();
+    await getOwnedGroup(groupId, userId);
+    const { start, end } = getWeekRange();
+    const goalId = `managed-goal-${safeId(groupId)}-${preset.id}-${dayKey(start)}`;
+    const now = new Date();
+
+    await db.collection("group_goals")
+      .where({ groupId, status: "active" })
+      .update({ data: { status: "inactive", updatedAt: now } });
+    await db.collection("group_goals").doc(goalId).set({
+      data: {
+        groupId,
+        presetId: preset.id,
+        title: preset.title,
+        slogan: preset.description,
+        targetValue: preset.targetValue,
+        unit: "分钟",
+        periodStart: start,
+        periodEnd: end,
+        status: "active",
+        isDefaultGoal: false,
+        createdBy: userId,
+        createdAt: now,
+        updatedAt: now
+      }
+    });
+
+    return { success: true, data: { presetId: preset.id } };
+  } catch (error) {
+    console.error("设置群目标失败", error);
+    return { success: false, message: error.message || "设置群目标失败" };
   }
 }
 
@@ -1247,4 +1469,14 @@ async function getGroupDetail(event) {
   }
 }
 
-module.exports = { getMyGroups, getGroupDetail, getGroupLeaderboard, searchGroups, applyToGroup };
+module.exports = {
+  getMyGroups,
+  getManagedGroups,
+  createGroup,
+  getManagedGroupDetail,
+  setManagedGroupGoal,
+  getGroupDetail,
+  getGroupLeaderboard,
+  searchGroups,
+  applyToGroup
+};

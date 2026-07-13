@@ -1,0 +1,64 @@
+<view class="detail-page">
+  <view class="page-heading">
+    <view class="page-title">{{groupName}}</view>
+    <view class="page-subtitle">群组管理</view>
+  </view>
+
+  <view class="tabs">
+    <view class="tab {{activeTab === 'goals' ? 'active' : ''}}" bindtap="onTabTap" data-tab="goals">群目标</view>
+    <view class="tab {{activeTab === 'members' ? 'active' : ''}}" bindtap="onTabTap" data-tab="members">群成员</view>
+    <view class="tab {{activeTab === 'applications' ? 'active' : ''}}" bindtap="onTabTap" data-tab="applications">申请列表</view>
+  </view>
+
+  <view class="loading-state" wx:if="{{loading}}">正在加载管理信息…</view>
+
+  <view wx:elif="{{activeTab === 'goals'}}" class="tab-panel">
+    <view class="section-heading">
+      <view class="section-title">预设训练目标</view>
+      <view class="section-copy">每周全员累计训练时长</view>
+    </view>
+    <view class="goal-list">
+      <view class="goal-card" wx:for="{{goalPresets}}" wx:key="id">
+        <view class="goal-icon"><view class="lucide-icon icon-zap"></view></view>
+        <view class="goal-content">
+          <view class="goal-title">{{item.title}}</view>
+          <view class="goal-description">{{item.description}}</view>
+        </view>
+        <button
+          class="goal-action {{item.isConfigured ? 'configured' : ''}}"
+          loading="{{settingGoalId === item.id}}"
+          disabled="{{item.isConfigured || settingGoalId}}"
+          bindtap="onSetGoal"
+          data-preset-id="{{item.id}}"
+          data-configured="{{item.isConfigured}}"
+        >{{item.buttonText}}</button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:elif="{{activeTab === 'members'}}" class="tab-panel">
+    <view class="section-heading"><view class="section-title">群成员</view></view>
+    <view class="person-list" wx:if="{{members.length > 0}}">
+      <view class="person-row" wx:for="{{members}}" wx:key="id">
+        <image wx:if="{{item.avatarUrl}}" class="person-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="person-avatar avatar-fallback">{{item.initial}}</view>
+        <view class="person-name">{{item.name}}</view>
+        <view class="person-tag">{{item.roleText}}</view>
+      </view>
+    </view>
+    <view class="empty-state" wx:else>暂无群成员</view>
+  </view>
+
+  <view wx:elif="{{activeTab === 'applications'}}" class="tab-panel">
+    <view class="section-heading"><view class="section-title">申请列表</view></view>
+    <view class="person-list" wx:if="{{applications.length > 0}}">
+      <view class="person-row" wx:for="{{applications}}" wx:key="id">
+        <image wx:if="{{item.avatarUrl}}" class="person-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="person-avatar avatar-fallback">{{item.initial}}</view>
+        <view class="person-name">{{item.name}}</view>
+        <view class="apply-tag">{{item.statusText}}</view>
+      </view>
+    </view>
+    <view class="empty-state" wx:else>暂无待处理申请</view>
+  </view>
+</view>

@@ -20,6 +20,22 @@ function getMyGroups() {
   return callGroupFunction("getMyGroups").then((data) => Array.isArray(data) ? data : []);
 }
 
+function getManagedGroups() {
+  return callGroupFunction("getManagedGroups").then((data) => Array.isArray(data) ? data : []);
+}
+
+function createGroup(name) {
+  return callGroupFunction("createGroup", { name });
+}
+
+function getManagedGroupDetail(groupId) {
+  return callGroupFunction("getManagedGroupDetail", { groupId });
+}
+
+function setManagedGroupGoal(groupId, presetId) {
+  return callGroupFunction("setManagedGroupGoal", { groupId, presetId });
+}
+
 function getGroupDetail(groupId) {
   return callGroupFunction("getGroupDetail", { groupId });
 }
@@ -37,4 +53,14 @@ function applyToGroup(groupId) {
   return callGroupFunction("applyToGroup", { groupId });
 }
 
-module.exports = { getMyGroups, getGroupDetail, getGroupLeaderboard, searchGroups, applyToGroup };
+module.exports = {
+  getMyGroups,
+  getManagedGroups,
+  createGroup,
+  getManagedGroupDetail,
+  setManagedGroupGoal,
+  getGroupDetail,
+  getGroupLeaderboard,
+  searchGroups,
+  applyToGroup
+};

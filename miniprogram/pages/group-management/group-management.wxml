@@ -1,0 +1,60 @@
+<view class="management-page">
+  <view class="page-heading">
+    <view class="page-title">群组管理</view>
+    <view class="page-subtitle">仅展示由你创建的群组</view>
+  </view>
+
+  <view class="loading-state" wx:if="{{loading}}">正在加载群组…</view>
+
+  <view class="group-list" wx:elif="{{groups.length > 0}}">
+    <view class="group-card" wx:for="{{groups}}" wx:key="id" bindtap="onGroupTap" data-id="{{item.id}}" data-name="{{item.name}}">
+      <view class="group-icon {{item.tone}}">
+        <view class="lucide-icon icon-users"></view>
+      </view>
+      <view class="group-content">
+        <view class="group-title-row">
+          <view class="group-name">{{item.name}}</view>
+        </view>
+        <view class="group-meta">
+          <text>{{item.members}} 名成员</text>
+          <text wx:if="{{item.maxMembers > 0}}">/ {{item.maxMembers}} 人</text>
+          <text class="meta-divider">·</text>
+          <text>{{item.visibility}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <view class="empty-icon"><view class="lucide-icon icon-users"></view></view>
+    <view class="empty-title">还没有创建群组</view>
+    <view class="empty-copy">你创建的群组会显示在这里</view>
+  </view>
+
+  <button class="create-group-button" bindtap="openCreateModal">
+    <view class="lucide-icon icon-plus"></view>
+    <text>创建群组</text>
+  </button>
+</view>
+
+<view wx:if="{{showCreateModal}}" class="create-modal-mask">
+  <view class="create-modal" role="dialog" aria-label="创建群组">
+    <view class="create-modal-title">创建群组</view>
+    <view class="form-label">群组名</view>
+    <input
+      class="group-name-input"
+      value="{{newGroupName}}"
+      placeholder="请输入群组名"
+      placeholder-class="input-placeholder"
+      maxlength="30"
+      focus="{{showCreateModal}}"
+      bindinput="onGroupNameInput"
+      bindconfirm="confirmCreateGroup"
+      confirm-type="done"
+    />
+    <view class="create-modal-actions">
+      <button class="modal-button cancel-button" disabled="{{creating}}" bindtap="closeCreateModal">取消</button>
+      <button class="modal-button confirm-button" loading="{{creating}}" disabled="{{creating}}" bindtap="confirmCreateGroup">确认</button>
+    </view>
+  </view>
+</view>
