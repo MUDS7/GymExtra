@@ -1,4 +1,5 @@
 const groupService = require("../../services/groups");
+const { getTrainingDrafts } = require("../../utils/training-drafts");
 const TODAY_WALL_DISPLAY_LIMIT = 5;
 
 function getTrainingTags(member) {
@@ -132,6 +133,18 @@ Page({
     const { action, name, rankType } = event.currentTarget.dataset;
 
     if (action === "checkIn") {
+      const draft = getTrainingDrafts()
+        .filter((item) => item && item.draftId)
+        .slice()
+        .sort((left, right) => Number(right.updatedAt || right.createdAt || 0) - Number(left.updatedAt || left.createdAt || 0))[0];
+
+      if (draft && draft.draftId) {
+        wx.navigateTo({
+          url: `/pages/new-training/new-training?mode=draft&draftId=${encodeURIComponent(draft.draftId)}`
+        });
+        return;
+      }
+
       this.pendingCheckInRefresh = true;
       wx.navigateTo({
         url: `/pages/new-training/new-training?groupId=${encodeURIComponent(this.data.groupId)}&groupName=${encodeURIComponent(this.data.groupName)}&sharedToGroup=1`

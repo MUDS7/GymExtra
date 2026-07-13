@@ -1,8 +1,14 @@
 const groupService = require("../../services/groups");
 
+function formatGroupId(groupId) {
+  const id = String(groupId || "");
+  return id.length > 10 ? `${id.slice(0, 10)}...` : id;
+}
+
 Page({
   data: {
     groupId: "",
+    groupIdDisplay: "",
     groupName: "群组管理",
     activeTab: "goals",
     goalPresets: [],
@@ -13,8 +19,10 @@ Page({
   },
 
   onLoad(options) {
+    const groupId = String(options.id || "");
     this.setData({
-      groupId: String(options.id || ""),
+      groupId,
+      groupIdDisplay: formatGroupId(groupId),
       groupName: options.name ? decodeURIComponent(options.name) : "群组管理"
     });
   },
@@ -30,7 +38,10 @@ Page({
       const detail = await groupService.getManagedGroupDetail(this.data.groupId);
       const members = Array.isArray(detail.members) ? detail.members : [];
       const applications = Array.isArray(detail.applications) ? detail.applications : [];
+      const groupId = (detail.group && detail.group.id) || this.data.groupId;
       this.setData({
+        groupId,
+        groupIdDisplay: formatGroupId(groupId),
         groupName: (detail.group && detail.group.name) || this.data.groupName,
         goalPresets: Array.isArray(detail.goalPresets) ? detail.goalPresets : [],
         members,
@@ -50,6 +61,15 @@ Page({
   onTabTap(event) {
     const { tab } = event.currentTarget.dataset;
     if (tab) this.setData({ activeTab: tab });
+  },
+
+  onCopyGroupId() {
+    if (!this.data.groupId) return;
+    wx.setClipboardData({
+      data: this.data.groupId,
+      success: () => wx.showToast({ title: "群号已复制", icon: "success" }),
+      fail: () => wx.showToast({ title: "复制失败，请重试", icon: "none" })
+    });
   },
 
   async onSetGoal(event) {

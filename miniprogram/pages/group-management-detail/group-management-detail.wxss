@@ -7,7 +7,14 @@
 
 .page-heading { margin-bottom: 34rpx; }
 .page-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 44rpx; line-height: 1.2; font-weight: 900; }
-.page-subtitle { margin-top: 12rpx; color: #6B6F76; font-size: 25rpx; }
+.group-id-row { min-width: 0; margin-top: 12rpx; display: flex; align-items: center; gap: 10rpx; color: #6B6F76; font-size: 25rpx; line-height: 1.2; }
+.group-id-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-id-copy { width: 46rpx; height: 46rpx; flex: 0 0 46rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #F1F2F3; }
+.group-id-copy:active { background: #E4E6E8; }
+.copy-icon { position: relative; width: 26rpx; height: 26rpx; }
+.copy-icon-back, .copy-icon-front { position: absolute; box-sizing: border-box; width: 18rpx; height: 18rpx; border: 2rpx solid #858A91; border-radius: 4rpx; background: #F1F2F3; }
+.copy-icon-back { top: 2rpx; left: 2rpx; }
+.copy-icon-front { right: 2rpx; bottom: 2rpx; }
 
 .tabs {
   height: 88rpx;

@@ -1,7 +1,15 @@
 <view class="detail-page">
   <view class="page-heading">
     <view class="page-title">{{groupName}}</view>
-    <view class="page-subtitle">群组管理</view>
+    <view class="group-id-row">
+      <text class="group-id-text">群号：{{groupIdDisplay}}</text>
+      <view class="group-id-copy" bindtap="onCopyGroupId" role="button" aria-label="复制群号">
+        <view class="copy-icon" aria-hidden="true">
+          <view class="copy-icon-back"></view>
+          <view class="copy-icon-front"></view>
+        </view>
+      </view>
+    </view>
   </view>
 
   <view class="tabs">
