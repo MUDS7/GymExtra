@@ -286,10 +286,11 @@ async function createIfMissing(collection, id, data) {
   }
 }
 
-function buildDefaultChallenge(group, now = new Date()) {
+function buildDefaultChallenge(group, now = new Date(), options = {}) {
   if (!group) return null;
 
   const { start, end } = getWeekRange(now);
+  const isDemoChallenge = Boolean(options.isDemoChallenge);
   return {
     id: `${group._id}-checkin-7-days-${dayKey(start)}`,
     data: {
@@ -303,12 +304,23 @@ function buildDefaultChallenge(group, now = new Date()) {
       startAt: start,
       endAt: end,
       status: "active",
-      createdBy: "demo-owner",
-      isDemoChallenge: true,
+      createdBy: group.ownerId || "system",
+      ...(isDemoChallenge ? { isDemoChallenge: true } : {}),
       createdAt: now,
       updatedAt: now
     }
   };
+}
+
+async function ensureDefaultChallenge(group, now = new Date()) {
+  const activeChallenge = await queryActiveChallenge(group._id);
+  if (activeChallenge) return activeChallenge;
+
+  const challenge = buildDefaultChallenge(group, now);
+  if (!challenge) return null;
+
+  await createIfMissing("group_challenges", challenge.id, challenge.data);
+  return { _id: challenge.id, ...challenge.data };
 }
 
 function isWeeklyCheckInChallenge(challenge) {
@@ -384,7 +396,7 @@ async function seedBaseData(userId) {
         isDemoMembership: true
       })
     ];
-    const challenge = buildDefaultChallenge(group, now);
+    const challenge = buildDefaultChallenge(group, now, { isDemoChallenge: true });
     if (challenge) {
       records.push(createIfMissing("group_challenges", challenge.id, challenge.data));
     }
@@ -496,25 +508,30 @@ async function createGroup(event) {
 
     const now = new Date();
     const groupId = `group-${safeId(name.toLowerCase())}`;
+    const group = {
+      _id: groupId,
+      name,
+      description: "暂无群组简介",
+      ownerId: userId,
+      avatarUrl: "",
+      coverUrl: "",
+      theme: "cool",
+      status: "active",
+      visibility: "public",
+      maxMembers: 500,
+      todayCheckInCount: 0,
+      badge: "新创建的群组",
+      badgeType: "checkin",
+      sortOrder: now.getTime(),
+      schemaVersion: 1,
+      createdAt: now,
+      updatedAt: now
+    };
+    const defaultChallenge = buildDefaultChallenge(group, now);
+    const { _id, ...groupData } = group;
+
     await db.collection("groups").doc(groupId).set({
-      data: {
-        name,
-        description: "暂无群组简介",
-        ownerId: userId,
-        avatarUrl: "",
-        coverUrl: "",
-        theme: "cool",
-        status: "active",
-        visibility: "public",
-        maxMembers: 500,
-        todayCheckInCount: 0,
-        badge: "新创建的群组",
-        badgeType: "checkin",
-        sortOrder: now.getTime(),
-        schemaVersion: 1,
-        createdAt: now,
-        updatedAt: now
-      }
+      data: groupData
     });
     await db.collection("group_members").doc(`${groupId}-user-${safeId(userId)}`).set({
       data: {
@@ -529,6 +546,11 @@ async function createGroup(event) {
         continuousCheckInDays: 0
       }
     });
+    if (defaultChallenge) {
+      await db.collection("group_challenges").doc(defaultChallenge.id).set({
+        data: defaultChallenge.data
+      });
+    }
 
     return { success: true, data: { id: groupId, name } };
   } catch (error) {
@@ -1409,21 +1431,21 @@ async function getGroupDetail(event) {
     const [
       goal,
       members,
-      challenge,
+      activeChallenge,
       templates,
       rankings
     ] = await Promise.all([
       queryCurrentGoal(groupId),
       queryTodayWallMembers(groupId),
-      queryActiveChallenge(groupId),
+      ensureDefaultChallenge(group),
       queryTrainingTemplates(groupId),
       queryRankings(groupId)
     ]);
     const goalStats = await queryGoalStats(groupId, goal);
-    const progress = await queryChallengeProgress(challenge, userId);
-    const challengeDate = challenge ? formatChallengeDate(getChallengePeriod(challenge).end) : null;
+    const progress = await queryChallengeProgress(activeChallenge, userId);
+    const challengeDate = activeChallenge ? formatChallengeDate(getChallengePeriod(activeChallenge).end) : null;
     const progressValue = Number(progress && progress.currentValue) || 0;
-    const targetValue = challenge ? Number(challenge.targetValue) || 0 : 0;
+    const targetValue = activeChallenge ? Number(activeChallenge.targetValue) || 0 : 0;
 
     return {
       success: true,
@@ -1442,15 +1464,15 @@ async function getGroupDetail(event) {
         attendance: goalStats.attendance,
         members,
         rankings,
-        challenge: challenge ? {
-          id: challenge._id,
-          title: challenge.title || "群挑战",
+        challenge: activeChallenge ? {
+          id: activeChallenge._id,
+          title: activeChallenge.title || "群挑战",
           statusText: "进行中",
           dateText: challengeDate.text,
           remainingDays: challengeDate.remainingDays,
           currentValue: progressValue,
           targetValue,
-          unit: challenge.unit || (challenge.metricType === "exercise_minutes" ? "分钟" : "天"),
+          unit: activeChallenge.unit || (activeChallenge.metricType === "exercise_minutes" ? "分钟" : "天"),
           progressDots: progress.progressDots
         } : null,
         templates: templates.map((template) => ({

@@ -12,10 +12,9 @@
           <view class="medal">☆</view>
           <view>
             <view class="goal-title-line">
-              <text class="goal-title">{{goal.title}}</text>
-              <text class="goal-slogan">{{goal.slogan}}</text>
+              <text class="goal-title">本周群目标</text>
             </view>
-            <view class="goal-copy">全员累计运动 <text class="orange-number">{{goal.targetValue}}</text> {{goal.unit}}</view>
+            <view class="goal-copy">累计运动 <text class="orange-number">{{goal.targetValue}}</text> {{goal.unit || '分钟'}}</view>
           </view>
         </view>
         <view class="attendance-row">
@@ -156,6 +155,14 @@
         </view>
       </view>
       <view class="check-button skeleton-block"></view>
+    </view>
+    <view class="challenge challenge-empty panel" wx:else>
+      <view class="challenge-empty-icon">🏁</view>
+      <view class="challenge-empty-copy">
+        <view class="challenge-label">群挑战</view>
+        <view class="challenge-empty-title">暂无进行中的群挑战</view>
+        <view class="challenge-empty-text">创建挑战后，成员可以在这里查看进度</view>
+      </view>
     </view>
 
     <view class="templates panel">
