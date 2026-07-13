@@ -1,21 +1,30 @@
 const groupService = require("../../services/groups");
+const TODAY_WALL_DISPLAY_LIMIT = 5;
 
-const CATEGORY_TAGS = {
-  cardio: { tag: "有氧", tagClass: "blue" },
-  stretch: { tag: "拉伸", tagClass: "purple" },
-  yoga: { tag: "瑜伽", tagClass: "purple" },
-  strength: { tag: "力量", tagClass: "orange" },
-  core: { tag: "核心", tagClass: "orange" }
-};
+function getTrainingTags(member) {
+  const categoryIds = Array.isArray(member.categoryIds) && member.categoryIds.length
+    ? member.categoryIds
+    : [member.categoryId];
+  const categories = categoryIds.filter(Boolean);
+  const hasCardio = categories.includes("cardio");
+  const hasStrength = categories.some((categoryId) => categoryId !== "cardio") || !hasCardio;
+  const tags = [];
+
+  if (hasStrength) tags.push({ label: "力量", tone: "energy" });
+  if (hasCardio) tags.push({ label: "有氧", tone: "cool" });
+
+  return tags;
+}
 
 function normalizeWallMembers(members) {
   const source = Array.isArray(members) ? members : [];
-  return source.map((member) => {
-    const category = CATEGORY_TAGS[member.categoryId] || null;
+  return source.slice(0, TODAY_WALL_DISPLAY_LIMIT).map((member) => {
+    const tags = member.checkedIn
+      ? (Array.isArray(member.tags) && member.tags.length ? member.tags : getTrainingTags(member))
+      : [{ label: member.tag || "未打卡", tone: "incomplete" }];
     return {
       ...member,
-      tag: member.tag || (category && category.tag) || "训练",
-      tagClass: member.tagClass || (category && category.tagClass) || "orange",
+      tags,
       state: member.state || "已完成",
       stateClass: member.stateClass || "done"
     };

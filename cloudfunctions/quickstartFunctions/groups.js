@@ -3,6 +3,7 @@ const crypto = require("crypto");
 
 const db = cloud.database();
 const DEFAULT_WEEKLY_GOAL_MINUTES = 1000;
+const TODAY_WALL_DISPLAY_LIMIT = 5;
 const COLLECTIONS = [
   "groups",
   "group_members",
@@ -125,6 +126,21 @@ function getCategoryTone(categoryId) {
     core: "orange"
   };
   return tones[categoryId] || "orange";
+}
+
+function getActivityTrainingTags(activity) {
+  const categoryIds = Array.isArray(activity && activity.categoryIds)
+    ? activity.categoryIds
+    : [activity && activity.categoryId];
+  const categories = categoryIds.filter(Boolean);
+  const hasCardio = categories.includes("cardio");
+  const hasStrength = categories.some((categoryId) => categoryId !== "cardio") || !hasCardio;
+  const tags = [];
+
+  if (hasStrength) tags.push({ label: "力量", tone: "energy" });
+  if (hasCardio) tags.push({ label: "有氧", tone: "cool" });
+
+  return tags;
 }
 
 function getCheckInText(status) {
@@ -690,8 +706,8 @@ async function queryTodayWallMembers(groupId) {
       training: activity.trainingTitle || "未命名训练",
       duration: Number(activity.durationMinutes) || 0,
       categoryId: activity.categoryId || "",
-      tag: activity.categoryName || "训练",
-      tagClass: activity.tagClass || getCategoryTone(activity.categoryId),
+      categoryIds: activity.categoryIds || [],
+      tags: getActivityTrainingTags(activity),
       state: activity.stateText || getCheckInText(activity.checkInStatus),
       stateClass: activity.checkInStatus || "done",
       checkedIn: true
@@ -717,7 +733,8 @@ async function queryTodayWallMembers(groupId) {
       };
     });
 
-  return checkedInRows.concat(missedRows);
+  // 群组详情页只展示训练墙的前五条，完整列表由“全部”入口查看。
+  return checkedInRows.concat(missedRows).slice(0, TODAY_WALL_DISPLAY_LIMIT);
 }
 
 async function queryActiveChallenge(groupId) {

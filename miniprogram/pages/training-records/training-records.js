@@ -67,7 +67,7 @@ function groupTrainings(trainings) {
       duration: formatDuration(training.timer),
       sets: Number(training.setsCount || 0),
       tags,
-      tone: tags.length === 1 ? tags[0].tone : "energy"
+      tone: training.status === "incomplete" ? "incomplete" : (tags.length === 1 ? tags[0].tone : "energy")
     });
   });
 

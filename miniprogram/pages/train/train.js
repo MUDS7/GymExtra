@@ -1,5 +1,6 @@
 const trainingService = require("../../services/trainings");
 const { getTrainingTags } = require("../../utils/training-tags");
+const { getTrainingDrafts } = require("../../utils/training-drafts");
 
 function formatTrainingDate(value) {
   const date = new Date(value);
@@ -91,12 +92,13 @@ function toWorkout(training) {
 
   return {
     id: training.uuid || training._id,
+    draftId: training.draftId || "",
     name: training.title || "未命名训练",
     date: formatTrainingDate(training.createdAt),
     duration: formatDuration(training.timer),
     sets: Number(training.setsCount || 0),
     tags,
-    tone: tags.length === 1 ? tags[0].tone : "energy"
+    tone: training.status === "incomplete" ? "incomplete" : (tags.length === 1 ? tags[0].tone : "energy")
   };
 }
 
@@ -141,7 +143,11 @@ Page({
       const weeklyDashboard = buildWeeklyDashboard(weeklyTrainings, weekStart);
 
       this.setData({
-        recentWorkouts: recentTrainings.map(toWorkout),
+        recentWorkouts: getTrainingDrafts()
+          .concat(recentTrainings)
+          .sort((left, right) => new Date(right.updatedAt || right.createdAt).getTime() - new Date(left.updatedAt || left.createdAt).getTime())
+          .slice(0, 5)
+          .map(toWorkout),
         ...weeklyDashboard
       });
     } catch (error) {
@@ -154,7 +160,14 @@ Page({
   },
 
   onActionTap(event) {
-    const { action, name, trainingId } = event.currentTarget.dataset;
+    const { action, name, trainingId, draftId } = event.currentTarget.dataset;
+
+    if (action === "viewTraining" && draftId) {
+      wx.navigateTo({
+        url: `/pages/new-training/new-training?mode=draft&draftId=${encodeURIComponent(draftId)}`
+      });
+      return;
+    }
 
     if (action === "viewTraining" && trainingId) {
       wx.navigateTo({
@@ -164,6 +177,14 @@ Page({
     }
 
     if (action === "newTraining") {
+      if (getTrainingDrafts().length > 0) {
+        wx.showToast({
+          title: "有未完成记录，请先完成未完成记录",
+          icon: "none"
+        });
+        return;
+      }
+
       wx.navigateTo({
         url: "/pages/new-training/new-training"
       });

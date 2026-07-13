@@ -2,6 +2,7 @@ const { ACTION_TABLE, DEFAULT_ACTION_ICON_PATH } = require("../../data/actions")
 const actionService = require("../../services/actions");
 const { getCachedIconPath, isCloudFile } = require("../../services/action-icon-cache");
 const trainingService = require("../../services/trainings");
+const { getTrainingDraft, saveTrainingDraft, removeTrainingDraft } = require("../../utils/training-drafts");
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
 const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, "0"));
@@ -246,6 +247,11 @@ Page({
       return;
     }
 
+    if (options.mode === "draft" && options.draftId) {
+      this.loadTrainingDraft(decodeURIComponent(options.draftId));
+      return;
+    }
+
     const groupId = options.groupId ? decodeURIComponent(options.groupId) : "";
     if (groupId) {
       const groupName = options.groupName ? decodeURIComponent(options.groupName) : "";
@@ -254,6 +260,16 @@ Page({
         groupName,
         sharedToGroup: options.sharedToGroup !== "0"
       });
+    }
+
+    this.startTimer();
+  },
+
+  onUnload() {
+    this.stopTimer();
+
+    if (!this.data.readonly && !this.trainingCompleted && !this.draftSaved) {
+      this.cacheTrainingDraft();
     }
   },
 
@@ -296,10 +312,131 @@ Page({
     });
   },
 
+  loadTrainingDraft(draftId) {
+    const draft = getTrainingDraft(draftId);
+
+    if (!draft) {
+      wx.showToast({ title: "暂存记录不存在", icon: "none" });
+      this.draftSaved = true;
+      const pages = getCurrentPages();
+
+      if (pages.length > 1) {
+        wx.navigateBack({ delta: 1 });
+      } else {
+        wx.switchTab({ url: "/pages/train/train" });
+      }
+      return;
+    }
+
+    this.draftId = draftId;
+    this.draftCreatedAt = draft.createdAt;
+    const actions = Array.isArray(draft.actions) ? draft.actions : [];
+    this.setData({
+      timer: draft.timer || "00:00",
+      title: draft.title || "",
+      actions,
+      summary: buildSummary(actions),
+      groupId: draft.groupId || "",
+      groupName: draft.groupName || "",
+      sharedToGroup: Boolean(draft.sharedToGroup)
+    });
+    this.startTimer(parseTimerSeconds(draft.timer));
+  },
+
+  startTimer(baseSeconds = 0) {
+    this.timerBaseSeconds = Math.max(0, Number(baseSeconds) || 0);
+    this.timerStartedAt = Date.now();
+    this.timerInterval = setInterval(() => this.syncTimer(), 1000);
+  },
+
+  syncTimer() {
+    if (!this.timerStartedAt) {
+      return this.data.timer;
+    }
+
+    const timer = formatTimer(this.timerBaseSeconds + Math.floor((Date.now() - this.timerStartedAt) / 1000));
+
+    if (timer !== this.data.timer) {
+      this.setData({ timer });
+    }
+
+    return timer;
+  },
+
+  stopTimer() {
+    const timer = this.syncTimer();
+
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+
+    this.timerStartedAt = null;
+    return timer;
+  },
+
+  getTrainingPayload(status) {
+    return {
+      status,
+      title: this.data.title,
+      timer: this.data.timer,
+      groupId: this.data.groupId,
+      sharedToGroup: status === "completed" && this.data.sharedToGroup,
+      actions: this.data.actions.map((action) => ({
+        id: action.id,
+        categoryId: action.categoryId,
+        name: action.name,
+        iconPath: action.iconFileID || action.iconPath,
+        durationMinutes: action.isCardio ? action.durationMinutes : null,
+        sets: action.sets.map((set) => ({
+          weight: set.weight,
+          reps: set.reps,
+          completed: set.completed
+        }))
+      }))
+    };
+  },
+
+  cacheTrainingDraft() {
+    if (this.data.readonly || this.trainingCompleted || this.draftSaved) {
+      return;
+    }
+
+    const draft = saveTrainingDraft({
+      draftId: this.draftId,
+      createdAt: this.draftCreatedAt,
+      title: this.data.title,
+      timer: this.data.timer,
+      groupId: this.data.groupId,
+      groupName: this.data.groupName,
+      sharedToGroup: this.data.sharedToGroup,
+      actions: this.data.actions
+    });
+    this.draftId = draft.draftId;
+    this.draftCreatedAt = draft.createdAt;
+    this.draftSaved = true;
+  },
+
   onTitleInput(event) {
     this.setData({
       title: event.detail.value
     });
+  },
+
+  async onBackTap() {
+    if (!this.data.readonly) {
+      this.stopTimer();
+      this.cacheTrainingDraft();
+    }
+
+    const pages = getCurrentPages();
+
+    if (pages.length > 1) {
+      wx.navigateBack({ delta: 1 });
+      return;
+    }
+
+    wx.switchTab({ url: "/pages/train/train" });
   },
 
   async onFinishTap() {
@@ -307,36 +444,14 @@ Page({
       return;
     }
 
-    if (!Array.isArray(this.data.actions) || this.data.actions.length === 0) {
-      wx.showToast({
-        title: "记录为空",
-        icon: "none"
-      });
-      return;
-    }
-
+    this.stopTimer();
+    this.trainingCompleted = true;
     this.setData({ saving: true });
     wx.showLoading({ title: "保存中", mask: true });
 
     try {
-      await trainingService.saveTraining({
-        title: this.data.title,
-        timer: this.data.timer,
-        groupId: this.data.groupId,
-        sharedToGroup: this.data.sharedToGroup,
-        actions: this.data.actions.map((action) => ({
-          id: action.id,
-          categoryId: action.categoryId,
-          name: action.name,
-          iconPath: action.iconFileID || action.iconPath,
-          durationMinutes: action.isCardio ? action.durationMinutes : null,
-          sets: action.sets.map((set) => ({
-            weight: set.weight,
-            reps: set.reps,
-            completed: set.completed
-          }))
-        }))
-      });
+      await trainingService.saveTraining(this.getTrainingPayload("completed"));
+      removeTrainingDraft(this.draftId);
 
       wx.hideLoading();
       wx.showToast({ title: "训练已保存", icon: "success" });
@@ -353,6 +468,7 @@ Page({
       }, 500);
     } catch (error) {
       wx.hideLoading();
+      this.trainingCompleted = false;
       this.setData({ saving: false });
       wx.showToast({
         title: error.message || "保存失败，请重试",
@@ -409,14 +525,9 @@ Page({
   },
 
   updateActions(actions) {
-    const previousCardioMinutes = getCardioDurationMinutes(this.data.actions);
-    const nextCardioMinutes = getCardioDurationMinutes(actions);
-    const cardioDeltaSeconds = (nextCardioMinutes - previousCardioMinutes) * 60;
-
     this.setData({
       actions,
-      summary: buildSummary(actions),
-      timer: formatTimer(parseTimerSeconds(this.data.timer) + cardioDeltaSeconds)
+      summary: buildSummary(actions)
     });
   },
 

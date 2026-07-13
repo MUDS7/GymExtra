@@ -40,7 +40,7 @@
     </view>
 
     <view class="record-list">
-      <view class="record-card" wx:for="{{recentWorkouts}}" wx:key="id" bindtap="onActionTap" data-action="viewTraining" data-training-id="{{item.id}}" data-name="{{item.name}}">
+      <view class="record-card" wx:for="{{recentWorkouts}}" wx:key="id" bindtap="onActionTap" data-action="viewTraining" data-training-id="{{item.id}}" data-draft-id="{{item.draftId}}" data-name="{{item.name}}">
         <view class="record-dot {{item.tone}}"></view>
         <view class="record-main">
           <view class="record-title-row">

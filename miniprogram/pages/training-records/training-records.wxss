@@ -102,6 +102,10 @@
   background: #258DE9;
 }
 
+.record-dot.incomplete {
+  background: #9AA0A8;
+}
+
 .record-main {
   min-width: 0;
   flex: 1;
@@ -156,6 +160,12 @@
   color: #258DE9;
   border: 1rpx solid #8AC5F7;
   background: #EFF8FF;
+}
+
+.record-tag.incomplete {
+  color: #6F757D;
+  border: 1rpx solid #D5D8DC;
+  background: #F1F2F4;
 }
 
 .record-meta {

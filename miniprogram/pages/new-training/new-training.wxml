@@ -1,11 +1,13 @@
 <view class="new-training-page">
+  <view class="detail-back-button" bindtap="onBackTap" role="button" aria-label="返回">‹</view>
+
   <view class="top-row">
     <input
       class="timer"
       value="{{timer}}"
       placeholder="00:00"
       placeholder-class="timer-placeholder"
-      disabled="{{readonly}}"
+      disabled="{{true}}"
       bindinput="onTimerInput"
     />
     <view wx:if="{{!readonly}}" class="finish-button" bindtap="onFinishTap">{{saving ? '保存中' : '完成'}}</view>

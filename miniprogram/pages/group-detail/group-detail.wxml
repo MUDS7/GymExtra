@@ -79,7 +79,12 @@
           <image wx:if="{{item.avatarUrl}}" class="member-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
           <view wx:else class="avatar-placeholder"><view class="avatar-head large"></view><view class="avatar-body large"></view></view>
           <view class="member-main">
-            <view class="member-name-line"><text class="member-name">{{item.name}}</text><text class="tag {{item.tagClass}}">{{item.tag}}</text></view>
+            <view class="member-name-line">
+              <text class="member-name">{{item.name}}</text>
+              <view class="record-tags">
+                <text class="record-tag {{tag.tone}}" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="label">{{tag.label}}</text>
+              </view>
+            </view>
             <view class="member-training">
               <block wx:if="{{item.checkedIn}}">{{item.training}} · {{item.duration}} 分钟</block>
               <block wx:else>{{item.training}}</block>

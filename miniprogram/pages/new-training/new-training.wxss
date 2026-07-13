@@ -1,14 +1,29 @@
 .new-training-page {
+  position: relative;
   min-height: 100vh;
   padding: calc(180rpx + env(safe-area-inset-top)) 0 0;
   color: #2B2B2B;
   background: #F4F4F5;
 }
 
+.detail-back-button {
+  position: absolute;
+  z-index: 2;
+  top: calc(180rpx + env(safe-area-inset-top));
+  left: 28rpx;
+  width: 48rpx;
+  height: 58rpx;
+  display: flex;
+  align-items: center;
+  color: #2D3138;
+  font-size: 56rpx;
+  line-height: 1;
+}
+
 .top-row {
   position: relative;
   height: 72rpx;
-  padding: 0 34rpx 0 36rpx;
+  padding: 0 34rpx 0 104rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;

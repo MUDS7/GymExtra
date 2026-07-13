@@ -7,6 +7,12 @@ const CARDIO_ACTION_NAMES = new Set(
 );
 
 function getTrainingTags(training) {
+  const isIncomplete = training && training.status === "incomplete";
+
+  if (isIncomplete) {
+    return [{ label: "未完成", tone: "incomplete" }];
+  }
+
   const categories = Array.isArray(training.actionCategories) ? training.actionCategories : [];
   const actionNames = Array.isArray(training.actionNames) ? training.actionNames : [];
   const cardioCategoryCount = categories.filter((categoryId) => categoryId === "cardio").length;
