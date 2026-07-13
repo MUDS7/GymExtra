@@ -206,6 +206,8 @@ exports.main = async (event, context) => {
       return await groupService.searchGroups(event);
     case "applyToGroup":
       return await groupService.applyToGroup(event);
+    case "approveGroupApplication":
+      return await groupService.approveGroupApplication(event);
     case "getGroupDetail":
       return await groupService.getGroupDetail(event);
     case "getGroupLeaderboard":

@@ -15,7 +15,8 @@ Page({
     members: [],
     applications: [],
     loading: true,
-    settingGoalId: ""
+    settingGoalId: "",
+    approvingApplicationId: ""
   },
 
   onLoad(options) {
@@ -84,6 +85,22 @@ Page({
       wx.showToast({ title: error.message || "设置失败", icon: "none" });
     } finally {
       this.setData({ settingGoalId: "" });
+    }
+  },
+
+  async onApproveApplication(event) {
+    const { applicationId } = event.currentTarget.dataset;
+    if (!applicationId || this.data.approvingApplicationId) return;
+
+    this.setData({ approvingApplicationId: applicationId });
+    try {
+      await groupService.approveGroupApplication(this.data.groupId, applicationId);
+      wx.showToast({ title: "已同意申请", icon: "success" });
+      await this.loadDetail();
+    } catch (error) {
+      wx.showToast({ title: error.message || "操作失败", icon: "none" });
+    } finally {
+      this.setData({ approvingApplicationId: "" });
     }
   },
 

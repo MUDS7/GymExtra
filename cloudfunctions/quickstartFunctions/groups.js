@@ -781,6 +781,72 @@ async function applyToGroup(event) {
   }
 }
 
+async function approveGroupApplication(event) {
+  try {
+    const userId = getIdentity();
+    const groupId = String(event.groupId || "").trim();
+    const applicationId = String(event.applicationId || "").trim();
+    if (!groupId) throw new Error("缺少群组 ID");
+    if (!applicationId) throw new Error("缺少申请 ID");
+
+    await ensureCollections();
+    await getOwnedGroup(groupId, userId);
+
+    const applicationRef = db.collection("group_applications").doc(applicationId);
+    const application = (await applicationRef.get()).data;
+    if (!application || application.groupId !== groupId) {
+      throw new Error("申请不存在");
+    }
+
+    if (application.status === "approved") {
+      return { success: true, data: { applicationId, status: "approved" } };
+    }
+    if (application.status !== "pending") {
+      throw new Error("该申请已处理");
+    }
+
+    const now = new Date();
+    const memberId = `${groupId}-user-${safeId(application.userId)}`;
+    const memberRef = db.collection("group_members").doc(memberId);
+    let member = null;
+    try {
+      member = (await memberRef.get()).data;
+    } catch (error) {
+      // 成员记录不存在时创建新的正式成员关系。
+    }
+
+    if (!member || member.status !== "active") {
+      await memberRef.set({
+        data: {
+          groupId,
+          userId: application.userId,
+          role: "member",
+          status: "active",
+          profileSnapshot: null,
+          joinedAt: now,
+          lastActiveAt: now,
+          lastCheckInAt: null,
+          continuousCheckInDays: 0
+        }
+      });
+    }
+
+    await applicationRef.update({
+      data: {
+        status: "approved",
+        reviewedAt: now,
+        reviewedBy: userId,
+        updatedAt: now
+      }
+    });
+
+    return { success: true, data: { applicationId, status: "approved" } };
+  } catch (error) {
+    console.error("同意入群申请失败", error);
+    return { success: false, message: error.message || "同意入群申请失败" };
+  }
+}
+
 function formatChallengeDate(endAt) {
   const end = new Date(endAt);
   if (Number.isNaN(end.getTime())) {
@@ -1500,5 +1566,6 @@ module.exports = {
   getGroupDetail,
   getGroupLeaderboard,
   searchGroups,
-  applyToGroup
+  applyToGroup,
+  approveGroupApplication
 };

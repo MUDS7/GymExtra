@@ -78,4 +78,17 @@
 .person-tag, .apply-tag { padding: 7rpx 13rpx; border-radius: 14rpx; font-size: 21rpx; line-height: 1.2; font-weight: 800; flex-shrink: 0; }
 .person-tag { color: #6B6F76; background: #ECEEF1; }
 .apply-tag { color: #258DE9; background: #EAF6FF; }
+.application-approve-button {
+  box-sizing: border-box;
+  min-width: 76rpx;
+  height: 48rpx;
+  margin: 0 0 0 4rpx;
+  padding: 0 14rpx;
+  border-radius: 15rpx;
+  color: #FFFFFF;
+  background: #258DE9;
+  font-size: 22rpx;
+  line-height: 48rpx;
+  font-weight: 800;
+}
 .loading-state, .empty-state { padding: 96rpx 24rpx; color: #7B8088; text-align: center; font-size: 27rpx; }

@@ -53,6 +53,10 @@ function applyToGroup(groupId) {
   return callGroupFunction("applyToGroup", { groupId });
 }
 
+function approveGroupApplication(groupId, applicationId) {
+  return callGroupFunction("approveGroupApplication", { groupId, applicationId });
+}
+
 module.exports = {
   getMyGroups,
   getManagedGroups,
@@ -62,5 +66,6 @@ module.exports = {
   getGroupDetail,
   getGroupLeaderboard,
   searchGroups,
-  applyToGroup
+  applyToGroup,
+  approveGroupApplication
 };

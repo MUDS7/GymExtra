@@ -65,6 +65,13 @@
         <view wx:else class="person-avatar avatar-fallback">{{item.initial}}</view>
         <view class="person-name">{{item.name}}</view>
         <view class="apply-tag">{{item.statusText}}</view>
+        <button
+          class="application-approve-button"
+          loading="{{approvingApplicationId === item.id}}"
+          disabled="{{approvingApplicationId}}"
+          bindtap="onApproveApplication"
+          data-application-id="{{item.id}}"
+        >同意</button>
       </view>
     </view>
     <view class="empty-state" wx:else>暂无待处理申请</view>
