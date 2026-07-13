@@ -1,11 +1,47 @@
 const groupService = require("../../services/groups");
 
+const CATEGORY_TAGS = {
+  cardio: { tag: "有氧", tagClass: "blue" },
+  stretch: { tag: "拉伸", tagClass: "purple" },
+  yoga: { tag: "瑜伽", tagClass: "purple" },
+  strength: { tag: "力量", tagClass: "orange" },
+  core: { tag: "核心", tagClass: "orange" }
+};
+
+function normalizeWallMembers(members) {
+  const source = Array.isArray(members) ? members : [];
+  return source.map((member) => {
+    const category = CATEGORY_TAGS[member.categoryId] || null;
+    return {
+      ...member,
+      tag: member.tag || (category && category.tag) || "训练",
+      tagClass: member.tagClass || (category && category.tagClass) || "orange",
+      state: member.state || "已完成",
+      stateClass: member.stateClass || "done"
+    };
+  });
+}
+
+function buildWallState(members, loading) {
+  const wallMembers = normalizeWallMembers(members);
+  const hasWallMembers = wallMembers.length > 0;
+  return {
+    members: wallMembers,
+    hasWallMembers,
+    showWallSkeleton: Boolean(loading && !hasWallMembers),
+    showWallPlaceholder: Boolean(!loading && !hasWallMembers)
+  };
+}
+
 Page({
   data: {
     groupId: "1",
     groupName: "群组详情",
     headerTop: 64,
     members: [],
+    hasWallMembers: false,
+    showWallSkeleton: true,
+    showWallPlaceholder: false,
     templates: [],
     attendance: [],
     goal: null,
@@ -42,7 +78,11 @@ Page({
 
   async loadGroupDetail(groupId, options = {}) {
     if (!options.silent) {
-      this.setData({ loading: true });
+      this.setData({
+        loading: true,
+        showWallSkeleton: !this.data.hasWallMembers,
+        showWallPlaceholder: false
+      });
     }
 
     try {
@@ -50,13 +90,14 @@ Page({
       const challenge = detail.challenge || (
         options.silent && this.pendingCheckInRefresh ? this.data.challenge : null
       );
+      const wallState = buildWallState(detail.members, false);
       this.detailLoaded = true;
       this.pendingCheckInRefresh = false;
       this.setData({
-        groupName: detail.group.name,
-        goal: detail.goal,
+        groupName: detail.group && detail.group.name ? detail.group.name : this.data.groupName,
+        goal: detail.goal || null,
         attendance: detail.attendance || [],
-        members: detail.members || [],
+        ...wallState,
         rankings: detail.rankings,
         challenge,
         templates: detail.templates || [],
@@ -65,7 +106,11 @@ Page({
     } catch (error) {
       console.error("群组详情加载失败", error);
       this.detailLoaded = true;
-      this.setData({ loading: false });
+      const wallState = buildWallState(this.data.members, false);
+      this.setData({
+        ...wallState,
+        loading: false
+      });
       wx.showToast({ title: error.message || "详情加载失败", icon: "none" });
     }
   },

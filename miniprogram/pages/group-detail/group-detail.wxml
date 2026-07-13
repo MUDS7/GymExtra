@@ -51,22 +51,20 @@
         <view class="skeleton-line value"></view>
       </view>
     </view>
+    <view class="goal-card goal-empty panel" wx:else>
+      <view class="goal-empty-icon">☆</view>
+      <view class="goal-empty-copy">
+        <view class="goal-empty-title">群目标</view>
+        <view class="goal-empty-text">暂无群目标</view>
+      </view>
+    </view>
 
     <view class="wall panel">
       <view class="section-head" bindtap="onActionTap" data-action="leaderboard" data-name="今日训练墙">
         <text class="section-title">今日训练墙</text>
         <view class="more">全部 <text>›</text></view>
       </view>
-      <view class="member-row" wx:for="{{members}}" wx:key="id">
-        <image wx:if="{{item.avatarUrl}}" class="member-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
-        <view wx:else class="avatar-placeholder"><view class="avatar-head large"></view><view class="avatar-body large"></view></view>
-        <view class="member-main">
-          <view class="member-name-line"><text class="member-name">{{item.name}}</text><text class="tag {{item.tagClass}}">{{item.tag}}</text></view>
-          <view class="member-training">{{item.training}} · {{item.duration}} 分钟</view>
-        </view>
-        <view class="member-state {{item.stateClass}}">{{item.state}} <text class="state-icon">{{item.stateClass === 'done' ? '✓' : item.stateClass === 'missed' ? '!' : '–'}}</text></view>
-      </view>
-      <block wx:if="{{loading && members.length === 0}}">
+      <block wx:if="{{showWallSkeleton}}">
         <view class="member-row skeleton-row" wx:for="{{placeholderMembers}}" wx:key="index">
           <view class="avatar-placeholder skeleton-block"></view>
           <view class="member-main">
@@ -76,7 +74,38 @@
           <view class="skeleton-line member-state-placeholder"></view>
         </view>
       </block>
-      <view class="empty-state" wx:if="{{!loading && members.length === 0}}">暂无今日训练</view>
+      <block wx:elif="{{hasWallMembers}}">
+        <view class="member-row" wx:for="{{members}}" wx:key="id">
+          <image wx:if="{{item.avatarUrl}}" class="member-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+          <view wx:else class="avatar-placeholder"><view class="avatar-head large"></view><view class="avatar-body large"></view></view>
+          <view class="member-main">
+            <view class="member-name-line"><text class="member-name">{{item.name}}</text><text class="tag {{item.tagClass}}">{{item.tag}}</text></view>
+            <view class="member-training">
+              <block wx:if="{{item.checkedIn}}">{{item.training}} · {{item.duration}} 分钟</block>
+              <block wx:else>{{item.training}}</block>
+            </view>
+          </view>
+          <view class="member-state {{item.stateClass}}">{{item.state}} <text class="state-icon">{{item.stateClass === 'done' ? '✓' : item.stateClass === 'missed' ? '!' : '–'}}</text></view>
+        </view>
+      </block>
+      <view class="wall-empty" wx:elif="{{showWallPlaceholder}}">
+        <view class="wall-empty-icon">+</view>
+        <view class="wall-empty-main">
+          <view class="wall-empty-title">暂无今日训练</view>
+          <view class="wall-empty-copy">完成训练并分享到群组后，会显示在这里</view>
+        </view>
+        <view class="wall-empty-button" bindtap="onActionTap" data-action="checkIn" data-name="去打卡">去打卡</view>
+      </view>
+      <view class="wall-placeholder-list" wx:if="{{showWallPlaceholder}}">
+        <view class="wall-placeholder-row" wx:for="{{placeholderMembers}}" wx:key="index">
+          <view class="wall-placeholder-avatar"></view>
+          <view class="wall-placeholder-copy">
+            <view class="wall-placeholder-title">等待训练上墙</view>
+            <view class="wall-placeholder-meta">今日完成并分享到群组</view>
+          </view>
+          <view class="wall-placeholder-state">待点亮</view>
+        </view>
+      </view>
     </view>
 
     <view class="rank-grid" wx:if="{{rankings}}">

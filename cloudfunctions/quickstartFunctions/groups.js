@@ -2,6 +2,7 @@ const cloud = require("wx-server-sdk");
 const crypto = require("crypto");
 
 const db = cloud.database();
+const DEFAULT_WEEKLY_GOAL_MINUTES = 1000;
 const COLLECTIONS = [
   "groups",
   "group_members",
@@ -109,11 +110,6 @@ function getWeekRange(now = new Date()) {
 function toValidDate(value, fallback) {
   const date = value ? new Date(value) : null;
   return date && !Number.isNaN(date.getTime()) ? date : fallback;
-}
-
-function isSameDay(value, target = new Date()) {
-  if (!value) return false;
-  return dayKey(new Date(value)) === dayKey(target);
 }
 
 function getProfileName(snapshot, fallback = "群成员") {
@@ -247,7 +243,8 @@ function isRealActivity(activity) {
   return activity
     && activity.sharedToGroup
     && activity.checkInStatus === "done"
-    && !isSeedRecord(activity);
+    && !isTestRecord(activity)
+    && !activity.isDemoActivity;
 }
 
 async function ensureCollections() {
@@ -272,7 +269,7 @@ async function createIfMissing(collection, id, data) {
 }
 
 function buildDefaultChallenge(group, now = new Date()) {
-  if (!group || group.badgeType !== "challenge") return null;
+  if (!group) return null;
 
   const { start, end } = getWeekRange(now);
   return {
@@ -293,6 +290,41 @@ function buildDefaultChallenge(group, now = new Date()) {
       createdAt: now,
       updatedAt: now
     }
+  };
+}
+
+function isWeeklyCheckInChallenge(challenge) {
+  return Boolean(
+    challenge
+    && (challenge.metricType || "checkin_days") === "checkin_days"
+    && Number(challenge.targetValue) === 7
+  );
+}
+
+function getChallengePeriod(challenge, now = new Date()) {
+  if (isWeeklyCheckInChallenge(challenge)) {
+    return getWeekRange(now);
+  }
+
+  return {
+    start: toValidDate(challenge && challenge.startAt, now),
+    end: toValidDate(challenge && challenge.endAt, now)
+  };
+}
+
+function buildDefaultGroupGoal(groupId, now = new Date()) {
+  const { start, end } = getWeekRange(now);
+  return {
+    _id: `default-weekly-goal-${groupId}-${dayKey(start)}`,
+    groupId,
+    title: "本周群目标",
+    slogan: "一起动起来",
+    targetValue: DEFAULT_WEEKLY_GOAL_MINUTES,
+    unit: "分钟",
+    periodStart: start,
+    periodEnd: end,
+    status: "active",
+    isDefaultGoal: true
   };
 }
 
@@ -516,7 +548,35 @@ async function queryCurrentGoal(groupId) {
     .orderBy("periodStart", "desc")
     .limit(20)
     .get();
-  return (result.data || []).find((goal) => !isSeedRecord(goal)) || null;
+  return (result.data || []).find((goal) => !isSeedRecord(goal))
+    || buildDefaultGroupGoal(groupId);
+}
+
+async function queryGoalPeriodActivities(groupId, periodStartKey, periodEndKey) {
+  const pageSize = 1000;
+  const _ = db.command;
+  let offset = 0;
+  let activities = [];
+
+  while (true) {
+    const result = await db.collection("group_daily_activities")
+      .where({
+        groupId,
+        sharedToGroup: true,
+        checkInStatus: "done",
+        activityDateKey: _.gte(periodStartKey).lt(periodEndKey)
+      })
+      .orderBy("activityDateKey", "desc")
+      .skip(offset)
+      .limit(pageSize)
+      .get();
+    const page = result.data || [];
+    activities = activities.concat(page);
+    if (page.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  return activities;
 }
 
 async function queryGoalStats(groupId, goal) {
@@ -527,91 +587,137 @@ async function queryGoalStats(groupId, goal) {
   const periodStartKey = dayKey(periodStart);
   const periodEndKey = dayKey(periodEnd);
 
-  const [activityResult, memberResult] = await Promise.all([
-    db.collection("group_daily_activities")
-      .where({
-        groupId,
-        sharedToGroup: true,
-        checkInStatus: "done"
-      })
-      .orderBy("activityDateKey", "desc")
-      .limit(1000)
-      .get(),
+  const [activities, memberResult] = await Promise.all([
+    queryGoalPeriodActivities(groupId, periodStartKey, periodEndKey),
     db.collection("group_members")
       .where({ groupId, status: "active" })
       .limit(1000)
       .get()
   ]);
 
-  const activities = (activityResult.data || []).filter(isRealActivity);
+  const realMembers = (memberResult.data || [])
+    .filter((member) => !isTestRecord(member) && member.userId);
+  const uniqueMembers = Array.from(new Map(
+    realMembers.map((member) => [member.userId, member])
+  ).values());
+  const activeMemberIds = new Set(uniqueMembers.map((member) => member.userId));
   const periodActivities = activities.filter((activity) => (
-    activity.activityDateKey >= periodStartKey
-    && activity.activityDateKey < periodEndKey
+    isRealActivity(activity)
+    && activeMemberIds.has(activity.userId)
   ));
-  const checkedInUsers = new Set(activities
+  const checkedInUsers = new Set(periodActivities
     .filter((activity) => activity.activityDateKey === todayKey)
     .map((activity) => activity.userId)
     .filter(Boolean));
-  const realMembers = (memberResult.data || []).filter((member) => !isTestRecord(member));
 
   return {
     currentValue: periodActivities.reduce((sum, activity) => sum + (Number(activity.durationMinutes) || 0), 0),
     checkedInMemberCount: checkedInUsers.size,
-    eligibleMemberCount: realMembers.length
+    eligibleMemberCount: uniqueMembers.length,
+    attendance: uniqueMembers
+      .sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0))
+      .slice(0, 8)
+      .map((member) => checkedInUsers.has(member.userId))
   };
 }
 
-async function queryAttendanceMembers(groupId) {
+async function queryMemberProfiles(memberIds) {
+  const userIds = [...new Set(memberIds.filter(Boolean))];
+  const profiles = new Map();
+  const batchSize = 20;
+
+  try {
+    for (let index = 0; index < userIds.length; index += batchSize) {
+      const ids = userIds.slice(index, index + batchSize);
+      const result = await db.collection("users")
+        .where({ _id: db.command.in(ids) })
+        .limit(batchSize)
+        .get();
+      (result.data || []).forEach((profile) => profiles.set(profile._id, profile));
+    }
+  } catch (error) {
+    // 用户资料缺失时，训练墙仍可使用成员快照或默认昵称展示。
+    console.error("查询群成员资料失败", error);
+  }
+
+  return profiles;
+}
+
+function getWallMemberIdentity(member, profile) {
+  const snapshot = (member && member.profileSnapshot) || {};
+  const user = profile || {};
+  return {
+    name: getProfileName(snapshot, getProfileName(user)),
+    avatarUrl: snapshot.avatarUrl || user.avatarUrl || ""
+  };
+}
+
+async function queryTodayWallMembers(groupId) {
   const todayKey = dayKey();
-  const [memberResult, checkInResult] = await Promise.all([
+  const [activityResult, memberResult] = await Promise.all([
+    db.collection("group_daily_activities")
+      .where({ groupId, activityDateKey: todayKey, sharedToGroup: true })
+      .limit(1000)
+      .get(),
     db.collection("group_members")
       .where({ groupId, status: "active" })
-      .orderBy("displayOrder", "asc")
-      .limit(100)
-      .get(),
-    db.collection("group_daily_activities")
-      .where({
-        groupId,
-        activityDateKey: todayKey,
-        sharedToGroup: true,
-        checkInStatus: "done"
-      })
       .limit(1000)
       .get()
   ]);
+  const members = Array.from(new Map((memberResult.data || [])
+    .filter((member) => !isTestRecord(member) && member.userId)
+    .map((member) => [member.userId, member]))
+    .values());
+  const membersByUserId = new Map(members.map((member) => [member.userId, member]));
+  const profiles = await queryMemberProfiles(members.map((member) => member.userId));
+  const activities = (activityResult.data || [])
+    .filter((activity) => isRealActivity(activity) && membersByUserId.has(activity.userId))
+    .sort((a, b) => (
+      getActivityTimestamp(a) - getActivityTimestamp(b)
+      || Number(a.displayOrder || 0) - Number(b.displayOrder || 0)
+      || String(a._id || "").localeCompare(String(b._id || ""))
+    ));
+  const checkedInUserIds = new Set(activities.map((activity) => activity.userId));
 
-  const today = new Date();
-  const checkedInUserIds = new Set((checkInResult.data || [])
-    .filter(isRealActivity)
-    .map((item) => item.userId));
-  return memberResult.data
-    .filter((member) => !isTestRecord(member))
-    .map((member) => ({
-      ...member,
-      checkedInToday: Boolean(
-        checkedInUserIds.has(member.userId)
-        || member.lastCheckInDateKey === todayKey
-        || isSameDay(member.lastCheckInAt, today)
-      )
-    }))
-    .sort((a, b) => {
-      if (Boolean(a.checkedInToday) !== Boolean(b.checkedInToday)) {
-        return a.checkedInToday ? -1 : 1;
-      }
-      return Number(a.displayOrder || 0) - Number(b.displayOrder || 0);
-    })
-    .slice(0, 8);
-}
+  const checkedInRows = activities.map((activity) => {
+    const member = membersByUserId.get(activity.userId);
+    const identity = getWallMemberIdentity(member, profiles.get(activity.userId));
+    const activityProfile = activity.profileSnapshot || {};
+    return {
+      id: activity._id,
+      name: getProfileName(activityProfile, identity.name),
+      avatarUrl: activityProfile.avatarUrl || identity.avatarUrl,
+      training: activity.trainingTitle || "未命名训练",
+      duration: Number(activity.durationMinutes) || 0,
+      categoryId: activity.categoryId || "",
+      tag: activity.categoryName || "训练",
+      tagClass: activity.tagClass || getCategoryTone(activity.categoryId),
+      state: activity.stateText || getCheckInText(activity.checkInStatus),
+      stateClass: activity.checkInStatus || "done",
+      checkedIn: true
+    };
+  });
+  const missedRows = members
+    .filter((member) => !checkedInUserIds.has(member.userId))
+    .sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0))
+    .map((member) => {
+      const identity = getWallMemberIdentity(member, profiles.get(member.userId));
+      return {
+        id: `missed-${member._id || member.userId}`,
+        name: identity.name,
+        avatarUrl: identity.avatarUrl,
+        training: "今日尚未训练",
+        duration: 0,
+        categoryId: "",
+        tag: "未打卡",
+        tagClass: "missed",
+        state: getCheckInText("missed"),
+        stateClass: "missed",
+        checkedIn: false
+      };
+    });
 
-async function queryTodayActivities(groupId) {
-  const result = await db.collection("group_daily_activities")
-    .where({ groupId, activityDateKey: dayKey(), sharedToGroup: true })
-    .orderBy("displayOrder", "asc")
-    .limit(20)
-    .get();
-  return (result.data || [])
-    .filter(isRealActivity)
-    .sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0));
+  return checkedInRows.concat(missedRows);
 }
 
 async function queryActiveChallenge(groupId) {
@@ -620,7 +726,12 @@ async function queryActiveChallenge(groupId) {
     .orderBy("startAt", "desc")
     .limit(20)
     .get();
-  const activeChallenges = result.data || [];
+  const now = new Date();
+  const activeChallenges = (result.data || []).filter((challenge) => {
+    const start = toValidDate(challenge.startAt, null);
+    const end = toValidDate(challenge.endAt, null);
+    return (!start || start <= now) && (!end || now < end);
+  });
   return activeChallenges.find((challenge) => !isSeedChallenge(challenge))
     || activeChallenges[0]
     || null;
@@ -629,26 +740,22 @@ async function queryActiveChallenge(groupId) {
 async function queryChallengeProgress(challenge, userId) {
   if (!challenge || !userId) return { currentValue: 0, progressDots: [] };
 
-  const start = toValidDate(challenge.startAt, new Date());
-  const end = toValidDate(challenge.endAt, new Date());
+  const { start, end } = getChallengePeriod(challenge);
   const startKey = dayKey(start);
   const endKey = dayKey(end);
+  const _ = db.command;
   const result = await db.collection("group_daily_activities")
     .where({
       groupId: challenge.groupId,
       userId,
       sharedToGroup: true,
-      checkInStatus: "done"
+      checkInStatus: "done",
+      activityDateKey: _.gte(startKey).lt(endKey)
     })
     .orderBy("activityDateKey", "desc")
     .limit(1000)
     .get();
-  const activities = result.data
-    .filter(isRealActivity)
-    .filter((activity) => (
-      activity.activityDateKey >= startKey
-      && (!endKey || activity.activityDateKey < endKey)
-    ));
+  const activities = result.data.filter(isRealActivity);
   const metricType = challenge.metricType || "checkin_days";
   const currentValue = metricType === "exercise_minutes"
     ? activities.reduce((sum, activity) => sum + (Number(activity.durationMinutes) || 0), 0)
@@ -857,7 +964,8 @@ async function queryTodayLeaderboard(groupId) {
 }
 
 function getActivityTimestamp(activity) {
-  const date = activity && activity.activityDate ? new Date(activity.activityDate) : null;
+  const dateValue = activity && (activity.activityDate || activity.createdAt);
+  const date = dateValue ? new Date(dateValue) : null;
   return date && !Number.isNaN(date.getTime()) ? date.getTime() : 0;
 }
 
@@ -1062,21 +1170,19 @@ async function getGroupDetail(event) {
     const [
       goal,
       members,
-      activities,
       challenge,
       templates,
       rankings
     ] = await Promise.all([
       queryCurrentGoal(groupId),
-      queryAttendanceMembers(groupId),
-      queryTodayActivities(groupId),
+      queryTodayWallMembers(groupId),
       queryActiveChallenge(groupId),
       queryTrainingTemplates(groupId),
       queryRankings(groupId)
     ]);
     const goalStats = await queryGoalStats(groupId, goal);
     const progress = await queryChallengeProgress(challenge, userId);
-    const challengeDate = challenge ? formatChallengeDate(challenge.endAt) : null;
+    const challengeDate = challenge ? formatChallengeDate(getChallengePeriod(challenge).end) : null;
     const progressValue = Number(progress && progress.currentValue) || 0;
     const targetValue = challenge ? Number(challenge.targetValue) || 0 : 0;
 
@@ -1094,18 +1200,8 @@ async function getGroupDetail(event) {
           checkedInMemberCount: goalStats.checkedInMemberCount,
           eligibleMemberCount: goalStats.eligibleMemberCount
         } : null,
-        attendance: members.map((member) => Boolean(member.checkedInToday)),
-        members: activities.map((activity) => ({
-          id: activity._id,
-          name: getProfileName(activity.profileSnapshot),
-          avatarUrl: activity.profileSnapshot && activity.profileSnapshot.avatarUrl,
-          training: activity.trainingTitle || "未命名训练",
-          duration: Number(activity.durationMinutes) || 0,
-          tag: activity.categoryName || "训练",
-          tagClass: activity.tagClass || getCategoryTone(activity.categoryId),
-          state: activity.stateText || getCheckInText(activity.checkInStatus),
-          stateClass: activity.checkInStatus || "done"
-        })),
+        attendance: goalStats.attendance,
+        members,
         rankings,
         challenge: challenge ? {
           id: challenge._id,

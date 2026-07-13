@@ -1,3 +1,5 @@
 # 本机微信云开发环境配置
 miniprogram/config/env.local.js
 
+# Cloud function dependencies are installed locally when needed.
+cloudfunctions/quickstartFunctions/node_modules/
