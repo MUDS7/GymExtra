@@ -234,13 +234,11 @@ function isSeedRecord(record) {
 }
 
 function isTestRecord(record) {
-  const userId = String((record && record.userId) || "");
   return Boolean(
     record && (
       record.isTestMember
       || record.isTestActivity
       || record.isTestGoal
-      || userId.startsWith("test-")
     )
   );
 }
