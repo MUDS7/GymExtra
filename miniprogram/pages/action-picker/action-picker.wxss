@@ -174,17 +174,21 @@
   width: 100%;
   min-width: 0;
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
+  align-content: flex-start;
   align-items: flex-start;
   justify-content: flex-start;
+  direction: ltr;
 }
 
 .action-card {
   flex: 0 0 274rpx;
+  align-self: flex-start;
   min-width: 0;
   width: 274rpx;
   height: 264rpx;
-  margin: 0 0 24rpx 0;
+  margin: 0 18rpx 24rpx 0;
   padding: 20rpx 16rpx 24rpx;
   border: 1rpx solid #EFEFEF;
   border-radius: 22rpx;
@@ -194,10 +198,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-}
-
-.action-card:nth-child(2n + 1) {
-  margin-right: 18rpx;
 }
 
 .action-image {
@@ -218,6 +218,140 @@
   line-height: 1.2;
   font-weight: 700;
   text-align: center;
+}
+
+.custom-action-type {
+  margin-top: 10rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 18rpx;
+  color: #E26424;
+  background: #FFF1E9;
+  font-size: 20rpx;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.action-card.custom-action-card {
+  height: 304rpx;
+}
+
+.custom-add-button {
+  width: 100%;
+  height: 78rpx;
+  margin: 12rpx 0 34rpx;
+  border-radius: 40rpx;
+  color: #FFFFFF;
+  background: #E26424;
+  box-shadow: 0 14rpx 34rpx rgba(226, 100, 36, 0.24);
+  font-size: 29rpx;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.custom-add-button .lucide-icon {
+  width: 30rpx;
+  height: 30rpx;
+}
+
+.dialog-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  padding: 48rpx;
+  background: rgba(15, 23, 42, 0.44);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-action-dialog {
+  width: 100%;
+  padding: 40rpx 34rpx 32rpx;
+  border-radius: 32rpx;
+  background: #FFFFFF;
+  box-shadow: 0 24rpx 60rpx rgba(15, 23, 42, 0.22);
+}
+
+.dialog-title {
+  margin-bottom: 38rpx;
+  color: #111111;
+  font-size: 36rpx;
+  line-height: 1;
+  font-weight: 900;
+  text-align: center;
+}
+
+.dialog-label {
+  margin-bottom: 14rpx;
+  color: #4E5157;
+  font-size: 25rpx;
+  font-weight: 700;
+}
+
+.dialog-input {
+  width: 100%;
+  height: 82rpx;
+  margin-bottom: 32rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid #E3E5E8;
+  border-radius: 16rpx;
+  color: #111111;
+  background: #F8F9FA;
+  font-size: 28rpx;
+}
+
+.type-options {
+  display: flex;
+  gap: 18rpx;
+}
+
+.type-option {
+  flex: 1;
+  height: 72rpx;
+  margin: 0;
+  border: 2rpx solid #E3E5E8;
+  border-radius: 16rpx;
+  color: #656970;
+  background: #FFFFFF;
+  font-size: 27rpx;
+  font-weight: 800;
+  line-height: 68rpx;
+}
+
+.type-option.selected {
+  border-color: #E26424;
+  color: #E26424;
+  background: #FFF1E9;
+}
+
+.dialog-actions {
+  margin-top: 42rpx;
+  display: flex;
+  gap: 18rpx;
+}
+
+.dialog-cancel,
+.dialog-confirm {
+  flex: 1;
+  height: 76rpx;
+  margin: 0;
+  border-radius: 38rpx;
+  font-size: 28rpx;
+  font-weight: 900;
+  line-height: 76rpx;
+}
+
+.dialog-cancel {
+  color: #5E6269;
+  background: #F0F1F3;
+}
+
+.dialog-confirm {
+  color: #FFFFFF;
+  background: #E26424;
 }
 
 @media (max-width: 360px) {
@@ -250,16 +384,21 @@
     padding-right: 16rpx;
   }
 
+  .action-grid {
+    display: flex;
+  }
+
   .action-card {
     flex-basis: 288rpx;
     width: 288rpx;
+    margin-right: 16rpx;
     margin-bottom: 20rpx;
     height: 246rpx;
     padding: 18rpx 12rpx 20rpx;
   }
 
-  .action-card:nth-child(2n + 1) {
-    margin-right: 16rpx;
+  .action-card.custom-action-card {
+    height: 282rpx;
   }
 
   .action-image {

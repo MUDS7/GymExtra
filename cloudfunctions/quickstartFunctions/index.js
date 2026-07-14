@@ -6,6 +6,7 @@ cloud.init({
 const db = cloud.database();
 const userService = require("./user");
 const actionService = require("./actions");
+const customActionService = require("./customActions");
 const trainingService = require("./trainings");
 const groupService = require("./groups");
 const userStatsService = require("./userStats");
@@ -180,6 +181,10 @@ exports.main = async (event, context) => {
       return await userService.register(event);
     case "getActions":
       return await actionService.getActions();
+    case "getCustomActions":
+      return await customActionService.getCustomActions(event);
+    case "createCustomAction":
+      return await customActionService.createCustomAction(event);
     case "saveTraining":
       return await trainingService.saveTraining(event);
     case "getRecentTrainings":

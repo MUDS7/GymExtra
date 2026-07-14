@@ -23,59 +23,19 @@ const COLLECTIONS = [
   "group_stat_snapshots"
 ];
 
-const GROUPS = [
-  {
-    _id: "1",
-    name: "力量训练精英组",
-    description: "一起完成力量训练，记录每一次进步。",
-    ownerId: "demo-owner",
-    avatarUrl: "",
-    coverUrl: "",
-    theme: "energy",
-    status: "active",
-    visibility: "public",
-    maxMembers: 500,
-    todayCheckInCount: 36,
-    badge: "今日打卡 · 36人",
-    badgeType: "checkin",
-    sortOrder: 1
-  },
-  {
-    _id: "2",
-    name: "早起跑步打卡",
-    description: "用清晨的一次奔跑开启新的一天。",
-    ownerId: "demo-owner",
-    avatarUrl: "",
-    coverUrl: "",
-    theme: "cool",
-    status: "active",
-    visibility: "public",
-    maxMembers: 500,
-    todayCheckInCount: 42,
-    badge: "连续 12 天",
-    badgeType: "streak",
-    sortOrder: 2
-  },
-  {
-    _id: "3",
-    name: "减脂百天计划",
-    description: "用一百天建立稳定、可持续的运动习惯。",
-    ownerId: "demo-owner",
-    avatarUrl: "",
-    coverUrl: "",
-    theme: "vital",
-    status: "active",
-    visibility: "public",
-    maxMembers: 300,
-    todayCheckInCount: 15,
-    badge: "活动进行中",
-    badgeType: "challenge",
-    sortOrder: 3
-  }
+const LEGACY_DEMO_GROUP_IDS = ["1", "2", "3"];
+const LEGACY_DEMO_GROUP_COLLECTIONS = [
+  "group_members",
+  "group_applications",
+  "group_goals",
+  "group_daily_activities",
+  "group_challenges",
+  "challenge_progress",
+  "training_templates",
+  "group_stat_snapshots"
 ];
-
-
 let collectionsReady;
+let legacyDemoGroupsCleanup;
 
 function getIdentity(event) {
   return identity.getUserId(event);
@@ -272,7 +232,8 @@ async function ensureCollections() {
       }
     }));
   }
-  return collectionsReady;
+  await collectionsReady;
+  return cleanupLegacyDemoGroups();
 }
 
 async function createIfMissing(collection, id, data) {
@@ -281,6 +242,39 @@ async function createIfMissing(collection, id, data) {
   } catch (error) {
     await db.collection(collection).doc(id).set({ data });
   }
+}
+
+async function removeRecordsByGroupId(collection) {
+  const groupIds = db.command.in(LEGACY_DEMO_GROUP_IDS);
+
+  while (true) {
+    const result = await db.collection(collection)
+      .where({ groupId: groupIds })
+      .limit(100)
+      .get();
+    const records = result.data || [];
+    if (!records.length) return;
+
+    await Promise.all(records.map((record) => (
+      db.collection(collection).doc(record._id).remove()
+    )));
+  }
+}
+
+async function cleanupLegacyDemoGroups() {
+  if (!legacyDemoGroupsCleanup) {
+    legacyDemoGroupsCleanup = (async () => {
+      await Promise.all(LEGACY_DEMO_GROUP_COLLECTIONS.map(removeRecordsByGroupId));
+      await Promise.all(LEGACY_DEMO_GROUP_IDS.map((groupId) => (
+        db.collection("groups").doc(groupId).remove().catch(() => null)
+      )));
+    })().catch((error) => {
+      legacyDemoGroupsCleanup = null;
+      throw error;
+    });
+  }
+
+  return legacyDemoGroupsCleanup;
 }
 
 function buildDefaultChallenge(group, now = new Date(), options = {}) {
@@ -355,58 +349,14 @@ function buildDefaultGroupGoal(groupId, now = new Date()) {
   };
 }
 
-async function seedBaseData(userId) {
+async function prepareGroupData() {
   await ensureCollections();
-  const now = new Date();
-  const userKey = safeId(userId);
-
-  await Promise.all(GROUPS.flatMap((group) => {
-    const records = [
-      createIfMissing("groups", group._id, {
-        name: group.name,
-        description: group.description,
-        ownerId: group.ownerId,
-        avatarUrl: group.avatarUrl,
-        coverUrl: group.coverUrl,
-        theme: group.theme,
-        status: group.status,
-        visibility: group.visibility,
-        maxMembers: group.maxMembers,
-        todayCheckInCount: group.todayCheckInCount,
-        badge: group.badge,
-        badgeType: group.badgeType,
-        sortOrder: group.sortOrder,
-        schemaVersion: 1,
-        createdAt: now,
-        updatedAt: now
-      }),
-      createIfMissing("group_members", `${group._id}-user-${userKey}`, {
-        groupId: group._id,
-        userId,
-        role: "member",
-        status: "active",
-        profileSnapshot: null,
-        joinedAt: now,
-        lastActiveAt: now,
-        lastCheckInAt: null,
-        continuousCheckInDays: 0,
-        isDemoMembership: true
-      })
-    ];
-    const challenge = buildDefaultChallenge(group, now, { isDemoChallenge: true });
-    if (challenge) {
-      records.push(createIfMissing("group_challenges", challenge.id, challenge.data));
-    }
-    return records;
-  }));
-
-  // 榜单和训练墙读取真实数据库记录，不再为详情页写入测试打卡数据。
 }
 
 async function getMyGroups(event = {}) {
   try {
     const userId = getIdentity(event);
-    await seedBaseData(userId);
+    await prepareGroupData();
 
     const memberships = await db.collection("group_members")
       .where({ userId })
@@ -684,7 +634,7 @@ async function searchGroups(event) {
     const keyword = String(event.keyword || "").trim().toLowerCase();
     if (!keyword) throw new Error("请输入群组名称或群号");
 
-    await seedBaseData(userId);
+    await prepareGroupData();
     const [result, membershipResult, applicationResult] = await Promise.all([
       db.collection("groups").limit(100).get(),
       db.collection("group_members").where({ userId }).limit(100).get(),
@@ -1494,7 +1444,7 @@ async function getGroupLeaderboard(event) {
     const leaderboardType = getLeaderboardType(event.leaderboardType || event.rankType);
     if (!groupId) throw new Error("缺少群组 ID");
 
-    await seedBaseData(userId);
+    await prepareGroupData();
 
     const groupResult = await db.collection("groups").doc(groupId).get();
     const group = groupResult.data;
@@ -1531,7 +1481,7 @@ async function getGroupDetail(event) {
     const groupId = String(event.groupId || "").trim();
     if (!groupId) throw new Error("缺少群组 ID");
 
-    await seedBaseData(userId);
+    await prepareGroupData();
 
     const groupResult = await db.collection("groups").doc(groupId).get();
     const group = groupResult.data;

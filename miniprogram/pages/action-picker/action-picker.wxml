@@ -36,20 +36,42 @@
       <view class="action-content">
         <view class="group-title">{{activeCategoryName}}</view>
         <view class="action-grid" wx:if="{{actions.length}}">
-          <button
+          <view
             wx:for="{{actions}}"
             wx:key="id"
-            class="action-card"
+            class="action-card {{activeCategory === 'custom' ? 'custom-action-card' : ''}}"
             bindtap="onActionTap"
             data-id="{{item.id}}"
-            data-name="{{item.name}}"
           >
             <image class="action-image" src="{{item.iconPath}}" mode="aspectFit"></image>
             <view class="action-name">{{item.name}}</view>
-          </button>
+            <view wx:if="{{activeCategory === 'custom'}}" class="custom-action-type">{{item.categoryId === 'cardio' ? '有氧' : '力量'}}</view>
+          </view>
         </view>
-        <view wx:else class="empty-state">暂无匹配动作</view>
+        <view wx:else class="empty-state">{{activeCategory === 'custom' ? '还没有自定义动作' : '暂无匹配动作'}}</view>
+
+        <button wx:if="{{activeCategory === 'custom'}}" class="custom-add-button" bindtap="onOpenCustomActionDialog">
+          <view class="lucide-icon icon-plus"></view>
+          <text>添加自定义动作</text>
+        </button>
       </view>
     </scroll-view>
+  </view>
+
+  <view wx:if="{{showCustomActionDialog}}" class="dialog-mask" catchtap="onCloseCustomActionDialog">
+    <view class="custom-action-dialog" catchtap="onCustomActionDialogTap">
+      <view class="dialog-title">添加自定义动作</view>
+      <view class="dialog-label">动作名称</view>
+      <input class="dialog-input" value="{{customActionName}}" maxlength="100" placeholder="例如：壶铃摆动" focus bindinput="onCustomActionNameInput" />
+      <view class="dialog-label">动作类型</view>
+      <view class="type-options">
+        <button class="type-option {{customActionCategory === 'strength' ? 'selected' : ''}}" bindtap="onCustomActionCategoryTap" data-category="strength">力量</button>
+        <button class="type-option {{customActionCategory === 'cardio' ? 'selected' : ''}}" bindtap="onCustomActionCategoryTap" data-category="cardio">有氧</button>
+      </view>
+      <view class="dialog-actions">
+        <button class="dialog-cancel" bindtap="onCloseCustomActionDialog">取消</button>
+        <button class="dialog-confirm" loading="{{creatingCustomAction}}" bindtap="onCreateCustomAction">添加</button>
+      </view>
+    </view>
   </view>
 </view>
