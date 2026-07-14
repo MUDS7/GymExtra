@@ -178,7 +178,7 @@
   flex-wrap: wrap;
   align-content: flex-start;
   align-items: flex-start;
-  justify-content: flex-start;
+  justify-content: space-between;
   direction: ltr;
 }
 
@@ -188,7 +188,7 @@
   min-width: 0;
   width: 274rpx;
   height: 264rpx;
-  margin: 0 18rpx 24rpx 0;
+  margin: 0 0 24rpx;
   padding: 20rpx 16rpx 24rpx;
   border: 1rpx solid #EFEFEF;
   border-radius: 22rpx;
@@ -229,6 +229,11 @@
   font-size: 20rpx;
   line-height: 1.2;
   font-weight: 800;
+}
+
+.custom-action-type.cardio {
+  color: #258DE9;
+  background: #EFF8FF;
 }
 
 .action-card.custom-action-card {
@@ -391,7 +396,6 @@
   .action-card {
     flex-basis: 288rpx;
     width: 288rpx;
-    margin-right: 16rpx;
     margin-bottom: 20rpx;
     height: 246rpx;
     padding: 18rpx 12rpx 20rpx;
