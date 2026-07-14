@@ -173,7 +173,9 @@ const deleteRecord = async (event) => {
 exports.main = async (event, context) => {
   switch (event.type) {
     case "login":
-      return await userService.login();
+      return await userService.login(event);
+    case "listTestUsers":
+      return await userService.listTestUsers();
     case "registerUser":
       return await userService.register(event);
     case "getActions":
@@ -181,7 +183,7 @@ exports.main = async (event, context) => {
     case "saveTraining":
       return await trainingService.saveTraining(event);
     case "getRecentTrainings":
-      return await trainingService.getRecentTrainings();
+      return await trainingService.getRecentTrainings(event);
     case "getAllTrainings":
       return await trainingService.getAllTrainings(event);
     case "getTrainingDetail":
@@ -191,11 +193,11 @@ exports.main = async (event, context) => {
     case "getWeeklyTrainings":
       return await trainingService.getWeeklyTrainings(event);
     case "getUserStats":
-      return await userStatsService.getUserStats();
+      return await userStatsService.getUserStats(event);
     case "getMyGroups":
-      return await groupService.getMyGroups();
+      return await groupService.getMyGroups(event);
     case "getManagedGroups":
-      return await groupService.getManagedGroups();
+      return await groupService.getManagedGroups(event);
     case "createGroup":
       return await groupService.createGroup(event);
     case "getManagedGroupDetail":
@@ -208,6 +210,8 @@ exports.main = async (event, context) => {
       return await groupService.applyToGroup(event);
     case "approveGroupApplication":
       return await groupService.approveGroupApplication(event);
+    case "removeGroupMember":
+      return await groupService.removeGroupMember(event);
     case "getGroupDetail":
       return await groupService.getGroupDetail(event);
     case "getGroupLeaderboard":

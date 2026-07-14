@@ -57,6 +57,10 @@ function approveGroupApplication(groupId, applicationId) {
   return callGroupFunction("approveGroupApplication", { groupId, applicationId });
 }
 
+function removeGroupMember(groupId, memberId) {
+  return callGroupFunction("removeGroupMember", { groupId, memberId });
+}
+
 module.exports = {
   getMyGroups,
   getManagedGroups,
@@ -67,5 +71,6 @@ module.exports = {
   getGroupLeaderboard,
   searchGroups,
   applyToGroup,
-  approveGroupApplication
+  approveGroupApplication,
+  removeGroupMember
 };

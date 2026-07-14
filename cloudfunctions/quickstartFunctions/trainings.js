@@ -1,6 +1,7 @@
 const cloud = require("wx-server-sdk");
 const crypto = require("crypto");
 const userStatsService = require("./userStats");
+const identity = require("./identity");
 
 const db = cloud.database();
 const COLLECTION = "trainings";
@@ -299,10 +300,7 @@ async function saveTraining(event) {
   try {
     await ensureCollection();
 
-    const { OPENID } = cloud.getWXContext();
-    if (!OPENID) {
-      throw new Error("无法获取当前用户身份");
-    }
+    const userId = identity.getUserId(event);
 
     const sourceActions = Array.isArray(event.actions) ? event.actions : [];
     if (sourceActions.length > 100) {
@@ -322,8 +320,8 @@ async function saveTraining(event) {
     const now = new Date();
     const data = {
       uuid: id,
-      userId: OPENID,
-      _openid: OPENID,
+      userId,
+      _openid: userId,
       groupId,
       title: String(event.title || "").trim().slice(0, 100) || "未命名训练",
       timer,
@@ -361,7 +359,7 @@ async function saveTraining(event) {
       trainingId: id,
       data: {
         uuid: id,
-        userId: OPENID
+        userId
       }
     };
   } catch (error) {
@@ -373,16 +371,13 @@ async function saveTraining(event) {
   }
 }
 
-async function getRecentTrainings() {
+async function getRecentTrainings(event = {}) {
   try {
-    const { OPENID } = cloud.getWXContext();
-    if (!OPENID) {
-      throw new Error("无法获取当前用户身份");
-    }
+    const userId = identity.getUserId(event);
 
     const result = await db.collection(COLLECTION)
       .aggregate()
-      .match({ userId: OPENID })
+      .match({ userId })
       .sort({ createdAt: -1 })
       .limit(5)
       .project({
@@ -415,16 +410,13 @@ async function getRecentTrainings() {
 
 async function getAllTrainings(event) {
   try {
-    const { OPENID } = cloud.getWXContext();
-    if (!OPENID) {
-      throw new Error("无法获取当前用户身份");
-    }
+    const userId = identity.getUserId(event);
 
     const page = Math.max(0, Math.floor(Number(event.page) || 0));
     const pageSize = Math.min(50, Math.max(1, Math.floor(Number(event.pageSize) || 20)));
     const result = await db.collection(COLLECTION)
       .aggregate()
-      .match({ userId: OPENID })
+      .match({ userId })
       .sort({ createdAt: -1 })
       .skip(page * pageSize)
       .limit(pageSize + 1)
@@ -460,10 +452,7 @@ async function getAllTrainings(event) {
 
 async function getTrainingDetail(event) {
   try {
-    const { OPENID } = cloud.getWXContext();
-    if (!OPENID) {
-      throw new Error("无法获取当前用户身份");
-    }
+    const userId = identity.getUserId(event);
 
     const trainingId = String(event.trainingId || "").trim();
     if (!trainingId) {
@@ -473,7 +462,7 @@ async function getTrainingDetail(event) {
     const result = await db.collection(COLLECTION).doc(trainingId).get();
     const training = result.data;
 
-    if (!training || training.userId !== OPENID) {
+    if (!training || training.userId !== userId) {
       throw new Error("训练记录不存在");
     }
 
@@ -492,10 +481,7 @@ async function getTrainingDetail(event) {
 
 async function deleteTraining(event) {
   try {
-    const { OPENID } = cloud.getWXContext();
-    if (!OPENID) {
-      throw new Error("无法获取当前用户身份");
-    }
+    const userId = identity.getUserId(event);
 
     const trainingId = String(event.trainingId || "").trim();
     if (!trainingId) {
@@ -505,21 +491,21 @@ async function deleteTraining(event) {
     const result = await db.collection(COLLECTION).doc(trainingId).get();
     const training = result.data;
 
-    if (!training || training.userId !== OPENID) {
+    if (!training || training.userId !== userId) {
       throw new Error("训练记录不存在");
     }
 
     await db.collection(COLLECTION).doc(trainingId).remove();
 
     try {
-      await userStatsService.syncAfterTrainingDeleted(OPENID);
+      await userStatsService.syncAfterTrainingDeleted(userId);
     } catch (error) {
       console.error("同步删除用户训练统计失败", error);
     }
 
     try {
       await db.collection("group_daily_activities")
-        .where({ trainingId, userId: OPENID })
+        .where({ trainingId, userId })
         .remove();
     } catch (error) {
       console.error("同步删除群组训练墙记录失败", error);
@@ -540,10 +526,7 @@ async function deleteTraining(event) {
 
 async function getWeeklyTrainings(event) {
   try {
-    const { OPENID } = cloud.getWXContext();
-    if (!OPENID) {
-      throw new Error("无法获取当前用户身份");
-    }
+    const userId = identity.getUserId(event);
 
     const weekStart = new Date(event.weekStart);
     const weekEnd = new Date(event.weekEnd);
@@ -556,7 +539,7 @@ async function getWeeklyTrainings(event) {
     const result = await db.collection(COLLECTION)
       .aggregate()
       .match({
-        userId: OPENID,
+        userId,
         createdAt: _.gte(weekStart).lt(weekEnd)
       })
       .sort({ createdAt: 1 })

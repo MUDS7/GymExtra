@@ -1,9 +1,32 @@
-const STORAGE_KEY = "gymextra-training-drafts";
+const STORAGE_KEY_PREFIX = "gymextra-training-drafts";
+
+function getCurrentUserId() {
+  try {
+    const app = getApp();
+    const userId = app && app.globalData && app.globalData.userId;
+    return userId ? String(userId) : "";
+  } catch (error) {
+    return "";
+  }
+}
+
+function getStorageKey(userId = getCurrentUserId()) {
+  return userId ? `${STORAGE_KEY_PREFIX}:${encodeURIComponent(userId)}` : "";
+}
 
 function getTrainingDrafts() {
+  const userId = getCurrentUserId();
+  const storageKey = getStorageKey(userId);
+
+  if (!storageKey) {
+    return [];
+  }
+
   try {
-    const drafts = wx.getStorageSync(STORAGE_KEY);
-    return Array.isArray(drafts) ? drafts : [];
+    const drafts = wx.getStorageSync(storageKey);
+    return Array.isArray(drafts)
+      ? drafts.filter((draft) => draft && draft.userId === userId)
+      : [];
   } catch (error) {
     console.error("读取训练暂存失败", error);
     return [];
@@ -15,12 +38,21 @@ function getTrainingDraft(draftId) {
 }
 
 function saveTrainingDraft(draft) {
+  const userId = getCurrentUserId();
+  const storageKey = getStorageKey(userId);
+
+  if (!storageKey) {
+    console.warn("未登录用户，跳过训练暂存");
+    return null;
+  }
+
   const drafts = getTrainingDrafts();
   const draftId = draft.draftId || `draft-${Date.now()}`;
   const now = Date.now();
   const actions = Array.isArray(draft.actions) ? draft.actions : [];
   const nextDraft = {
     ...draft,
+    userId,
     draftId,
     uuid: draftId,
     status: "incomplete",
@@ -40,13 +72,17 @@ function saveTrainingDraft(draft) {
     drafts.unshift(nextDraft);
   }
 
-  wx.setStorageSync(STORAGE_KEY, drafts.slice(0, 20));
+  wx.setStorageSync(storageKey, drafts.slice(0, 20));
   return nextDraft;
 }
 
 function removeTrainingDraft(draftId) {
   if (!draftId) return;
-  wx.setStorageSync(STORAGE_KEY, getTrainingDrafts().filter((draft) => draft && draft.draftId !== draftId));
+  const storageKey = getStorageKey();
+
+  if (!storageKey) return;
+
+  wx.setStorageSync(storageKey, getTrainingDrafts().filter((draft) => draft && draft.draftId !== draftId));
 }
 
 module.exports = { getTrainingDrafts, getTrainingDraft, saveTrainingDraft, removeTrainingDraft };

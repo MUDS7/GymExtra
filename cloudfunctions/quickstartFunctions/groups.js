@@ -1,5 +1,6 @@
 const cloud = require("wx-server-sdk");
 const crypto = require("crypto");
+const identity = require("./identity");
 
 const db = cloud.database();
 const DEFAULT_WEEKLY_GOAL_MINUTES = 1000;
@@ -76,10 +77,8 @@ const GROUPS = [
 
 let collectionsReady;
 
-function getIdentity() {
-  const { OPENID } = cloud.getWXContext();
-  if (!OPENID) throw new Error("无法获取当前用户身份");
-  return OPENID;
+function getIdentity(event) {
+  return identity.getUserId(event);
 }
 
 function safeId(value) {
@@ -406,9 +405,9 @@ async function seedBaseData(userId) {
   // 榜单和训练墙读取真实数据库记录，不再为详情页写入测试打卡数据。
 }
 
-async function getMyGroups() {
+async function getMyGroups(event = {}) {
   try {
-    const userId = getIdentity();
+    const userId = getIdentity(event);
     await seedBaseData(userId);
 
     const memberships = await db.collection("group_members")
@@ -449,9 +448,9 @@ async function getMyGroups() {
   }
 }
 
-async function getManagedGroups() {
+async function getManagedGroups(event = {}) {
   try {
-    const userId = getIdentity();
+    const userId = getIdentity(event);
     await ensureCollections();
 
     const result = await db.collection("groups")
@@ -491,7 +490,7 @@ async function getManagedGroups() {
 
 async function createGroup(event) {
   try {
-    const userId = getIdentity();
+    const userId = getIdentity(event);
     const name = String(event.name || "").trim();
     if (!name) throw new Error("请输入群组名");
     if (name.length > 30) throw new Error("群组名不能超过 30 个字符");
@@ -578,7 +577,8 @@ function toManagementMember(member, profile) {
     name,
     initial: String(name || "群").slice(0, 1),
     avatarUrl: (member.profileSnapshot && member.profileSnapshot.avatarUrl) || (profile && profile.avatarUrl) || "",
-    roleText: member.role === "owner" ? "群主" : "成员"
+    roleText: member.role === "owner" ? "群主" : "成员",
+    canRemove: member.role !== "owner"
   };
 }
 
@@ -595,7 +595,7 @@ function toManagementApplication(application, profile) {
 
 async function getManagedGroupDetail(event) {
   try {
-    const userId = getIdentity();
+    const userId = getIdentity(event);
     const groupId = String(event.groupId || "").trim();
     if (!groupId) throw new Error("缺少群组 ID");
 
@@ -639,7 +639,7 @@ async function getManagedGroupDetail(event) {
 
 async function setManagedGroupGoal(event) {
   try {
-    const userId = getIdentity();
+    const userId = getIdentity(event);
     const groupId = String(event.groupId || "").trim();
     const presetId = String(event.presetId || "").trim();
     const preset = GROUP_GOAL_PRESETS.find((item) => item.id === presetId);
@@ -682,7 +682,7 @@ async function setManagedGroupGoal(event) {
 
 async function searchGroups(event) {
   try {
-    const userId = getIdentity();
+    const userId = getIdentity(event);
     const keyword = String(event.keyword || "").trim().toLowerCase();
     if (!keyword) throw new Error("请输入群组名称或群号");
 
@@ -728,7 +728,7 @@ async function searchGroups(event) {
 
 async function applyToGroup(event) {
   try {
-    const userId = getIdentity();
+    const userId = getIdentity(event);
     const groupId = String(event.groupId || "").trim();
     if (!groupId) throw new Error("缺少群组 ID");
 
@@ -783,7 +783,7 @@ async function applyToGroup(event) {
 
 async function approveGroupApplication(event) {
   try {
-    const userId = getIdentity();
+    const userId = getIdentity(event);
     const groupId = String(event.groupId || "").trim();
     const applicationId = String(event.applicationId || "").trim();
     if (!groupId) throw new Error("缺少群组 ID");
@@ -844,6 +844,56 @@ async function approveGroupApplication(event) {
   } catch (error) {
     console.error("同意入群申请失败", error);
     return { success: false, message: error.message || "同意入群申请失败" };
+  }
+}
+
+async function removeGroupMember(event) {
+  try {
+    const userId = getIdentity(event);
+    const groupId = String(event.groupId || "").trim();
+    const memberId = String(event.memberId || "").trim();
+    if (!groupId) throw new Error("缺少群组 ID");
+    if (!memberId) throw new Error("缺少成员 ID");
+
+    await ensureCollections();
+    const group = await getOwnedGroup(groupId, userId);
+    const memberRef = db.collection("group_members").doc(memberId);
+    const member = (await memberRef.get()).data;
+
+    if (!member || member.groupId !== groupId) {
+      throw new Error("成员不存在");
+    }
+    if (member.role === "owner" || member.userId === group.ownerId) {
+      throw new Error("不能移除群主");
+    }
+    if (member.status !== "active") {
+      return { success: true, data: { memberId, status: member.status } };
+    }
+
+    const now = new Date();
+    await memberRef.update({
+      data: {
+        status: "removed",
+        removedAt: now,
+        removedBy: userId,
+        updatedAt: now
+      }
+    });
+
+    const applicationId = `${groupId}-user-${safeId(member.userId)}`;
+    await db.collection("group_applications").doc(applicationId).update({
+      data: {
+        status: "removed",
+        reviewedAt: now,
+        reviewedBy: userId,
+        updatedAt: now
+      }
+    }).catch(() => null);
+
+    return { success: true, data: { memberId, status: "removed" } };
+  } catch (error) {
+    console.error("移除群成员失败", error);
+    return { success: false, message: error.message || "移除群成员失败" };
   }
 }
 
@@ -1441,7 +1491,7 @@ async function queryLeaderboardByType(groupId, type) {
 
 async function getGroupLeaderboard(event) {
   try {
-    const userId = getIdentity();
+    const userId = getIdentity(event);
     const groupId = String(event.groupId || "").trim();
     const leaderboardType = getLeaderboardType(event.leaderboardType || event.rankType);
     if (!groupId) throw new Error("缺少群组 ID");
@@ -1479,7 +1529,7 @@ async function getGroupLeaderboard(event) {
 
 async function getGroupDetail(event) {
   try {
-    const userId = getIdentity();
+    const userId = getIdentity(event);
     const groupId = String(event.groupId || "").trim();
     if (!groupId) throw new Error("缺少群组 ID");
 
@@ -1567,5 +1617,6 @@ module.exports = {
   getGroupLeaderboard,
   searchGroups,
   applyToGroup,
-  approveGroupApplication
+  approveGroupApplication,
+  removeGroupMember
 };

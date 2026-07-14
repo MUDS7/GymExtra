@@ -1,4 +1,5 @@
 const cloud = require("wx-server-sdk");
+const identity = require("./identity");
 
 const db = cloud.database();
 const COLLECTION = "user_stats";
@@ -10,16 +11,6 @@ async function ensureCollection() {
   } catch (error) {
     // 集合已存在时继续使用。
   }
-}
-
-function getIdentity() {
-  const { OPENID } = cloud.getWXContext();
-
-  if (!OPENID) {
-    throw new Error("无法获取当前用户身份");
-  }
-
-  return OPENID;
 }
 
 function toDate(value) {
@@ -183,11 +174,11 @@ async function rebuildStatsForUser(userId) {
   return normalizeStats(data);
 }
 
-async function getUserStats() {
+async function getUserStats(event = {}) {
   try {
     await ensureCollection();
 
-    const userId = getIdentity();
+    const userId = identity.getUserId(event);
     const record = await getExistingStats(userId);
     if (!record) {
       return {

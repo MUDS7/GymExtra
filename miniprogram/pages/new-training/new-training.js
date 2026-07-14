@@ -412,6 +412,11 @@ Page({
       sharedToGroup: this.data.sharedToGroup,
       actions: this.data.actions
     });
+
+    if (!draft) {
+      return;
+    }
+
     this.draftId = draft.draftId;
     this.draftCreatedAt = draft.createdAt;
     this.draftSaved = true;

@@ -16,7 +16,8 @@ Page({
     applications: [],
     loading: true,
     settingGoalId: "",
-    approvingApplicationId: ""
+    approvingApplicationId: "",
+    removingMemberId: ""
   },
 
   onLoad(options) {
@@ -102,6 +103,32 @@ Page({
     } finally {
       this.setData({ approvingApplicationId: "" });
     }
+  },
+
+  onRemoveMember(event) {
+    const { memberId, memberName } = event.currentTarget.dataset;
+    if (!memberId || this.data.removingMemberId) return;
+
+    wx.showModal({
+      title: "移除成员",
+      content: `确定将“${memberName || "该成员"}”移出该群吗？`,
+      confirmText: "移除",
+      confirmColor: "#E54D4D",
+      success: async ({ confirm }) => {
+        if (!confirm) return;
+
+        this.setData({ removingMemberId: memberId });
+        try {
+          await groupService.removeGroupMember(this.data.groupId, memberId);
+          wx.showToast({ title: "成员已移除", icon: "success" });
+          await this.loadDetail();
+        } catch (error) {
+          wx.showToast({ title: error.message || "移除失败，请重试", icon: "none" });
+        } finally {
+          this.setData({ removingMemberId: "" });
+        }
+      }
+    });
   },
 
 });

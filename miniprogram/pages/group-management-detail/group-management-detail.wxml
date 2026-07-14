@@ -52,6 +52,15 @@
         <view wx:else class="person-avatar avatar-fallback">{{item.initial}}</view>
         <view class="person-name">{{item.name}}</view>
         <view class="person-tag">{{item.roleText}}</view>
+        <button
+          wx:if="{{item.canRemove}}"
+          class="member-remove-button"
+          loading="{{removingMemberId === item.id}}"
+          disabled="{{removingMemberId}}"
+          bindtap="onRemoveMember"
+          data-member-id="{{item.id}}"
+          data-member-name="{{item.name}}"
+        >移除</button>
       </view>
     </view>
     <view class="empty-state" wx:else>暂无群成员</view>
