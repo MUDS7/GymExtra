@@ -2,6 +2,10 @@ const trainingService = require("../../services/trainings");
 const { getTrainingTags } = require("../../utils/training-tags");
 const { getTrainingDrafts } = require("../../utils/training-drafts");
 
+// 力量和自定义训练按产品约定估算；有氧采用常见中等强度有氧的平均值。
+const STRENGTH_KCAL_PER_HOUR = 300;
+const CARDIO_KCAL_PER_HOUR = 530;
+
 function formatTrainingDate(value) {
   const date = new Date(value);
 
@@ -55,9 +59,51 @@ function parseDurationSeconds(value) {
   return Number.isFinite(minutes) ? Math.max(0, minutes * 60) : 0;
 }
 
+function getTrainingDurationMinutes(training) {
+  const timerMinutes = parseDurationSeconds(training.timer) / 60;
+  const savedMinutes = Number(training.durationMinutes || 0);
+
+  return Math.max(timerMinutes, Number.isFinite(savedMinutes) ? savedMinutes : 0);
+}
+
+function isCustomAction(action) {
+  return Boolean(action && (action.isCustom || typeof action.actionId === "string"));
+}
+
+function calculateTrainingCalories(training) {
+  const totalMinutes = getTrainingDurationMinutes(training);
+  const actions = Array.isArray(training.actions) ? training.actions : [];
+  let recordedCardioMinutes = 0;
+  let calories = 0;
+
+  actions.forEach((action) => {
+    if (action.categoryId !== "cardio" || Number(action.completedSets || 0) <= 0) {
+      return;
+    }
+
+    const minutes = Math.max(0, Number(action.durationMinutes || 0));
+    const availableMinutes = Math.max(0, totalMinutes - recordedCardioMinutes);
+    const cardioMinutes = Math.min(minutes, availableMinutes);
+
+    recordedCardioMinutes += cardioMinutes;
+    calories += cardioMinutes * (isCustomAction(action) ? STRENGTH_KCAL_PER_HOUR : CARDIO_KCAL_PER_HOUR) / 60;
+  });
+
+  const hasCustomAction = actions.some(isCustomAction);
+  const hasStrengthAction = actions.some((action) => action.categoryId && action.categoryId !== "cardio");
+  const hasCardioAction = actions.some((action) => action.categoryId === "cardio");
+  const remainingMinutes = Math.max(0, totalMinutes - recordedCardioMinutes);
+  const remainingRate = hasCustomAction || hasStrengthAction || !hasCardioAction
+    ? STRENGTH_KCAL_PER_HOUR
+    : CARDIO_KCAL_PER_HOUR;
+
+  return calories + remainingMinutes * remainingRate / 60;
+}
+
 function buildWeeklyDashboard(trainings, weekStart) {
   const activeDays = new Set();
   let totalSeconds = 0;
+  let totalCalories = 0;
 
   trainings.forEach((training) => {
     const createdAt = new Date(training.createdAt);
@@ -72,6 +118,7 @@ function buildWeeklyDashboard(trainings, weekStart) {
     }
 
     totalSeconds += parseDurationSeconds(training.timer);
+    totalCalories += calculateTrainingCalories(training);
   });
 
   const labels = ["一", "二", "三", "四", "五", "六", "日"];
@@ -82,7 +129,7 @@ function buildWeeklyDashboard(trainings, weekStart) {
     stats: [
       { label: "本周训练", value: String(trainings.length), unit: "次", tone: "energy", icon: "icon-zap" },
       { label: "累计时长", value: String(Math.ceil(totalSeconds / 60)), unit: "分钟", tone: "cool", icon: "icon-clock" },
-      { label: "消耗热量", value: "0", unit: "千卡", tone: "power", icon: "icon-flame" }
+      { label: "消耗热量", value: String(Math.round(totalCalories)), unit: "千卡", tone: "power", icon: "icon-flame" }
     ]
   };
 }

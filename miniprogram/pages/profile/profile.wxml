@@ -1,10 +1,6 @@
 <view class="profile-page">
   <view class="profile-header">
     <view class="page-title">我的</view>
-    <view class="notice-button" bindtap="onActionTap" data-name="通知">
-      <view class="lucide-icon icon-bell"></view>
-      <view class="notice-dot"></view>
-    </view>
   </view>
 
   <view class="profile-card">

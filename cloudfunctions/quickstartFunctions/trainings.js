@@ -80,6 +80,7 @@ function normalizeAction(action, index) {
   return {
     actionId: action && action.id !== undefined ? action.id : null,
     categoryId,
+    isCustom: Boolean(action && action.isCustom) || typeof (action && action.id) === "string",
     durationMinutes,
     name: String((action && action.name) || "未命名动作").trim().slice(0, 100),
     iconPath: String((action && action.iconPath) || "").slice(0, 500),
@@ -548,6 +549,7 @@ async function getWeeklyTrainings(event) {
         timer: 1,
         groupId: 1,
         durationMinutes: 1,
+        actions: 1,
         createdAt: 1
       })
       .end();

@@ -172,6 +172,7 @@ function createTrainingAction(action) {
     uid: `${action.id || "action"}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     id: action.id,
     categoryId,
+    isCustom: Boolean(action.isCustom),
     isCardio,
     durationMinutes: normalizeDuration(action.durationMinutes, isCardio ? 30 : 0),
     name: action.name || "未命名动作",
@@ -195,6 +196,7 @@ async function createReadonlyTrainingAction(action, actionIconMap) {
     uid: `saved-action-${action.order || action.actionId || Date.now()}`,
     id: action.actionId,
     categoryId,
+    isCustom: Boolean(action.isCustom || typeof action.actionId === "string"),
     isCardio,
     durationMinutes: normalizeDuration(action.durationMinutes, isCardio ? 30 : 0),
     name: action.name || "未命名动作",
@@ -312,6 +314,37 @@ Page({
     });
   },
 
+  onTimerFocus() {
+    if (this.data.readonly) {
+      return;
+    }
+
+    this.timerEditing = true;
+    this.stopTimer();
+  },
+
+  onTimerBlur(event) {
+    if (this.data.readonly) {
+      return;
+    }
+
+    this.commitTimerInput(event.detail.value);
+  },
+
+  commitTimerInput(value = this.data.timer) {
+    const timerSeconds = parseTimerSeconds(value);
+
+    this.timerEditing = false;
+    this.timerBaseSeconds = timerSeconds;
+    this.timerStartedAt = Date.now();
+
+    if (!this.timerInterval) {
+      this.timerInterval = setInterval(() => this.syncTimer(), 1000);
+    }
+
+    this.setData({ timer: formatTimer(timerSeconds) });
+  },
+
   loadTrainingDraft(draftId) {
     const draft = getTrainingDraft(draftId);
 
@@ -350,7 +383,7 @@ Page({
   },
 
   syncTimer() {
-    if (!this.timerStartedAt) {
+    if (!this.timerStartedAt || this.timerEditing) {
       return this.data.timer;
     }
 
@@ -364,6 +397,10 @@ Page({
   },
 
   stopTimer() {
+    if (this.timerEditing) {
+      this.commitTimerInput();
+    }
+
     const timer = this.syncTimer();
 
     if (this.timerInterval) {
@@ -385,6 +422,7 @@ Page({
       actions: this.data.actions.map((action) => ({
         id: action.id,
         categoryId: action.categoryId,
+        isCustom: Boolean(action.isCustom),
         name: action.name,
         iconPath: action.iconFileID || action.iconPath,
         durationMinutes: action.isCardio ? action.durationMinutes : null,
@@ -536,6 +574,21 @@ Page({
     });
   },
 
+  adjustTimerForCardioDurationChange(previousCardioDurationMinutes, actions) {
+    const cardioDurationDeltaSeconds = (
+      getCardioDurationMinutes(actions) - previousCardioDurationMinutes
+    ) * 60;
+
+    if (!cardioDurationDeltaSeconds) {
+      return;
+    }
+
+    const currentTimerSeconds = parseTimerSeconds(this.syncTimer());
+    this.timerBaseSeconds = Math.max(0, currentTimerSeconds + cardioDurationDeltaSeconds);
+    this.timerStartedAt = Date.now();
+    this.setData({ timer: formatTimer(this.timerBaseSeconds) });
+  },
+
   addTrainingAction(action) {
     this.updateActions(this.data.actions.concat(createTrainingAction(action)));
   },
@@ -571,10 +624,12 @@ Page({
       return;
     }
 
+    const previousCardioDurationMinutes = getCardioDurationMinutes(this.data.actions);
     const durationMinutes = Number(value[0] || 0) * 60 + Number(value[1] || 0);
     const actions = this.data.actions.slice();
     actions[index] = refreshAction({ ...action, durationMinutes });
     this.updateActions(actions);
+    this.adjustTimerForCardioDurationChange(previousCardioDurationMinutes, actions);
   },
 
   getSetInputContext(event) {
@@ -676,6 +731,7 @@ Page({
     }
 
     const actions = this.data.actions.slice();
+    const previousCardioDurationMinutes = getCardioDurationMinutes(actions);
     const action = { ...actions[actionPosition] };
     const sets = action.sets.slice();
 
@@ -686,6 +742,8 @@ Page({
     sets[setPosition] = { ...sets[setPosition], completed: !sets[setPosition].completed };
     actions[actionPosition] = refreshAction({ ...action, sets });
     this.updateActions(actions);
+
+    this.adjustTimerForCardioDurationChange(previousCardioDurationMinutes, actions);
   },
 
   onAddSetTap(event) {

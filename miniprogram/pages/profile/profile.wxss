@@ -7,44 +7,13 @@
 }
 
 .profile-header {
-  padding: 8rpx 0 46rpx;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  padding: 18rpx 0 24rpx;
 }
 
 .page-title {
   font-size: 48rpx;
   line-height: 1;
   font-weight: 900;
-}
-
-.notice-button {
-  position: relative;
-  width: 72rpx;
-  height: 72rpx;
-  margin-top: -8rpx;
-  border: 1rpx solid #DADDE2;
-  border-radius: 50%;
-  color: #5E6269;
-  background: #FBFBFC;
-  display: grid;
-  place-items: center;
-}
-
-.notice-button .lucide-icon {
-  width: 31rpx;
-  height: 31rpx;
-}
-
-.notice-dot {
-  position: absolute;
-  top: 10rpx;
-  right: 18rpx;
-  width: 10rpx;
-  height: 10rpx;
-  border-radius: 50%;
-  background: #D14AC7;
 }
 
 .profile-card {

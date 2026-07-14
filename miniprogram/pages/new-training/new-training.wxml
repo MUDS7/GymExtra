@@ -7,8 +7,10 @@
       value="{{timer}}"
       placeholder="00:00"
       placeholder-class="timer-placeholder"
-      disabled="{{true}}"
+      disabled="{{readonly}}"
+      bindfocus="onTimerFocus"
       bindinput="onTimerInput"
+      bindblur="onTimerBlur"
     />
     <view wx:if="{{!readonly}}" class="finish-button" bindtap="onFinishTap">{{saving ? '保存中' : '完成'}}</view>
     <view wx:if="{{readonly}}" class="training-delete-button {{deleting || loading ? 'disabled' : ''}}" bindtap="onTrainingDeleteTap" aria-label="删除记录">
