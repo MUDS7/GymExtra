@@ -1,4 +1,4 @@
-const CACHE_STORAGE_KEY = "actionIconCache:v1";
+const CACHE_STORAGE_KEY = "actionIconCache:v2";
 
 const pendingDownloads = Object.create(null);
 
@@ -95,13 +95,14 @@ async function getCachedIconPath(fileID) {
 }
 
 async function cacheActionIcon(action) {
-  const sourceIconPath = isCloudFile(action && action.iconFileID)
+  const sourceIconPath = action && (action.iconDownloadPath || action.iconPath);
+  const iconFileID = isCloudFile(action && action.iconFileID)
     ? action.iconFileID
-    : action && action.iconPath;
-  const iconFileID = isCloudFile(sourceIconPath) ? sourceIconPath : "";
+    : (isCloudFile(sourceIconPath) ? sourceIconPath : "");
+  const { iconDownloadPath, ...cachedAction } = action || {};
 
   return {
-    ...action,
+    ...cachedAction,
     iconFileID,
     iconPath: await getCachedIconPath(sourceIconPath)
   };

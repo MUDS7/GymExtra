@@ -1,6 +1,9 @@
 const { cloudEnvId } = require("./config/env.local");
 const { callCloudFunction } = require("./services/network");
 
+// Temporary: keep the test-user entry hidden and use the current WeChat account.
+const ENABLE_TEST_USER_SELECTOR = false;
+
 App({
   globalData: {
     env: cloudEnvId,
@@ -13,7 +16,9 @@ App({
 
   onLaunch() {
     this.initCloud();
-    this.testUserSelectionPromise = this.selectTestUser();
+    this.testUserSelectionPromise = ENABLE_TEST_USER_SELECTOR
+      ? this.selectTestUser()
+      : Promise.resolve();
     this.login().catch(() => { });
   },
 

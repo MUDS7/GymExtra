@@ -3,7 +3,7 @@ const identity = require("./identity");
 
 const db = cloud.database();
 const COLLECTION = "custom_actions";
-const DEFAULT_ACTION_ICON_PATH = "/assets/500px-Bench-press-1.png";
+const DEFAULT_ACTION_ICON_PATH = "/assets/action-icons/bench-press.png";
 const VALID_CATEGORIES = new Set(["strength", "cardio"]);
 
 async function ensureCollection() {

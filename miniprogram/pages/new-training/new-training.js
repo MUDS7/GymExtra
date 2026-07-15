@@ -81,6 +81,10 @@ function formatRecordedAt(value) {
 }
 
 function getPersistentIconPath(action) {
+  if (action && typeof action.iconPath === "string" && action.iconPath.indexOf("/assets/") === 0) {
+    return "";
+  }
+
   if (action && isCloudFile(action.iconFileID)) {
     return action.iconFileID;
   }
@@ -98,15 +102,9 @@ function getReadonlyIconSource(action, actionIconMap) {
     ? actionIconMap.get(String(action.actionId)) || ""
     : "";
 
-  if (isCloudFile(savedIconPath)) {
-    return savedIconPath;
-  }
-
-  if (isCloudFile(libraryIconPath)) {
-    return libraryIconPath;
-  }
-
-  return savedIconPath || libraryIconPath || DEFAULT_ACTION_ICON_PATH;
+  if (libraryIconPath && !isCloudFile(libraryIconPath)) return libraryIconPath;
+  if (savedIconPath && !isCloudFile(savedIconPath)) return savedIconPath;
+  return libraryIconPath || savedIconPath || DEFAULT_ACTION_ICON_PATH;
 }
 
 async function loadActionIconMap() {
@@ -437,6 +435,12 @@ Page({
 
   cacheTrainingDraft() {
     if (this.data.readonly || this.trainingCompleted || this.draftSaved) {
+      return;
+    }
+
+    if (!Array.isArray(this.data.actions) || this.data.actions.length === 0) {
+      removeTrainingDraft(this.draftId);
+      this.draftSaved = true;
       return;
     }
 
