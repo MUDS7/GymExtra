@@ -84,9 +84,106 @@ const BACK_ACTION_ICON_PATHS = {
   "俯卧挺身": "/assets/action-icons/back-prone-extension.png"
 };
 
+const LEG_ACTION_ICON_PATHS = {
+  "深蹲": "/assets/action-icons/legs-squat.png",
+  "腿举": "/assets/action-icons/legs-leg-press.png",
+  "弓步蹲": "/assets/action-icons/legs-lunge.png",
+  "腿屈伸": "/assets/action-icons/legs-leg-extension.png",
+  "颈前深蹲": "/assets/action-icons/legs-front-squat.png",
+  "高脚杯深蹲": "/assets/action-icons/legs-goblet-squat.png",
+  "哈克深蹲": "/assets/action-icons/legs-hack-squat.png",
+  "罗马尼亚硬拉": "/assets/action-icons/legs-romanian-deadlift.png",
+  "腿弯举": "/assets/action-icons/legs-leg-curl.png",
+  "登台阶": "/assets/action-icons/legs-step-up.png",
+  "提踵": "/assets/action-icons/legs-calf-raise.png",
+  "相扑硬拉": "/assets/action-icons/legs-sumo-deadlift.png",
+  "保加利亚单腿蹲": "/assets/action-icons/legs-bulgarian-split-squat.png"
+};
+
+const SHOULDER_ACTION_ICON_PATHS = {
+  "肩推": "/assets/action-icons/shoulders-press.png",
+  "侧平举": "/assets/action-icons/shoulders-lateral-raise.png",
+  "俯身飞鸟": "/assets/action-icons/shoulders-bent-over-fly.png",
+  "前平举": "/assets/action-icons/shoulders-front-raise.png",
+  "杠铃推举": "/assets/action-icons/shoulders-barbell-press.png",
+  "哑铃肩推": "/assets/action-icons/shoulders-dumbbell-press.png",
+  "阿诺德推举": "/assets/action-icons/shoulders-arnold-press.png",
+  "绳索侧平举": "/assets/action-icons/shoulders-cable-lateral-raise.png",
+  "反向蝴蝶机": "/assets/action-icons/shoulders-reverse-pec-deck.png",
+  "直立划船": "/assets/action-icons/shoulders-upright-row.png"
+};
+
+const BICEPS_ACTION_ICON_PATHS = {
+  "杠铃弯举": "/assets/action-icons/biceps-barbell-curl.png",
+  "哑铃弯举": "/assets/action-icons/biceps-dumbbell-curl.png",
+  "锤式弯举": "/assets/action-icons/biceps-hammer-curl.png",
+  "牧师凳弯举": "/assets/action-icons/biceps-preacher-curl.png",
+  "上斜哑铃弯举": "/assets/action-icons/biceps-incline-dumbbell-curl.png",
+  "集中弯举": "/assets/action-icons/biceps-concentration-curl.png",
+  "绳索弯举": "/assets/action-icons/biceps-cable-curl.png",
+  "反握弯举": "/assets/action-icons/biceps-reverse-curl.png"
+};
+
+const TRICEPS_ACTION_ICON_PATHS = {
+  "绳索下压": "/assets/action-icons/triceps-rope-pushdown.png",
+  "窄距卧推": "/assets/action-icons/triceps-close-grip-bench-press.png",
+  "臂屈伸": "/assets/action-icons/triceps-dip.png",
+  "仰卧臂屈伸": "/assets/action-icons/triceps-lying-extension.png",
+  "过顶臂屈伸": "/assets/action-icons/triceps-overhead-extension.png",
+  "哑铃臂后伸": "/assets/action-icons/triceps-dumbbell-kickback.png",
+  "绳索过顶臂屈伸": "/assets/action-icons/triceps-cable-overhead-extension.png",
+  "钻石俯卧撑": "/assets/action-icons/triceps-diamond-push-up.png"
+};
+
+const GLUTE_ACTION_ICON_PATHS = {
+  "臀桥": "/assets/action-icons/glutes-bridge.png",
+  "臀推": "/assets/action-icons/glutes-hip-thrust.png",
+  "绳索后踢腿": "/assets/action-icons/glutes-cable-kickback.png",
+  "保加利亚分腿蹲": "/assets/action-icons/glutes-bulgarian-split-squat.png",
+  "相扑深蹲": "/assets/action-icons/glutes-sumo-squat.png",
+  "髋外展": "/assets/action-icons/glutes-hip-abduction.png",
+  "反向弓步蹲": "/assets/action-icons/glutes-reverse-lunge.png",
+  "蛙式臀桥": "/assets/action-icons/glutes-frog-bridge.png"
+};
+
+const CORE_ACTION_ICON_PATHS = {
+  "卷腹": "/assets/action-icons/core-crunch.png",
+  "平板支撑": "/resource/plank.png",
+  "俄罗斯转体": "/assets/action-icons/core-russian-twist.png",
+  "悬垂举腿": "/assets/action-icons/core-hanging-leg-raise.png",
+  "仰卧起坐": "/assets/action-icons/core-sit-up.png",
+  "自行车卷腹": "/assets/action-icons/core-bicycle-crunch.png",
+  "死虫式": "/assets/action-icons/core-dead-bug.png",
+  "鸟狗式": "/assets/action-icons/core-bird-dog.png",
+  "健腹轮": "/assets/action-icons/core-ab-wheel.png",
+  "登山跑": "/assets/action-icons/core-mountain-climber.png",
+  "侧平板支撑": "/assets/action-icons/core-side-plank.png",
+  "帕洛夫抗旋转": "/assets/action-icons/core-pallof-press.png"
+};
+
+const CARDIO_ACTION_ICON_PATHS = {
+  "跑步": "/assets/action-icons/cardio-running.png",
+  "快走": "/assets/action-icons/cardio-brisk-walking.png",
+  "骑行": "/assets/action-icons/cardio-cycling.png",
+  "动感单车": "/assets/action-icons/cardio-stationary-bike.png",
+  "游泳": "/assets/action-icons/cardio-swimming.png",
+  "跳绳": "/assets/action-icons/cardio-jump-rope.png",
+  "椭圆机": "/assets/action-icons/cardio-elliptical.png",
+  "划船机": "/assets/action-icons/cardio-rowing-machine.png",
+  "爬楼机": "/assets/action-icons/cardio-stair-climber.png",
+  "有氧操": "/assets/action-icons/cardio-aerobics.png"
+};
+
 function getActionIconPath(name, categoryId) {
   if (categoryId === "chest") return CHEST_ACTION_ICON_PATHS[name] || DEFAULT_ACTION_ICON_PATH;
   if (categoryId === "back") return BACK_ACTION_ICON_PATHS[name] || CATEGORY_ICON_PATHS.back;
+  if (categoryId === "legs") return LEG_ACTION_ICON_PATHS[name] || CATEGORY_ICON_PATHS.legs;
+  if (categoryId === "shoulders") return SHOULDER_ACTION_ICON_PATHS[name] || CATEGORY_ICON_PATHS.shoulders;
+  if (categoryId === "biceps") return BICEPS_ACTION_ICON_PATHS[name] || CATEGORY_ICON_PATHS.biceps;
+  if (categoryId === "triceps") return TRICEPS_ACTION_ICON_PATHS[name] || CATEGORY_ICON_PATHS.triceps;
+  if (categoryId === "glutes") return GLUTE_ACTION_ICON_PATHS[name] || CATEGORY_ICON_PATHS.glutes;
+  if (categoryId === "core") return CORE_ACTION_ICON_PATHS[name] || CATEGORY_ICON_PATHS.core;
+  if (categoryId === "cardio") return CARDIO_ACTION_ICON_PATHS[name] || CATEGORY_ICON_PATHS.cardio;
   return CATEGORY_ICON_PATHS[categoryId] || DEFAULT_ACTION_ICON_PATH;
 }
 
@@ -179,6 +276,7 @@ const ACTION_DEFINITIONS = [
   { name: "登台阶", categoryId: "legs", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "提踵", categoryId: "legs", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "相扑硬拉", categoryId: "legs", iconPath: DEFAULT_ACTION_ICON_PATH },
+  { name: "保加利亚单腿蹲", categoryId: "legs", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "肩推", categoryId: "shoulders", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "侧平举", categoryId: "shoulders", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "俯身飞鸟", categoryId: "shoulders", iconPath: DEFAULT_ACTION_ICON_PATH },
