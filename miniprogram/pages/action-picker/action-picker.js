@@ -29,13 +29,53 @@ function buildActions(categoryId, keyword = "") {
   });
 }
 
+function getBackActionGroup(action) {
+  if (/(下拉|引体向上|直臂下压|面拉|哑铃后拉|哑铃上拉)/.test(action.name)) {
+    return "pull";
+  }
+
+  if (action.name.includes("划船")) {
+    return "row";
+  }
+
+  return "other";
+}
+
+function buildBackActionGroups(actions) {
+  const groups = [
+    { id: "pull", title: "拉类", actions: [] },
+    { id: "row", title: "划类", actions: [] },
+    { id: "other", title: "其他", actions: [] }
+  ];
+
+  const groupById = groups.reduce((result, group) => {
+    result[group.id] = group;
+    return result;
+  }, {});
+
+  actions.forEach((action) => {
+    groupById[getBackActionGroup(action)].actions.push(action);
+  });
+
+  return groups.filter((group) => group.actions.length);
+}
+
+function buildActionData(categoryId, keyword = "") {
+  const actions = buildActions(categoryId, keyword);
+
+  return {
+    actions,
+    actionGroups: categoryId === "back" ? buildBackActionGroups(actions) : []
+  };
+}
+
 Page({
   data: {
     categories,
     activeCategory: "chest",
     activeCategoryName: "胸",
     keyword: "",
-    actions: buildActions("chest"),
+    ...buildActionData("chest"),
     headerHeight: 128,
     toolbarTop: 76,
     showCustomActionDialog: false,
@@ -65,9 +105,7 @@ Page({
   },
 
   refreshActions() {
-    this.setData({
-      actions: buildActions(this.data.activeCategory, this.data.keyword)
-    });
+    this.setData(buildActionData(this.data.activeCategory, this.data.keyword));
   },
 
   setHeaderMetrics() {
@@ -93,7 +131,7 @@ Page({
     this.setData({
       activeCategory: id,
       activeCategoryName: name,
-      actions: buildActions(id, this.data.keyword)
+      ...buildActionData(id, this.data.keyword)
     });
   },
 
@@ -102,7 +140,7 @@ Page({
 
     this.setData({
       keyword,
-      actions: buildActions(this.data.activeCategory, keyword)
+      ...buildActionData(this.data.activeCategory, keyword)
     });
   },
 
@@ -155,7 +193,7 @@ Page({
         showCustomActionDialog: false,
         customActionName: "",
         customActionCategory: "strength",
-        actions: buildActions(this.data.activeCategory, this.data.keyword)
+        ...buildActionData(this.data.activeCategory, this.data.keyword)
       });
       wx.showToast({ title: "添加成功", icon: "success" });
     }).catch((error) => {

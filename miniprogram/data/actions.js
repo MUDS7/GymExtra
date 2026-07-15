@@ -1,4 +1,4 @@
-const DEFAULT_ACTION_ICON_PATH = "/assets/action-icons/bench-press.png";
+const DEFAULT_ACTION_ICON_PATH = "/assets/default-action.png";
 
 // 动作示意图均来自 Wikimedia Commons 的 Everkinetic 线条图系列，按动作模式匹配。
 const CATEGORY_ICON_PATHS = {

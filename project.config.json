@@ -74,7 +74,60 @@
   "compileType": "miniprogram",
   "srcMiniprogramRoot": "miniprogram/",
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "type": "glob",
+        "value": "pages/example/**"
+      },
+      {
+        "type": "glob",
+        "value": "images/ai_example1.png"
+      },
+      {
+        "type": "glob",
+        "value": "images/ai_example2.png"
+      },
+      {
+        "type": "glob",
+        "value": "images/cloud_dev.png"
+      },
+      {
+        "type": "glob",
+        "value": "images/create_cbr.png"
+      },
+      {
+        "type": "glob",
+        "value": "images/create_cbrf.png"
+      },
+      {
+        "type": "glob",
+        "value": "images/create_env.png"
+      },
+      {
+        "type": "glob",
+        "value": "images/database.png"
+      },
+      {
+        "type": "glob",
+        "value": "images/database_add.png"
+      },
+      {
+        "type": "glob",
+        "value": "images/default-goods-image.png"
+      },
+      {
+        "type": "glob",
+        "value": "images/env-select.png"
+      },
+      {
+        "type": "glob",
+        "value": "images/function_deploy.png"
+      },
+      {
+        "type": "glob",
+        "value": "images/scf-enter.png"
+      }
+    ],
     "include": []
   },
   "editorSetting": {

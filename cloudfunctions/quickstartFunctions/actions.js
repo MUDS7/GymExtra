@@ -4,7 +4,7 @@ const path = require("path");
 
 const db = cloud.database();
 const COLLECTION = "actions";
-const DATA_VERSION = 12;
+const DATA_VERSION = 13;
 const DEFAULT_ACTION_ICON_PATH = "/assets/action-icons/bench-press.png";
 const ACTION_ICON_CLOUD_PATH = "actions/icons/line-action-fallback.png";
 const ACTION_ICON_LOCAL_PATH = path.join(__dirname, "assets", "default-action.png");
@@ -371,17 +371,50 @@ async function getSeedVersion() {
   }
 }
 
-async function uploadActionIcon() {
-  const result = await cloud.uploadFile({
-    cloudPath: ACTION_ICON_CLOUD_PATH,
-    fileContent: fs.readFileSync(ACTION_ICON_LOCAL_PATH)
-  });
-
-  if (!result.fileID) {
-    throw new Error("动作线条图上传云存储失败");
+function getActionIconLocalPath(iconPath) {
+  if (typeof iconPath === "string" && iconPath.indexOf("/assets/action-icons/") === 0) {
+    return path.join(__dirname, "assets", "action-icons", path.basename(iconPath));
   }
 
-  return result.fileID;
+  if (iconPath === "/resource/plank.png") {
+    return path.join(__dirname, "assets", "plank.png");
+  }
+
+  return ACTION_ICON_LOCAL_PATH;
+}
+
+async function uploadActionIcons() {
+  const iconPaths = Array.from(new Set(ACTION_TABLE.map((action) => action.iconPath)));
+  const iconFileIDs = {};
+
+  // 保持较小的并发量，避免首次初始化时过多请求同时占用云存储资源。
+  for (let index = 0; index < iconPaths.length; index += 8) {
+    const batch = iconPaths.slice(index, index + 8);
+    const uploaded = await Promise.all(batch.map(async (iconPath) => {
+      const localPath = getActionIconLocalPath(iconPath);
+
+      if (!fs.existsSync(localPath)) {
+        throw new Error(`动作图标源文件不存在：${localPath}`);
+      }
+
+      const result = await cloud.uploadFile({
+        cloudPath: `actions/icons/${path.basename(localPath)}`,
+        fileContent: fs.readFileSync(localPath)
+      });
+
+      if (!result.fileID) {
+        throw new Error(`动作图标上传失败：${iconPath}`);
+      }
+
+      return [iconPath, result.fileID];
+    }));
+
+    uploaded.forEach(([iconPath, fileID]) => {
+      iconFileIDs[iconPath] = fileID;
+    });
+  }
+
+  return iconFileIDs;
 }
 
 async function syncActions() {
@@ -391,12 +424,12 @@ async function syncActions() {
     return;
   }
 
-  const iconFileID = await uploadActionIcon();
+  const iconFileIDs = await uploadActionIcons();
 
   await Promise.all(ACTION_TABLE.map((action) => db.collection(COLLECTION).doc(String(action.id)).set({
     data: {
       ...action,
-      iconFileID
+      iconFileID: iconFileIDs[action.iconPath]
     }
   })));
 
@@ -404,8 +437,8 @@ async function syncActions() {
     data: {
       version: DATA_VERSION,
       actionCount: ACTION_TABLE.length,
-      iconStyle: "wikimedia-line",
-      iconFileID,
+      iconStyle: "wikimedia-line-cloud",
+      iconCount: Object.keys(iconFileIDs).length,
       updatedAt: db.serverDate()
     }
   });

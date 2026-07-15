@@ -170,6 +170,28 @@
   font-weight: 900;
 }
 
+.back-group-title {
+  margin: 6rpx -20rpx 26rpx -24rpx;
+  color: #4E5157;
+  font-size: 28rpx;
+  line-height: 1.2;
+  font-weight: 800;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.back-group-line {
+  flex: 1;
+  height: 0;
+  border-top: 2rpx dashed #A6A6AA;
+}
+
+.back-action-groups .action-grid {
+  margin-bottom: 18rpx;
+}
+
 .action-grid {
   width: 100%;
   min-width: 0;
@@ -387,6 +409,11 @@
   .action-content {
     padding-left: 18rpx;
     padding-right: 16rpx;
+  }
+
+  .back-group-title {
+    margin-left: -18rpx;
+    margin-right: -16rpx;
   }
 
   .action-grid {
