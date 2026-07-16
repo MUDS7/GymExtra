@@ -611,4 +611,67 @@ async function getMonthlyTrainings(event) {
   }
 }
 
-module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings, getMonthlyTrainings };
+function getRecordMetric(action, isCardio) {
+  if (isCardio) {
+    return Math.max(0, Number(action.durationMinutes) || 0);
+  }
+
+  return (Array.isArray(action.sets) ? action.sets : []).reduce((maximum, set) => (
+    Math.max(maximum, Number(set && set.weight) || 0)
+  ), 0);
+}
+
+async function getTrainingTrend(event = {}) {
+  try {
+    const userId = identity.getUserId(event);
+    const rawActionId = String(event.actionId || "").trim();
+    const categoryId = String(event.categoryId || "").trim();
+
+    if (!rawActionId) {
+      throw new Error("缺少动作 ID");
+    }
+
+    // 内置动作 ID 为数字，自定义动作 ID 为字符串；保留两种类型以匹配已保存的训练数据。
+    const numericActionId = /^\d+$/.test(rawActionId) ? Number(rawActionId) : null;
+    const actionIdCandidates = numericActionId === null
+      ? [rawActionId]
+      : [numericActionId, rawActionId];
+    const _ = db.command;
+    const result = await db.collection(COLLECTION)
+      .aggregate()
+      .match({ userId })
+      .unwind("$actions")
+      .match({ "actions.actionId": _.in(actionIdCandidates) })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .project({
+        uuid: 1,
+        createdAt: 1,
+        action: "$actions"
+      })
+      .end();
+
+    const isCardio = categoryId === "cardio";
+    const records = (result.list || [])
+      .map((training) => ({
+        trainingId: training.uuid,
+        createdAt: training.createdAt,
+        value: getRecordMetric(training.action || {}, isCardio)
+      }))
+      .sort((first, second) => new Date(first.createdAt) - new Date(second.createdAt));
+
+    return {
+      success: true,
+      data: records,
+      metric: isCardio ? "duration" : "weight"
+    };
+  } catch (error) {
+    console.error("获取训练趋势失败", error);
+    return {
+      success: false,
+      message: error.message || "获取训练趋势失败"
+    };
+  }
+}
+
+module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings, getMonthlyTrainings, getTrainingTrend };

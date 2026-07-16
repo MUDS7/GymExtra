@@ -147,4 +147,25 @@ function getMonthlyTrainings(monthStart, monthEnd) {
   });
 }
 
-module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings, getMonthlyTrainings };
+function getTrainingTrend(actionId, categoryId) {
+  if (!wx.cloud) {
+    return Promise.reject(new Error("当前基础库不支持云开发"));
+  }
+
+  return callCloudFunction({
+    name: "quickstartFunctions",
+    data: {
+      type: "getTrainingTrend",
+      actionId,
+      categoryId
+    }
+  }).then(({ result }) => {
+    if (!result || !result.success) {
+      throw new Error((result && result.message) || "获取训练趋势失败");
+    }
+
+    return Array.isArray(result.data) ? result.data : [];
+  });
+}
+
+module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings, getMonthlyTrainings, getTrainingTrend };

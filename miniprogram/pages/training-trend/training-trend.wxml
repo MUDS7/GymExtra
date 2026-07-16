@@ -1,0 +1,36 @@
+<view class="trend-page">
+  <view class="trend-header">
+    <view class="page-title">训练趋势</view>
+    <view class="page-subtitle">{{actionName}}</view>
+  </view>
+
+  <view class="trend-card">
+    <view class="trend-card-head">
+      <view>
+        <view class="trend-card-title">近 20 次训练记录</view>
+        <view class="trend-card-desc">{{isCardio ? '每次记录取最长运动时长' : '每次记录取最大训练重量'}}</view>
+      </view>
+      <view class="unit-badge">{{unit}}</view>
+    </view>
+    <canvas
+      canvas-id="trendChart"
+      class="trend-chart"
+      style="width: {{chartWidth}}px; height: {{chartHeight}}px;"
+      width="{{chartWidth}}"
+      height="{{chartHeight}}"
+    ></canvas>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-text">正在加载训练趋势...</view>
+  <view wx:elif="{{!records.length}}" class="state-text">还没有包含「{{actionName}}」的训练记录</view>
+
+  <view wx:if="{{records.length}}" class="record-section">
+    <view class="record-section-title">记录明细</view>
+    <view class="record-card">
+      <view wx:for="{{records}}" wx:key="trainingId" class="record-row">
+        <view class="record-date">第 {{item.order}} 次 · {{item.dateLabel}}</view>
+        <view class="record-value {{isCardio ? 'cardio' : ''}}">{{item.valueLabel}}</view>
+      </view>
+    </view>
+  </view>
+</view>

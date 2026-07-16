@@ -204,6 +204,8 @@ exports.main = async (event, context) => {
       return await trainingService.getWeeklyTrainings(event);
     case "getMonthlyTrainings":
       return await trainingService.getMonthlyTrainings(event);
+    case "getTrainingTrend":
+      return await trainingService.getTrainingTrend(event);
     case "getUserStats":
       return await userStatsService.getUserStats(event);
     case "getMyGroups":

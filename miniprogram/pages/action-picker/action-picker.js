@@ -92,7 +92,8 @@ Page({
     creatingCustomAction: false
   },
 
-  onLoad() {
+  onLoad(options = {}) {
+    this.pickerMode = options.mode || "";
     this.setHeaderMetrics();
     this.loadActions();
     this.loadCustomActions();
@@ -220,6 +221,17 @@ Page({
     const selectedAction = this.data.actions.find((item) => String(item.id) === id);
     const pages = getCurrentPages();
     const previousPage = pages.length > 1 ? pages[pages.length - 2] : null;
+
+    if (selectedAction && this.pickerMode === "trainingTrend") {
+      const query = [
+        `actionId=${encodeURIComponent(selectedAction.id)}`,
+        `actionName=${encodeURIComponent(selectedAction.name)}`,
+        `categoryId=${encodeURIComponent(selectedAction.categoryId || "")}`
+      ].join("&");
+
+      wx.redirectTo({ url: `/pages/training-trend/training-trend?${query}` });
+      return;
+    }
 
     if (selectedAction && previousPage && typeof previousPage.addTrainingAction === "function") {
       previousPage.addTrainingAction(selectedAction);

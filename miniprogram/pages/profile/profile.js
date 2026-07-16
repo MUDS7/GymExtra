@@ -94,6 +94,11 @@ Page({
   onActionTap(event) {
     const { name } = event.currentTarget.dataset;
 
+    if (name === "训练趋势") {
+      wx.navigateTo({ url: "/pages/action-picker/action-picker?mode=trainingTrend" });
+      return;
+    }
+
     if (name === "训练日历") {
       wx.navigateTo({ url: "/pages/training-calendar/training-calendar" });
       return;

@@ -1,0 +1,80 @@
+.trend-page {
+  min-height: 100vh;
+  padding: 36rpx 28rpx calc(56rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  color: #111111;
+  background: #FFFFFF;
+}
+
+.trend-header { margin-bottom: 32rpx; }
+
+.page-title {
+  font-size: 46rpx;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.page-subtitle {
+  margin-top: 14rpx;
+  color: #6B6F76;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.trend-card,
+.record-card {
+  border: 1rpx solid #DADDE2;
+  border-radius: 34rpx;
+  background: #FFFFFF;
+  box-shadow: 0 12rpx 30rpx rgba(33, 42, 52, 0.05);
+}
+
+.trend-card { padding: 30rpx 0 12rpx; overflow: hidden; }
+
+.trend-card-head {
+  padding: 0 30rpx;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.trend-card-title { font-size: 30rpx; font-weight: 900; }
+.trend-card-desc { margin-top: 10rpx; color: #7A7F87; font-size: 22rpx; font-weight: 600; }
+
+.unit-badge {
+  padding: 8rpx 18rpx;
+  border-radius: 20rpx;
+  color: #E26424;
+  background: #FFF0EA;
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.trend-chart { display: block; margin: 12rpx auto 0; }
+
+.state-text {
+  margin: 34rpx 12rpx 0;
+  color: #8A8E95;
+  text-align: center;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.record-section { margin-top: 40rpx; }
+.record-section-title { margin: 0 8rpx 18rpx; font-size: 30rpx; font-weight: 900; }
+.record-card { overflow: hidden; }
+
+.record-row {
+  min-height: 92rpx;
+  padding: 0 28rpx;
+  border-bottom: 1rpx solid #EDF0F2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.record-row:last-child { border-bottom: 0; }
+.record-date { color: #5E6269; font-size: 25rpx; font-weight: 700; }
+.record-value { color: #E26424; font-size: 28rpx; font-weight: 900; }
+.record-value.cardio { color: #258DE9; }
