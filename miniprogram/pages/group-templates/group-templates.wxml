@@ -1,0 +1,29 @@
+<view class="templates-page">
+  <view class="page-heading">
+    <view class="page-title">训练模板</view>
+    <view class="page-subtitle">{{groupName}} 的训练模板</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-state">正在加载模板…</view>
+
+  <view wx:elif="{{templates.length}}" class="template-grid">
+    <view class="template-item" wx:for="{{templates}}" wx:key="id" bindtap="onTemplateTap" data-id="{{item.id}}" role="button" aria-label="查看{{item.name}}">
+      <image wx:if="{{item.imageUrl}}" class="template-image" src="{{item.imageUrl}}" mode="aspectFill"></image>
+      <view wx:else class="template-icon {{item.tone}}">
+        <view class="lucide-icon {{item.icon}}"></view>
+      </view>
+      <view class="template-name">{{item.name}}</view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <view class="empty-icon"><view class="lucide-icon icon-calendar"></view></view>
+    <view class="empty-title">还没有训练模板</view>
+    <view class="empty-copy">上传的训练模板会显示在这里</view>
+  </view>
+
+  <button class="add-template-button" bindtap="onUploadTemplateTap">
+    <view class="lucide-icon icon-plus"></view>
+    <text>上传模板</text>
+  </button>
+</view>

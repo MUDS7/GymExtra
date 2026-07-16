@@ -1103,6 +1103,125 @@ async function queryTrainingTemplates(groupId) {
   return result.data;
 }
 
+function serializeTrainingTemplate(template) {
+  return {
+    id: template._id,
+    name: template.name || "未命名模板",
+    imageUrl: template.imageUrl || "",
+    duration: Number(template.durationMinutes) || 0,
+    focus: template.focusText || "综合训练",
+    used: Number(template.usedCount) || 0,
+    actions: Array.isArray(template.actions) ? template.actions : []
+  };
+}
+
+async function getGroupTemplates(event) {
+  try {
+    const userId = getIdentity(event);
+    const groupId = String(event.groupId || "").trim();
+    if (!groupId) throw new Error("缺少群组 ID");
+
+    await prepareGroupData();
+    const [groupResult, membership] = await Promise.all([
+      db.collection("groups").doc(groupId).get(),
+      getActiveMembership(groupId, userId)
+    ]);
+    const group = groupResult.data;
+    if (!group || group.status !== "active") throw new Error("群组不存在或已停用");
+    if (!membership) throw new Error("请先加入该群组");
+
+    const result = await db.collection("training_templates")
+      .where({ groupId, status: "active" })
+      .orderBy("displayOrder", "asc")
+      .limit(100)
+      .get();
+
+    return { success: true, data: result.data.map(serializeTrainingTemplate) };
+  } catch (error) {
+    console.error("获取群组模板失败", error);
+    return { success: false, message: error.message || "获取群组模板失败" };
+  }
+}
+
+async function getGroupTemplate(event) {
+  try {
+    const userId = getIdentity(event);
+    const groupId = String(event.groupId || "").trim();
+    const templateId = String(event.templateId || "").trim();
+    if (!groupId || !templateId) throw new Error("缺少模板信息");
+
+    await prepareGroupData();
+    const membership = await getActiveMembership(groupId, userId);
+    if (!membership) throw new Error("请先加入该群组");
+
+    const result = await db.collection("training_templates").doc(templateId).get();
+    const template = result.data;
+    if (!template || template.groupId !== groupId || template.status !== "active") {
+      throw new Error("模板不存在或已下架");
+    }
+
+    return { success: true, data: serializeTrainingTemplate(template) };
+  } catch (error) {
+    console.error("获取群组模板详情失败", error);
+    return { success: false, message: error.message || "获取群组模板详情失败" };
+  }
+}
+
+async function uploadGroupTemplate(event) {
+  try {
+    const userId = getIdentity(event);
+    const groupId = String(event.groupId || "").trim();
+    const source = event.template || {};
+    const name = String(source.name || "").trim();
+    const actions = Array.isArray(source.actions) ? source.actions : [];
+    if (!groupId) throw new Error("缺少群组 ID");
+    if (!name) throw new Error("模板名称不能为空");
+    if (!actions.length) throw new Error("模板至少需要一个动作");
+
+    await prepareGroupData();
+    const [groupResult, membership, existingResult] = await Promise.all([
+      db.collection("groups").doc(groupId).get(),
+      getActiveMembership(groupId, userId),
+      db.collection("training_templates").where({ groupId, status: "active" }).orderBy("displayOrder", "desc").limit(1).get()
+    ]);
+    const group = groupResult.data;
+    if (!group || group.status !== "active") throw new Error("群组不存在或已停用");
+    if (!membership) throw new Error("请先加入该群组");
+
+    const exists = await db.collection("training_templates")
+      .where({ groupId, status: "active", name })
+      .limit(1)
+      .get();
+    if (exists.data.length) throw new Error("群组中已存在同名模板");
+
+    const durationMinutes = actions.reduce((sum, action) => (
+      sum + (action && action.categoryId === "cardio" ? Math.max(0, Number(action.durationMinutes) || 0) : 0)
+    ), 0);
+    const lastTemplate = existingResult.data[0];
+    const result = await db.collection("training_templates").add({
+      data: {
+        groupId,
+        name: name.slice(0, 40),
+        actions,
+        durationMinutes,
+        focusText: "综合训练",
+        imageUrl: "",
+        usedCount: 0,
+        displayOrder: (Number(lastTemplate && lastTemplate.displayOrder) || 0) + 1,
+        status: "active",
+        createdBy: userId,
+        createdAt: db.serverDate(),
+        updatedAt: db.serverDate()
+      }
+    });
+
+    return { success: true, data: { id: result._id } };
+  } catch (error) {
+    console.error("上传群组模板失败", error);
+    return { success: false, message: error.message || "上传群组模板失败" };
+  }
+}
+
 async function queryRankingActivities(groupId) {
   const result = await db.collection("group_daily_activities")
     .where({ groupId, sharedToGroup: true, checkInStatus: "done" })
@@ -1562,6 +1681,9 @@ module.exports = {
   getManagedGroupDetail,
   setManagedGroupGoal,
   getGroupDetail,
+  getGroupTemplates,
+  getGroupTemplate,
+  uploadGroupTemplate,
   getGroupLeaderboard,
   searchGroups,
   applyToGroup,

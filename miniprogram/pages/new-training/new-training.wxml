@@ -13,7 +13,8 @@
       bindinput="onTimerInput"
       bindblur="onTimerBlur"
     />
-    <view wx:if="{{!readonly}}" class="finish-button" bindtap="onFinishTap">{{saving ? '保存中' : (isTemplateMode ? '保存' : '完成')}}</view>
+    <view wx:if="{{isGroupTemplate}}" class="finish-button group-copy-button" bindtap="onCopyGroupTemplateTap">{{copying ? '复制中' : '复制模板'}}</view>
+    <view wx:elif="{{!readonly}}" class="finish-button" bindtap="onFinishTap">{{saving ? '保存中' : (isTemplateMode ? '保存' : '完成')}}</view>
     <view wx:if="{{readonly && !isTemplateMode}}" class="training-delete-button {{deleting || loading ? 'disabled' : ''}}" bindtap="onTrainingDeleteTap" aria-label="删除记录">
       <view class="delete-icon training-delete-icon"></view>
     </view>

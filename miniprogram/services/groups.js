@@ -40,6 +40,19 @@ function getGroupDetail(groupId) {
   return callGroupFunction("getGroupDetail", { groupId });
 }
 
+function getGroupTemplates(groupId) {
+  return callGroupFunction("getGroupTemplates", { groupId })
+    .then((data) => Array.isArray(data) ? data : []);
+}
+
+function getGroupTemplate(groupId, templateId) {
+  return callGroupFunction("getGroupTemplate", { groupId, templateId });
+}
+
+function uploadGroupTemplate(groupId, template) {
+  return callGroupFunction("uploadGroupTemplate", { groupId, template });
+}
+
 function getGroupLeaderboard(groupId, leaderboardType) {
   return callGroupFunction("getGroupLeaderboard", { groupId, leaderboardType });
 }
@@ -68,6 +81,9 @@ module.exports = {
   getManagedGroupDetail,
   setManagedGroupGoal,
   getGroupDetail,
+  getGroupTemplates,
+  getGroupTemplate,
+  uploadGroupTemplate,
   getGroupLeaderboard,
   searchGroups,
   applyToGroup,

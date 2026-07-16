@@ -230,6 +230,12 @@ exports.main = async (event, context) => {
       return await groupService.removeGroupMember(event);
     case "getGroupDetail":
       return await groupService.getGroupDetail(event);
+    case "getGroupTemplates":
+      return await groupService.getGroupTemplates(event);
+    case "getGroupTemplate":
+      return await groupService.getGroupTemplate(event);
+    case "uploadGroupTemplate":
+      return await groupService.uploadGroupTemplate(event);
     case "getGroupLeaderboard":
       return await groupService.getGroupLeaderboard(event);
     case "getOpenId":

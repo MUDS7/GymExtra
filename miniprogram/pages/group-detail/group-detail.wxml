@@ -169,18 +169,15 @@
       <view class="section-head"><text class="section-title">训练模板</text><view class="more" bindtap="onActionTap" data-name="全部模板">全部 <text>›</text></view></view>
       <view class="template-grid">
         <view class="template-row" wx:for="{{templates}}" wx:key="id">
-          <image wx:if="{{item.imageUrl}}" class="template-image" src="{{item.imageUrl}}" mode="aspectFill"></image>
-          <view wx:else class="template-placeholder"><text>图片</text></view>
-          <view class="template-copy"><view class="template-name">{{item.name}}</view><view class="template-meta">{{item.duration}} 分钟 · {{item.focus}}</view><view class="template-used">{{item.used}} 人使用</view></view>
-          <view class="copy-button" bindtap="onActionTap" data-name="复制模板" role="button" aria-label="复制{{item.name}}">复制模板</view>
+          <view class="template-placeholder template-icon {{item.tone}}"><view class="lucide-icon {{item.icon}}"></view></view>
+          <view class="template-copy"><view class="template-name">{{item.name}}</view></view>
+          <view class="copy-button" bindtap="onActionTap" data-template-id="{{item.id}}" role="button" aria-label="复制{{item.name}}">复制模板</view>
         </view>
         <block wx:if="{{loading && templates.length === 0}}">
           <view class="template-row skeleton-row" wx:for="{{placeholderTemplates}}" wx:key="index">
             <view class="template-placeholder skeleton-block"></view>
             <view class="template-copy">
               <view class="skeleton-line template-name-placeholder"></view>
-              <view class="skeleton-line template-meta-placeholder"></view>
-              <view class="skeleton-line template-used-placeholder"></view>
             </view>
             <view class="copy-button skeleton-block"></view>
           </view>

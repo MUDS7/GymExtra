@@ -2,6 +2,7 @@ const { ACTION_TABLE, DEFAULT_ACTION_ICON_PATH } = require("../../data/actions")
 const actionService = require("../../services/actions");
 const { getCachedIconPath, isCloudFile } = require("../../services/action-icon-cache");
 const trainingService = require("../../services/trainings");
+const groupService = require("../../services/groups");
 const { getTrainingDraft, saveTrainingDraft, removeTrainingDraft } = require("../../utils/training-drafts");
 const {
   getUserTemplate,
@@ -240,8 +241,10 @@ Page({
     summary: buildSummary([]),
     saving: false,
     deleting: false,
+    copying: false,
     readonly: false,
     isTemplateMode: false,
+    isGroupTemplate: false,
     templateId: "",
     loading: false,
     trainingId: "",
@@ -271,6 +274,14 @@ Page({
 
     if (options.mode === "templateDetail" && options.id) {
       this.loadTemplateDetail(decodeURIComponent(options.id));
+      return;
+    }
+
+    if (options.mode === "groupTemplateDetail" && options.id && options.groupId) {
+      this.loadGroupTemplateDetail(
+        decodeURIComponent(options.groupId),
+        decodeURIComponent(options.id)
+      );
       return;
     }
 
@@ -403,6 +414,76 @@ Page({
     } catch (error) {
       this.setData({ loading: false });
       wx.showToast({ title: error.message || "模板加载失败", icon: "none" });
+    }
+  },
+
+  async loadGroupTemplateDetail(groupId, templateId) {
+    this.setData({
+      isTemplateMode: true,
+      readonly: true,
+      loading: true,
+      isGroupTemplate: true,
+      templateId,
+      groupId
+    });
+
+    try {
+      const template = await groupService.getGroupTemplate(groupId, templateId);
+      const actions = (Array.isArray(template.actions) ? template.actions : []).map((action) => (
+        createTrainingAction(action)
+      ));
+
+      this.setData({
+        title: template.name || "未命名模板",
+        actions,
+        summary: buildSummary(actions),
+        loading: false
+      });
+    } catch (error) {
+      this.setData({ loading: false });
+      wx.showToast({ title: error.message || "模板加载失败", icon: "none" });
+    }
+  },
+
+  async onCopyGroupTemplateTap() {
+    if (this.data.copying) return;
+    if (!this.data.actions.length) {
+      wx.showToast({ title: "该模板暂无动作", icon: "none" });
+      return;
+    }
+
+    this.setData({ copying: true });
+    try {
+      const app = getApp();
+      let user = app.globalData.userInfo || wx.getStorageSync("userInfo");
+      if (!user) {
+        const result = await app.login({ redirectToRegister: false });
+        user = result.registered ? result.user : null;
+      }
+      if (!user) throw new Error("用户信息加载失败");
+
+      saveUserTemplate(user.id, {
+        name: this.data.title,
+        actions: this.data.actions.map((action) => ({
+          id: action.id,
+          categoryId: action.categoryId,
+          isCustom: Boolean(action.isCustom),
+          isCardio: Boolean(action.isCardio),
+          name: action.name,
+          iconPath: action.iconFileID || action.iconPath,
+          durationMinutes: action.isCardio ? action.durationMinutes : null,
+          sets: action.sets.map((set) => ({
+            weight: set.weight,
+            reps: set.reps
+          }))
+        }))
+      });
+
+      wx.showToast({ title: "已保存到我的模板", icon: "success" });
+    } catch (error) {
+      wx.showToast({ title: error.message || "复制失败", icon: "none" });
+    } finally {
+      this.setData({ copying: false });
     }
   },
 

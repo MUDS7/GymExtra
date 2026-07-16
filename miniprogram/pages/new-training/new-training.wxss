@@ -59,6 +59,14 @@
   text-align: center;
 }
 
+.finish-button.group-copy-button {
+  width: 156rpx;
+  height: 60rpx;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+  line-height: 60rpx;
+}
+
 .training-delete-button {
   position: absolute;
   top: 8rpx;

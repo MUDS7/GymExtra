@@ -1,6 +1,22 @@
 const groupService = require("../../services/groups");
 const { getTrainingDrafts } = require("../../utils/training-drafts");
+const { saveUserTemplate } = require("../../services/user-templates");
 const TODAY_WALL_DISPLAY_LIMIT = 5;
+
+const TEMPLATE_APPEARANCES = [
+  { icon: "icon-zap", tone: "energy" },
+  { icon: "icon-flame", tone: "power" },
+  { icon: "icon-calendar", tone: "cool" },
+  { icon: "icon-trophy", tone: "gold" },
+  { icon: "icon-zap", tone: "vital" }
+];
+
+function decorateTemplates(templates) {
+  return (Array.isArray(templates) ? templates : []).map((template) => ({
+    ...template,
+    ...TEMPLATE_APPEARANCES[Math.floor(Math.random() * TEMPLATE_APPEARANCES.length)]
+  }));
+}
 
 function getTrainingTags(member) {
   const categoryIds = Array.isArray(member.categoryIds) && member.categoryIds.length
@@ -110,7 +126,7 @@ Page({
         ...wallState,
         rankings: detail.rankings,
         challenge,
-        templates: detail.templates || [],
+        templates: decorateTemplates(detail.templates),
         loading: false
       });
     } catch (error) {
@@ -130,7 +146,7 @@ Page({
   },
 
   onActionTap(event) {
-    const { action, name, rankType } = event.currentTarget.dataset;
+    const { action, name, rankType, templateId } = event.currentTarget.dataset;
 
     if (action === "checkIn") {
       const draft = getTrainingDrafts()
@@ -159,7 +175,46 @@ Page({
       return;
     }
 
+    if (name === "全部模板") {
+      wx.navigateTo({
+        url: `/pages/group-templates/group-templates?groupId=${encodeURIComponent(this.data.groupId)}&groupName=${encodeURIComponent(this.data.groupName)}`
+      });
+      return;
+    }
+
+    if (templateId) {
+      this.copyTemplateToMine(templateId);
+      return;
+    }
+
     wx.showToast({ title: `${name} 待接入`, icon: "none" });
+  },
+
+  async copyTemplateToMine(templateId) {
+    try {
+      const app = getApp();
+      let user = app.globalData.userInfo || wx.getStorageSync("userInfo");
+      if (!user) {
+        const result = await app.login({ redirectToRegister: false });
+        user = result.registered ? result.user : null;
+      }
+      if (!user) throw new Error("用户信息加载失败");
+
+      wx.showLoading({ title: "复制中", mask: true });
+      const template = await groupService.getGroupTemplate(this.data.groupId, templateId);
+      const actions = Array.isArray(template.actions) ? template.actions : [];
+      if (!actions.length) throw new Error("该模板暂无动作");
+
+      saveUserTemplate(user.id, {
+        name: template.name,
+        actions
+      });
+      wx.hideLoading();
+      wx.showToast({ title: "已保存到我的模板", icon: "success" });
+    } catch (error) {
+      wx.hideLoading();
+      wx.showToast({ title: error.message || "复制失败", icon: "none" });
+    }
   },
 
   onTabTap(event) {
