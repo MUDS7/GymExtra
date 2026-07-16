@@ -126,4 +126,25 @@ function getWeeklyTrainings(weekStart, weekEnd) {
   });
 }
 
-module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings };
+function getMonthlyTrainings(monthStart, monthEnd) {
+  if (!wx.cloud) {
+    return Promise.reject(new Error("当前基础库不支持云开发"));
+  }
+
+  return callCloudFunction({
+    name: "quickstartFunctions",
+    data: {
+      type: "getMonthlyTrainings",
+      monthStart,
+      monthEnd
+    }
+  }).then(({ result }) => {
+    if (!result || !result.success) {
+      throw new Error((result && result.message) || "获取月度训练记录失败");
+    }
+
+    return Array.isArray(result.data) ? result.data : [];
+  });
+}
+
+module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings, getMonthlyTrainings };

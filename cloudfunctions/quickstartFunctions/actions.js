@@ -4,9 +4,9 @@ const path = require("path");
 
 const db = cloud.database();
 const COLLECTION = "actions";
-const DATA_VERSION = 13;
+const DATA_VERSION = 14;
+const ICON_BATCH_SIZE = 6;
 const DEFAULT_ACTION_ICON_PATH = "/assets/action-icons/bench-press.png";
-const ACTION_ICON_CLOUD_PATH = "actions/icons/line-action-fallback.png";
 const ACTION_ICON_LOCAL_PATH = path.join(__dirname, "assets", "default-action.png");
 
 const CATEGORY_ICON_PATHS = {
@@ -383,8 +383,8 @@ function getActionIconLocalPath(iconPath) {
   return ACTION_ICON_LOCAL_PATH;
 }
 
-async function uploadActionIcons() {
-  const iconPaths = Array.from(new Set(ACTION_TABLE.map((action) => action.iconPath)));
+async function uploadActionIcons(actions) {
+  const iconPaths = Array.from(new Set(actions.map((action) => action.iconPath)));
   const iconFileIDs = {};
 
   // 保持较小的并发量，避免首次初始化时过多请求同时占用云存储资源。
@@ -424,12 +424,11 @@ async function syncActions() {
     return;
   }
 
-  const iconFileIDs = await uploadActionIcons();
-
   await Promise.all(ACTION_TABLE.map((action) => db.collection(COLLECTION).doc(String(action.id)).set({
     data: {
       ...action,
-      iconFileID: iconFileIDs[action.iconPath]
+      // 图标不在初始化时全量上传，而是切换到对应分类后再按需上传。
+      iconFileID: ""
     }
   })));
 
@@ -437,11 +436,57 @@ async function syncActions() {
     data: {
       version: DATA_VERSION,
       actionCount: ACTION_TABLE.length,
-      iconStyle: "wikimedia-line-cloud",
-      iconCount: Object.keys(iconFileIDs).length,
+      iconStyle: "wikimedia-line-cloud-lazy",
       updatedAt: db.serverDate()
     }
   });
+}
+
+async function ensureActionIcons({ categoryIds, actionIds } = {}) {
+  await syncActions();
+
+  const requestedCategories = Array.from(new Set(
+    (Array.isArray(categoryIds) ? categoryIds : [categoryIds])
+      .filter((categoryId) => typeof categoryId === "string" && categoryId)
+  ));
+  const requestedActionIds = new Set(
+    (Array.isArray(actionIds) ? actionIds : [actionIds])
+      .filter((actionId) => actionId !== undefined && actionId !== null)
+      .map((actionId) => String(actionId))
+  );
+  const actions = ACTION_TABLE.filter((action) => (
+    requestedActionIds.size
+      ? requestedActionIds.has(String(action.id))
+      : requestedCategories.includes(action.categoryId)
+  )).slice(0, ICON_BATCH_SIZE);
+
+  if (!actions.length) {
+    return { success: true, data: [] };
+  }
+
+  const existingRecords = await Promise.all(actions.map(async (action) => {
+    try {
+      const result = await db.collection(COLLECTION).doc(String(action.id)).get();
+      return [String(action.id), result.data && result.data.iconFileID];
+    } catch (error) {
+      return [String(action.id), ""];
+    }
+  }));
+  const existingFileIDs = Object.fromEntries(existingRecords);
+  const missingActions = actions.filter((action) => !existingFileIDs[String(action.id)]);
+  const uploadedFileIDs = missingActions.length ? await uploadActionIcons(missingActions) : {};
+
+  await Promise.all(missingActions.map((action) => db.collection(COLLECTION).doc(String(action.id)).update({
+    data: { iconFileID: uploadedFileIDs[action.iconPath] }
+  })));
+
+  return {
+    success: true,
+    data: actions.map((action) => ({
+      ...action,
+      iconFileID: existingFileIDs[String(action.id)] || uploadedFileIDs[action.iconPath]
+    }))
+  };
 }
 
 async function getActions() {
@@ -471,5 +516,6 @@ async function getActions() {
 
 module.exports = {
   getActions,
-  syncActions
+  syncActions,
+  ensureActionIcons
 };

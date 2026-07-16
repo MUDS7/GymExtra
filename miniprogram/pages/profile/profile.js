@@ -94,6 +94,11 @@ Page({
   onActionTap(event) {
     const { name } = event.currentTarget.dataset;
 
+    if (name === "训练日历") {
+      wx.navigateTo({ url: "/pages/training-calendar/training-calendar" });
+      return;
+    }
+
     if (name === "我的群组") {
       wx.navigateTo({ url: "/pages/group-management/group-management" });
       return;

@@ -104,7 +104,8 @@ async function cacheActionIcon(action) {
   return {
     ...cachedAction,
     iconFileID,
-    iconPath: await getCachedIconPath(sourceIconPath)
+    iconPath: await getCachedIconPath(sourceIconPath),
+    iconCached: true
   };
 }
 

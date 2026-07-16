@@ -1,9 +1,13 @@
 const { ACTION_TABLE } = require("../../data/actions");
 const actionService = require("../../services/actions");
 const customActionService = require("../../services/custom-actions");
+const { cacheActionIcons } = require("../../services/action-icon-cache");
 
 let actionTable = ACTION_TABLE;
 let customActionTable = [];
+const pendingCategoryIconLoads = Object.create(null);
+const iconBatchStates = Object.create(null);
+const ICON_BATCH_SIZE = 6;
 
 const categories = [
   { id: "chest", name: "胸" },
@@ -61,7 +65,11 @@ function buildBackActionGroups(actions) {
 }
 
 function buildActionData(categoryId, keyword = "") {
-  const actions = buildActions(categoryId, keyword);
+  const actions = buildActions(categoryId, keyword).map((action) => ({
+    ...action,
+    // 未请求的卡片保持空白，避免 image 组件自行触发下载。
+    displayIconPath: action.iconCached ? action.iconPath : ""
+  }));
 
   return {
     actions,
@@ -93,7 +101,9 @@ Page({
   loadActions() {
     actionService.getActions().then((actions) => {
       actionTable = actions;
+      Object.keys(iconBatchStates).forEach((key) => delete iconBatchStates[key]);
       this.refreshActions();
+      this.loadNextIconBatch();
     });
   },
 
@@ -106,6 +116,65 @@ Page({
 
   refreshActions() {
     this.setData(buildActionData(this.data.activeCategory, this.data.keyword));
+  },
+
+  getIconBatchKey() {
+    const { activeCategory, keyword } = this.data;
+    return keyword ? `search:${keyword.trim().toLowerCase()}` : `category:${activeCategory}`;
+  },
+
+  loadNextIconBatch() {
+    const { activeCategory, keyword } = this.data;
+
+    if (activeCategory === "custom") return Promise.resolve();
+
+    const actions = buildActions(activeCategory, keyword);
+    const cacheKey = this.getIconBatchKey();
+    const state = iconBatchStates[cacheKey] || { offset: 0, loading: false, completed: false };
+    iconBatchStates[cacheKey] = state;
+
+    if (!actions.length || state.loading || state.completed) {
+      return Promise.resolve();
+    }
+
+    const batch = actions.slice(state.offset, state.offset + ICON_BATCH_SIZE);
+    if (!batch.length) {
+      state.completed = true;
+      return Promise.resolve();
+    }
+
+    state.loading = true;
+    let batchSucceeded = false;
+
+    pendingCategoryIconLoads[cacheKey] = actionService.ensureActionIcons(batch.map((action) => action.id))
+      .then((syncedActions) => {
+        const syncedById = new Map(syncedActions.map((action) => [String(action.id), action]));
+        return cacheActionIcons(batch.map((action) => syncedById.get(String(action.id)) || action));
+      })
+      .then((cachedActions) => {
+        const cachedById = new Map(cachedActions.map((action) => [String(action.id), action]));
+        actionTable = actionTable.map((action) => cachedById.get(String(action.id)) || action);
+        state.offset += batch.length;
+        state.completed = state.offset >= actions.length;
+        batchSucceeded = true;
+
+        // 下载完成时仅刷新当前可见列表，避免切换分类后用旧请求覆盖新视图。
+        this.refreshActions();
+      })
+      .catch((error) => {
+        console.warn("动作图标懒加载失败", error);
+      })
+      .finally(() => {
+        state.loading = false;
+        delete pendingCategoryIconLoads[cacheKey];
+
+        // 当前批次完成后立即串行请求下一批，每次仍不超过 6 张。
+        if (batchSucceeded && !state.completed && this.getIconBatchKey() === cacheKey) {
+          setTimeout(() => this.loadNextIconBatch(), 0);
+        }
+      });
+
+    return pendingCategoryIconLoads[cacheKey];
   },
 
   setHeaderMetrics() {
@@ -133,6 +202,7 @@ Page({
       activeCategoryName: name,
       ...buildActionData(id, this.data.keyword)
     });
+    this.loadNextIconBatch();
   },
 
   onSearchInput(event) {
@@ -142,6 +212,7 @@ Page({
       keyword,
       ...buildActionData(this.data.activeCategory, keyword)
     });
+    this.loadNextIconBatch();
   },
 
   onActionTap(event) {

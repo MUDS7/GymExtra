@@ -567,4 +567,48 @@ async function getWeeklyTrainings(event) {
   }
 }
 
-module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings };
+async function getMonthlyTrainings(event) {
+  try {
+    const userId = identity.getUserId(event);
+    const monthStart = new Date(event.monthStart);
+    const monthEnd = new Date(event.monthEnd);
+
+    if (Number.isNaN(monthStart.getTime()) || Number.isNaN(monthEnd.getTime()) || monthStart >= monthEnd) {
+      throw new Error("月份时间范围无效");
+    }
+
+    const _ = db.command;
+    const result = await db.collection(COLLECTION)
+      .aggregate()
+      .match({
+        userId,
+        createdAt: _.gte(monthStart).lt(monthEnd)
+      })
+      .sort({ createdAt: 1 })
+      .project({
+        uuid: 1,
+        title: 1,
+        timer: 1,
+        createdAt: 1,
+        status: 1,
+        actionsCount: 1,
+        setsCount: 1,
+        actionCategories: "$actions.categoryId",
+        actionNames: "$actions.name"
+      })
+      .end();
+
+    return {
+      success: true,
+      data: result.list || []
+    };
+  } catch (error) {
+    console.error("获取月度训练记录失败", error);
+    return {
+      success: false,
+      message: error.message || "获取月度训练记录失败"
+    };
+  }
+}
+
+module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings, getMonthlyTrainings };

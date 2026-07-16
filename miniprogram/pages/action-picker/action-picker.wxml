@@ -50,7 +50,7 @@
                 bindtap="onActionTap"
                 data-id="{{item.id}}"
               >
-                <image class="action-image" src="{{item.iconPath}}" mode="aspectFit"></image>
+                <image class="action-image" src="{{item.displayIconPath}}" mode="aspectFit"></image>
                 <view class="action-name">{{item.name}}</view>
               </view>
             </view>
@@ -64,7 +64,7 @@
             bindtap="onActionTap"
             data-id="{{item.id}}"
           >
-            <image class="action-image" src="{{item.iconPath}}" mode="aspectFit"></image>
+            <image class="action-image" src="{{item.displayIconPath}}" mode="aspectFit"></image>
             <view class="action-name">{{item.name}}</view>
             <view wx:if="{{activeCategory === 'custom'}}" class="custom-action-type {{item.categoryId === 'cardio' ? 'cardio' : 'strength'}}">{{item.categoryId === 'cardio' ? '有氧' : '力量'}}</view>
           </view>

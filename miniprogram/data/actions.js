@@ -1,4 +1,5 @@
 const DEFAULT_ACTION_ICON_PATH = "/assets/default-action.png";
+const CLOUD_ACTION_ICON_ROOT = "cloud://cloud1-d0g045i05d14e02d0/actions/icons";
 
 // 动作示意图均来自 Wikimedia Commons 的 Everkinetic 线条图系列，按动作模式匹配。
 const CATEGORY_ICON_PATHS = {
@@ -187,6 +188,18 @@ function getActionIconPath(name, categoryId) {
   return CATEGORY_ICON_PATHS[categoryId] || DEFAULT_ACTION_ICON_PATH;
 }
 
+function getCloudActionIconPath(localPath) {
+  if (typeof localPath === "string" && localPath.indexOf("/assets/action-icons/") === 0) {
+    return `${CLOUD_ACTION_ICON_ROOT}/${localPath.slice(localPath.lastIndexOf("/") + 1)}`;
+  }
+
+  if (localPath === "/resource/plank.png") {
+    return `${CLOUD_ACTION_ICON_ROOT}/plank.png`;
+  }
+
+  return localPath;
+}
+
 // FNV-1a 32 位哈希。相同的动作名称始终得到相同的无符号数字 ID。
 function hashActionName(name) {
   let hash = 0x811c9dc5;
@@ -338,7 +351,7 @@ const ACTION_DEFINITIONS = [
 const ACTION_TABLE = ACTION_DEFINITIONS.map((action) => ({
   id: hashActionName(action.name),
   ...action,
-  iconPath: getActionIconPath(action.name, action.categoryId)
+  iconPath: getCloudActionIconPath(getActionIconPath(action.name, action.categoryId))
 }));
 
 const actionIds = new Set(ACTION_TABLE.map((action) => action.id));

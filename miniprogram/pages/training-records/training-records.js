@@ -13,6 +13,14 @@ function getDayKey(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+function parseDayKey(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return Number.isNaN(date.getTime()) || getDayKey(date) !== value ? null : date;
+}
+
 function formatDayLabel(date) {
   const today = new Date();
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -87,8 +95,11 @@ Page({
 
   trainings: [],
   page: 0,
+  selectedDate: "",
 
-  onLoad() {
+  onLoad(options = {}) {
+    const selectedDate = parseDayKey(options.date);
+    this.selectedDate = selectedDate ? getDayKey(selectedDate) : "";
     this.setNavMetrics();
     this.loadRecords(true);
   },
@@ -144,12 +155,26 @@ Page({
         return;
       }
 
-      const result = await trainingService.getAllTrainings(this.page, PAGE_SIZE);
-      this.trainings = this.trainings.concat(result.list);
-      this.page += 1;
+      let hasMore = false;
+
+      if (this.selectedDate) {
+        const selectedDay = parseDayKey(this.selectedDate);
+        const monthStart = new Date(selectedDay.getFullYear(), selectedDay.getMonth(), 1);
+        const monthEnd = new Date(selectedDay.getFullYear(), selectedDay.getMonth() + 1, 1);
+        const trainings = await trainingService.getMonthlyTrainings(monthStart.toISOString(), monthEnd.toISOString());
+        this.trainings = trainings.filter((training) => {
+          const date = parseDate(training.createdAt);
+          return date && getDayKey(date) === this.selectedDate;
+        });
+      } else {
+        const result = await trainingService.getAllTrainings(this.page, PAGE_SIZE);
+        this.trainings = this.trainings.concat(result.list);
+        this.page += 1;
+        hasMore = result.hasMore;
+      }
       this.setData({
         groups: groupTrainings(this.trainings),
-        hasMore: result.hasMore,
+        hasMore,
         loading: false
       });
     } catch (error) {

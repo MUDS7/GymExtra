@@ -181,6 +181,11 @@ exports.main = async (event, context) => {
       return await userService.register(event);
     case "getActions":
       return await actionService.getActions();
+    case "ensureActionIcons":
+      return await actionService.ensureActionIcons({
+        categoryIds: event.categoryIds,
+        actionIds: event.actionIds
+      });
     case "getCustomActions":
       return await customActionService.getCustomActions(event);
     case "createCustomAction":
@@ -197,6 +202,8 @@ exports.main = async (event, context) => {
       return await trainingService.deleteTraining(event);
     case "getWeeklyTrainings":
       return await trainingService.getWeeklyTrainings(event);
+    case "getMonthlyTrainings":
+      return await trainingService.getMonthlyTrainings(event);
     case "getUserStats":
       return await userStatsService.getUserStats(event);
     case "getMyGroups":

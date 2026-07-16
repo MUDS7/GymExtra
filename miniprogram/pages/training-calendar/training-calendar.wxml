@@ -1,0 +1,33 @@
+<view class="calendar-page">
+  <view class="calendar-nav" style="height: {{navHeight}}px; padding-top: {{navTop}}px;">
+    <button class="calendar-back" style="top: {{navTop}}px; height: {{navBarHeight}}px; width: {{navBarHeight}}px;" bindtap="onBackTap" aria-label="返回">
+      <view class="calendar-back-mark"></view>
+    </button>
+    <view class="calendar-nav-title" style="height: {{navBarHeight}}px; line-height: {{navBarHeight}}px;">训练日历</view>
+  </view>
+
+  <view class="calendar-card">
+    <view class="calendar-month-head">
+      <view class="month-control previous {{loading ? 'disabled' : ''}}" bindtap="onPreviousMonth" role="button" aria-label="上个月"><view></view></view>
+      <view class="month-label">{{monthLabel}}</view>
+      <view wx:if="{{canGoNext}}" class="month-control next {{loading ? 'disabled' : ''}}" bindtap="onNextMonth" role="button" aria-label="下个月"><view></view></view>
+      <view wx:else class="month-control-placeholder"></view>
+    </view>
+
+    <view class="weekdays">
+      <view wx:for="{{weekdays}}" wx:key="*this" class="weekday">{{item}}</view>
+    </view>
+    <view class="calendar-grid">
+      <view wx:for="{{calendarDays}}" wx:key="key" class="calendar-cell">
+        <view wx:if="{{!item.empty}}" class="date-circle {{item.hasTraining ? item.tone : ''}}" bindtap="onDateTap" data-date="{{item.key}}" data-has-training="{{item.hasTraining}}">{{item.day}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="calendar-legend">
+    <view class="legend-item"><view class="legend-dot energy"></view><text>力量训练</text></view>
+    <view class="legend-item"><view class="legend-dot cool"></view><text>有氧训练</text></view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-text">正在加载训练记录...</view>
+</view>
