@@ -1,4 +1,5 @@
 const { getUserStats } = require("../../services/user-stats");
+const { getUserTemplates } = require("../../services/user-templates");
 
 function formatStats(stats = {}) {
   const totalTrainingCount = Number(stats.totalTrainingCount) || 0;
@@ -22,12 +23,7 @@ Page({
       avatar: "A"
     },
     stats: formatStats(),
-    templates: [
-      { name: "力量模板", icon: "icon-zap", tone: "energy" },
-      { name: "燃脂模板", icon: "icon-flame", tone: "power" },
-      { name: "打卡模板", icon: "icon-calendar", tone: "cool" },
-      { name: "进阶模板", icon: "icon-trophy", tone: "gold" }
-    ],
+    templates: [],
     menuGroups: [
       {
         group: "健康数据",
@@ -55,6 +51,7 @@ Page({
     if (cachedUser) {
       this.showUser(cachedUser);
       this.loadUserStats();
+      this.loadUserTemplates(cachedUser.id);
       return;
     }
 
@@ -65,6 +62,7 @@ Page({
       }
       this.showUser(result.user);
       this.loadUserStats();
+      this.loadUserTemplates(result.user.id);
     }).catch(() => {
       wx.showToast({ title: "用户信息加载失败", icon: "none" });
     });
@@ -91,8 +89,24 @@ Page({
     });
   },
 
+  loadUserTemplates(userId) {
+    this.setData({ templates: getUserTemplates(userId).slice(0, 4) });
+  },
+
   onActionTap(event) {
-    const { name } = event.currentTarget.dataset;
+    const { name, templateId } = event.currentTarget.dataset;
+
+    if (templateId) {
+      wx.navigateTo({
+        url: `/pages/new-training/new-training?mode=templateDetail&id=${encodeURIComponent(templateId)}`
+      });
+      return;
+    }
+
+    if (name === "全部模板") {
+      wx.navigateTo({ url: "/pages/templates/templates" });
+      return;
+    }
 
     if (name === "训练趋势") {
       wx.navigateTo({ url: "/pages/action-picker/action-picker?mode=trainingTrend" });

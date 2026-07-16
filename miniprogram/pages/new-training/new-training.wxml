@@ -1,8 +1,9 @@
 <view class="new-training-page">
   <view class="detail-back-button" bindtap="onBackTap" role="button" aria-label="返回">‹</view>
 
-  <view class="top-row">
+  <view class="top-row {{isTemplateMode ? 'template-mode' : ''}}">
     <input
+      wx:if="{{!isTemplateMode}}"
       class="timer"
       value="{{timer}}"
       placeholder="00:00"
@@ -12,33 +13,34 @@
       bindinput="onTimerInput"
       bindblur="onTimerBlur"
     />
-    <view wx:if="{{!readonly}}" class="finish-button" bindtap="onFinishTap">{{saving ? '保存中' : '完成'}}</view>
-    <view wx:if="{{readonly}}" class="training-delete-button {{deleting || loading ? 'disabled' : ''}}" bindtap="onTrainingDeleteTap" aria-label="删除记录">
+    <view wx:if="{{!readonly}}" class="finish-button" bindtap="onFinishTap">{{saving ? '保存中' : (isTemplateMode ? '保存' : '完成')}}</view>
+    <view wx:if="{{readonly && !isTemplateMode}}" class="training-delete-button {{deleting || loading ? 'disabled' : ''}}" bindtap="onTrainingDeleteTap" aria-label="删除记录">
       <view class="delete-icon training-delete-icon"></view>
     </view>
   </view>
 
-  <view class="title-row {{readonly ? 'readonly' : ''}}">
+  <view class="title-row {{readonly ? 'readonly' : ''}} {{isTemplateMode ? 'template-mode' : ''}}">
     <view wx:if="{{!readonly}}" class="pen-icon"></view>
     <view class="title-content">
       <input
         class="title-input"
         value="{{title}}"
-        placeholder="点击输入训练标题"
+        placeholder="{{isTemplateMode ? '点击输入模板名称' : '点击输入训练标题'}}"
         placeholder-class="title-placeholder"
         disabled="{{readonly}}"
         bindinput="onTitleInput"
       />
       <view wx:if="{{readonly && recordedAt}}" class="recorded-at">记录于 {{recordedAt}}</view>
     </view>
+    <view wx:if="{{isTemplateMode}}" class="template-action-count">{{actions.length}} 个动作</view>
   </view>
 
-  <view wx:if="{{actions.length}}" class="training-summary">
+  <view wx:if="{{actions.length && !isTemplateMode}}" class="training-summary">
     <view>{{summary.setText}}　{{summary.actionText}}</view>
     <view>{{summary.volumeText}}</view>
   </view>
 
-  <view class="action-panel {{actions.length ? 'has-actions' : ''}}">
+  <view class="action-panel {{actions.length ? 'has-actions' : ''}} {{isTemplateMode ? 'template-mode' : ''}}">
     <scroll-view wx:if="{{actions.length}}" class="training-scroll" scroll-y enhanced show-scrollbar="{{false}}">
       <view class="training-list">
         <view class="training-card {{item.expanded ? 'expanded' : ''}}" wx:for="{{actions}}" wx:key="uid">
@@ -46,12 +48,12 @@
             <image class="training-image" src="{{item.iconPath}}" mode="aspectFit"></image>
             <view class="training-main">
               <view class="training-name">{{item.name}}</view>
-              <view class="training-meta">{{item.metaText}}</view>
+              <view class="training-meta">{{isTemplateMode ? item.templateMetaText : item.metaText}}</view>
             </view>
             <view class="training-side">
-              <button wx:if="{{!readonly}}" class="delete-button" catchtap="onActionDeleteTap" data-index="{{index}}" data-name="{{item.name}}" aria-label="删除动作">
+              <view wx:if="{{!readonly}}" class="delete-button" catchtap="onActionDeleteTap" data-index="{{index}}" data-name="{{item.name}}" role="button" aria-label="删除动作">
                 <view class="delete-icon"></view>
-              </button>
+              </view>
             </view>
           </view>
 
@@ -84,7 +86,7 @@
                   </view>
                 </picker-view-column>
               </picker-view>
-              <button class="cardio-status {{item.sets[0].completed ? 'completed' : ''}} {{readonly ? 'readonly' : ''}}" catchtap="onSetStatusTap" data-action-index="{{index}}" data-set-index="0">
+              <button wx:if="{{!isTemplateMode}}" class="cardio-status {{item.sets[0].completed ? 'completed' : ''}} {{readonly ? 'readonly' : ''}}" catchtap="onSetStatusTap" data-action-index="{{index}}" data-set-index="0">
                 {{item.sets[0].completed ? '已完成' : '标记完成'}}
               </button>
             </view>
@@ -99,12 +101,12 @@
                   <text class="set-unit">次</text>
                   <input class="set-input" type="number" value="{{set.reps}}" placeholder="{{set.repsEditing ? '' : '0'}}" disabled="{{readonly}}" data-action-index="{{index}}" data-set-index="{{setIndex}}" data-field="reps" bindfocus="onSetInputFocus" bindinput="onSetInput" bindblur="onSetInputBlur" />
                 </view>
-                <button class="set-status {{set.completed ? 'completed' : ''}} {{readonly ? 'readonly' : ''}}" catchtap="onSetStatusTap" data-action-index="{{index}}" data-set-index="{{setIndex}}" aria-label="完成状态">
+                <button wx:if="{{!isTemplateMode}}" class="set-status {{set.completed ? 'completed' : ''}} {{readonly ? 'readonly' : ''}}" catchtap="onSetStatusTap" data-action-index="{{index}}" data-set-index="{{setIndex}}" aria-label="完成状态">
                   <view class="set-status-icon {{set.completed ? 'is-check' : 'is-cross'}}"></view>
                 </button>
-                <button wx:if="{{!readonly}}" class="set-delete" catchtap="onSetDeleteTap" data-action-index="{{index}}" data-set-index="{{setIndex}}" aria-label="删除本组">
+                <view wx:if="{{!readonly}}" class="set-delete" catchtap="onSetDeleteTap" data-action-index="{{index}}" data-set-index="{{setIndex}}" role="button" aria-label="删除本组">
                   <view class="delete-icon set-delete-icon"></view>
-                </button>
+                </view>
               </view>
             </view>
             <button wx:if="{{!readonly && !item.isCardio}}" class="add-set-button" catchtap="onAddSetTap" data-index="{{index}}">
@@ -115,10 +117,18 @@
       </view>
     </scroll-view>
 
-    <view wx:if="{{!readonly}}" class="panel-add {{actions.length ? 'with-list' : ''}}">
+    <view wx:if="{{!readonly}}" class="panel-add {{actions.length ? 'with-list' : ''}} {{isTemplateMode ? 'template-mode' : ''}} {{templateId ? 'with-template-actions' : ''}}">
       <button class="add-action" bindtap="onAddActionTap">
         <view class="add-icon">+</view>
         <view class="add-label">加动作</view>
+      </button>
+      <button wx:if="{{templateId}}" class="template-action-button" bindtap="onUseTemplateTap">
+        <view class="template-action-icon train-icon"><view class="lucide-icon icon-zap"></view></view>
+        <text class="template-action-label">去训练</text>
+      </button>
+      <button wx:if="{{templateId}}" class="template-action-button" bindtap="onTemplateDeleteTap">
+        <view class="template-action-icon delete-icon-wrap"><view class="delete-icon template-delete-icon"></view></view>
+        <text class="template-action-label">删除</text>
       </button>
     </view>
   </view>

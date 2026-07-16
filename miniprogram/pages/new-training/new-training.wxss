@@ -29,6 +29,10 @@
   justify-content: space-between;
 }
 
+.top-row.template-mode {
+  justify-content: flex-end;
+}
+
 .timer {
   width: 210rpx;
   height: 72rpx;
@@ -95,6 +99,15 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+.title-row.template-mode {
+  margin-top: 0;
+  grid-template-columns: 32rpx minmax(0, 1fr) auto;
+}
+
+.title-row.readonly.template-mode {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .title-content {
   min-width: 0;
 }
@@ -133,6 +146,15 @@
   color: #9A9A9A;
 }
 
+.template-action-count {
+  padding-left: 18rpx;
+  color: #545459;
+  font-size: 25rpx;
+  line-height: 56rpx;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .training-summary {
   min-height: 62rpx;
   margin-top: -8rpx;
@@ -160,6 +182,10 @@
 .action-panel.has-actions {
   height: calc(100vh - 388rpx - env(safe-area-inset-top));
   justify-content: flex-start;
+}
+
+.action-panel.template-mode .training-list {
+  padding-bottom: 196rpx;
 }
 
 .training-scroll {
@@ -534,6 +560,85 @@
 
 .panel-add.with-list {
   min-height: 150rpx;
+}
+
+.panel-add.template-mode {
+  position: fixed;
+  z-index: 10;
+  bottom: calc(26rpx + env(safe-area-inset-bottom));
+  left: 50%;
+  width: 148rpx;
+  min-height: 0;
+  transform: translateX(-50%);
+}
+
+.panel-add.template-mode.with-template-actions {
+  right: 28rpx;
+  left: 28rpx;
+  width: auto;
+  height: 120rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transform: none;
+}
+
+.panel-add.template-mode.with-template-actions .add-action,
+.template-action-button {
+  width: 0;
+  min-width: 0;
+  height: 120rpx;
+  margin: 0;
+  flex: 1 1 0;
+  color: #5D5D5D;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.panel-add.template-mode.with-template-actions .add-icon {
+  width: 60rpx;
+  height: 60rpx;
+  font-size: 46rpx;
+  line-height: 58rpx;
+}
+
+.panel-add.template-mode.with-template-actions .add-label,
+.template-action-label {
+  font-size: 24rpx;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.template-action-icon {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.template-action-icon .lucide-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.train-icon {
+  color: #FFFFFF;
+  background: #E26424;
+  box-shadow: 0 8rpx 18rpx rgba(226, 100, 36, 0.22);
+}
+
+.delete-icon-wrap {
+  background: #FFF0EE;
+}
+
+.template-delete-icon {
+  width: 34rpx;
+  height: 34rpx;
 }
 
 .add-action {

@@ -39,7 +39,7 @@
       </view>
     </view>
     <view class="template-grid">
-      <view class="template-item" wx:for="{{templates}}" wx:key="name" bindtap="onActionTap" data-name="{{item.name}}">
+      <view class="template-item" wx:for="{{templates}}" wx:key="id" bindtap="onActionTap" data-name="{{item.name}}" data-template-id="{{item.id}}">
         <view class="template-icon {{item.tone}}">
           <view class="lucide-icon {{item.icon}}"></view>
         </view>

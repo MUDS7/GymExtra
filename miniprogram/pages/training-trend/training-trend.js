@@ -19,6 +19,46 @@ function formatValue(value, isCardio) {
   return isCardio ? `${number} 分钟` : `${number} kg`;
 }
 
+function getNiceStep(roughStep) {
+  const safeStep = Math.max(Number(roughStep) || 1, 0.0001);
+  const magnitude = Math.pow(10, Math.floor(Math.log10(safeStep)));
+  const normalized = safeStep / magnitude;
+  const base = normalized <= 1.5 ? 1 : (normalized <= 3 ? 2 : (normalized <= 7 ? 5 : 10));
+
+  return base * magnitude;
+}
+
+function formatAxisValue(value) {
+  const rounded = Math.round(value * 100) / 100;
+  return Number.isInteger(rounded) ? String(rounded) : String(rounded).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function getChartAxis(values, isCardio) {
+  const maximum = Math.max(...values, 0);
+  const minimum = Math.min(...values);
+  const useZeroBaseline = isCardio || maximum <= 30;
+
+  if (useZeroBaseline) {
+    const step = getNiceStep(Math.max(maximum, 1) / 4);
+    const axisMaximum = Math.max(step * 4, Math.ceil(maximum / step) * step);
+
+    return { minimum: 0, maximum: axisMaximum, step, gridCount: Math.round(axisMaximum / step) };
+  }
+
+  const dataRange = Math.max(maximum - minimum, maximum * 0.03, 1);
+  const padding = dataRange * 0.15;
+  const step = getNiceStep((dataRange + padding * 2) / 4);
+  const axisMinimum = Math.max(0, Math.floor((minimum - padding) / step) * step);
+  const axisMaximum = Math.ceil((maximum + padding) / step) * step;
+
+  return {
+    minimum: axisMinimum,
+    maximum: Math.max(axisMaximum, axisMinimum + step * 4),
+    step,
+    gridCount: Math.round((Math.max(axisMaximum, axisMinimum + step * 4) - axisMinimum) / step)
+  };
+}
+
 Page({
   data: {
     actionName: "",
@@ -89,10 +129,8 @@ Page({
     }
 
     const values = records.map((item) => Number(item.value) || 0);
-    const largest = Math.max(...values, 1);
-    const smallest = Math.min(...values, 0);
-    const range = Math.max(largest - smallest, 1);
-    const gridCount = 4;
+    const axis = getChartAxis(values, this.data.isCardio);
+    const range = axis.maximum - axis.minimum;
     const lineColor = this.data.isCardio ? "#258DE9" : "#F06F38";
 
     context.setStrokeStyle("#E8EBEF");
@@ -100,19 +138,19 @@ Page({
     context.setFillStyle("#8A8E95");
     context.setFontSize(10);
     context.setTextAlign("right");
-    for (let index = 0; index <= gridCount; index += 1) {
-      const y = padding.top + chartHeight * index / gridCount;
-      const value = largest - range * index / gridCount;
+    for (let index = 0; index <= axis.gridCount; index += 1) {
+      const y = padding.top + chartHeight * index / axis.gridCount;
+      const value = axis.maximum - axis.step * index;
       context.beginPath();
       context.moveTo(padding.left, y);
       context.lineTo(width - padding.right, y);
       context.stroke();
-      context.fillText(String(Math.round(value * 10) / 10), padding.left - 8, y + 3);
+      context.fillText(formatAxisValue(value), padding.left - 8, y + 3);
     }
 
     const pointPosition = (item, index) => ({
       x: padding.left + (records.length === 1 ? chartWidth / 2 : chartWidth * index / (records.length - 1)),
-      y: padding.top + (largest - (Number(item.value) || 0)) / range * chartHeight
+      y: padding.top + (axis.maximum - (Number(item.value) || 0)) / range * chartHeight
     });
     const positions = records.map(pointPosition);
 

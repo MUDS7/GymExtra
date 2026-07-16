@@ -68,4 +68,29 @@ async function createCustomAction(event = {}) {
   }
 }
 
-module.exports = { getCustomActions, createCustomAction };
+async function deleteCustomAction(event = {}) {
+  try {
+    await ensureCollection();
+    const ownerId = identity.getUserId(event);
+    const actionId = String(event.actionId || "").trim();
+
+    if (!actionId) return { success: false, message: "未找到要删除的自定义动作" };
+
+    const existing = await db.collection(COLLECTION)
+      .where({ _id: actionId, ownerId })
+      .limit(1)
+      .get();
+
+    if (!existing.data || !existing.data.length) {
+      return { success: false, message: "该自定义动作不存在或无权删除" };
+    }
+
+    await db.collection(COLLECTION).doc(existing.data[0]._id).remove();
+    return { success: true, data: { id: actionId } };
+  } catch (error) {
+    console.error("删除自定义动作失败", error);
+    return { success: false, message: error.message || "删除自定义动作失败" };
+  }
+}
+
+module.exports = { getCustomActions, createCustomAction, deleteCustomAction };

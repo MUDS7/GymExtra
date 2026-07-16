@@ -62,7 +62,12 @@
             wx:key="id"
             class="action-card {{activeCategory === 'custom' ? 'custom-action-card' : ''}}"
             bindtap="onActionTap"
+            bindtouchstart="onCustomActionTouchStart"
+            bindtouchend="onCustomActionTouchEnd"
+            bindtouchcancel="onCustomActionTouchEnd"
+            bindtouchmove="onCustomActionTouchEnd"
             data-id="{{item.id}}"
+            data-name="{{item.name}}"
           >
             <image class="action-image" src="{{item.displayIconPath}}" mode="aspectFit"></image>
             <view class="action-name">{{item.name}}</view>

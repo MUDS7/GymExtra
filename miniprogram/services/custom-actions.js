@@ -84,4 +84,27 @@ function createCustomAction(values) {
   });
 }
 
-module.exports = { getCustomActions, createCustomAction };
+function deleteCustomAction(actionId) {
+  const id = String(actionId || "").trim();
+
+  if (!id) {
+    return Promise.reject(new Error("未找到要删除的自定义动作"));
+  }
+
+  if (!wx.cloud) {
+    return Promise.reject(new Error("当前基础库不支持云开发"));
+  }
+
+  return callCloudFunction({
+    name: "quickstartFunctions",
+    data: { type: "deleteCustomAction", actionId: id }
+  }).then(({ result }) => {
+    if (!result || !result.success) {
+      throw new Error((result && result.message) || "删除自定义动作失败");
+    }
+
+    cacheCustomActions(getCachedCustomActions().filter((item) => String(item.id) !== id));
+  });
+}
+
+module.exports = { getCustomActions, createCustomAction, deleteCustomAction };

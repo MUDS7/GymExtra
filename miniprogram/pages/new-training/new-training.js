@@ -3,6 +3,13 @@ const actionService = require("../../services/actions");
 const { getCachedIconPath, isCloudFile } = require("../../services/action-icon-cache");
 const trainingService = require("../../services/trainings");
 const { getTrainingDraft, saveTrainingDraft, removeTrainingDraft } = require("../../utils/training-drafts");
+const {
+  getUserTemplate,
+  hasUserTemplateName,
+  saveUserTemplate,
+  updateUserTemplate,
+  deleteUserTemplate
+} = require("../../services/user-templates");
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
 const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, "0"));
@@ -156,6 +163,9 @@ function refreshAction(action) {
     metaText: action.isCardio
       ? `${formatDuration(durationMinutes)} · ${completedSets ? "已完成" : "未完成"}`
       : `${sets.length}组 · ${completedSets}组完成`,
+    templateMetaText: action.isCardio
+      ? formatDuration(durationMinutes)
+      : `${sets.length}组`,
     volumeText: `${formatVolume(completedVolume)}/${formatVolume(plannedVolume)}`
   };
 }
@@ -200,7 +210,7 @@ async function createReadonlyTrainingAction(action, actionIconMap) {
     name: action.name || "未命名动作",
     iconPath: await getCachedIconPath(iconSource),
     iconFileID: isCloudFile(iconSource) ? iconSource : "",
-    expanded: true,
+    expanded: false,
     sets: sourceSets.map((set, index) => createSet({
       ...set,
       uid: `saved-set-${action.order || 0}-${set.order || index + 1}`
@@ -231,6 +241,8 @@ Page({
     saving: false,
     deleting: false,
     readonly: false,
+    isTemplateMode: false,
+    templateId: "",
     loading: false,
     trainingId: "",
     recordedAt: "",
@@ -252,6 +264,21 @@ Page({
       return;
     }
 
+    if (options.mode === "template") {
+      this.setData({ isTemplateMode: true });
+      return;
+    }
+
+    if (options.mode === "templateDetail" && options.id) {
+      this.loadTemplateDetail(decodeURIComponent(options.id));
+      return;
+    }
+
+    if (options.mode === "templateUse" && options.id) {
+      this.loadTemplateForTraining(decodeURIComponent(options.id));
+      return;
+    }
+
     const groupId = options.groupId ? decodeURIComponent(options.groupId) : "";
     if (groupId) {
       const groupName = options.groupName ? decodeURIComponent(options.groupName) : "";
@@ -268,7 +295,7 @@ Page({
   onUnload() {
     this.stopTimer();
 
-    if (!this.data.readonly && !this.trainingCompleted && !this.draftSaved) {
+    if (!this.data.readonly && !this.data.isTemplateMode && !this.trainingCompleted && !this.draftSaved) {
       this.cacheTrainingDraft();
     }
   },
@@ -303,6 +330,79 @@ Page({
         title: error.message || "详情加载失败",
         icon: "none"
       });
+    }
+  },
+
+  async loadTemplateDetail(templateId) {
+    this.setData({
+      isTemplateMode: true,
+      loading: true,
+      templateId
+    });
+
+    try {
+      const app = getApp();
+      let user = app.globalData.userInfo || wx.getStorageSync("userInfo");
+
+      if (!user) {
+        const result = await app.login({ redirectToRegister: false });
+        user = result.registered ? result.user : null;
+      }
+
+      const template = user ? getUserTemplate(user.id, templateId) : null;
+
+      if (!template) {
+        throw new Error("模板不存在或已删除");
+      }
+
+      const actions = (Array.isArray(template.actions) ? template.actions : []).map((action) => (
+        createTrainingAction(action)
+      ));
+
+      this.setData({
+        title: template.name,
+        actions,
+        summary: buildSummary(actions),
+        loading: false
+      });
+    } catch (error) {
+      this.setData({ loading: false });
+      wx.showToast({ title: error.message || "模板加载失败", icon: "none" });
+    }
+  },
+
+  async loadTemplateForTraining(templateId) {
+    this.setData({ loading: true });
+
+    try {
+      const app = getApp();
+      let user = app.globalData.userInfo || wx.getStorageSync("userInfo");
+
+      if (!user) {
+        const result = await app.login({ redirectToRegister: false });
+        user = result.registered ? result.user : null;
+      }
+
+      const template = user ? getUserTemplate(user.id, templateId) : null;
+
+      if (!template) {
+        throw new Error("模板不存在或已删除");
+      }
+
+      const actions = (Array.isArray(template.actions) ? template.actions : []).map((action) => (
+        createTrainingAction(action)
+      ));
+
+      this.setData({
+        title: template.name,
+        actions,
+        summary: buildSummary(actions),
+        loading: false
+      });
+      this.startTimer();
+    } catch (error) {
+      this.setData({ loading: false });
+      wx.showToast({ title: error.message || "模板加载失败", icon: "none" });
     }
   },
 
@@ -434,7 +534,7 @@ Page({
   },
 
   cacheTrainingDraft() {
-    if (this.data.readonly || this.trainingCompleted || this.draftSaved) {
+    if (this.data.readonly || this.data.isTemplateMode || this.trainingCompleted || this.draftSaved) {
       return;
     }
 
@@ -471,7 +571,7 @@ Page({
   },
 
   async onBackTap() {
-    if (!this.data.readonly) {
+    if (!this.data.readonly && !this.data.isTemplateMode) {
       this.stopTimer();
       this.cacheTrainingDraft();
     }
@@ -488,6 +588,11 @@ Page({
 
   async onFinishTap() {
     if (this.data.readonly || this.data.saving) {
+      return;
+    }
+
+    if (this.data.isTemplateMode) {
+      this.onSaveTemplateTap();
       return;
     }
 
@@ -522,6 +627,118 @@ Page({
         icon: "none"
       });
     }
+  },
+
+  async onSaveTemplateTap() {
+    const name = this.data.title.trim();
+
+    if (!name) {
+      wx.showToast({ title: "请输入模板名称", icon: "none" });
+      return;
+    }
+
+    if (!this.data.actions.length) {
+      wx.showToast({ title: "请至少添加一个动作", icon: "none" });
+      return;
+    }
+
+    this.setData({ saving: true });
+
+    try {
+      const app = getApp();
+      let user = app.globalData.userInfo || wx.getStorageSync("userInfo");
+
+      if (!user) {
+        const result = await app.login({ redirectToRegister: false });
+        user = result.registered ? result.user : null;
+      }
+
+      if (!user) {
+        throw new Error("用户信息加载失败");
+      }
+
+      if (hasUserTemplateName(user.id, name, this.data.templateId)) {
+        throw new Error("模板名称已存在，请重命名");
+      }
+
+      const templateData = {
+        name,
+        actions: this.data.actions.map((action) => ({
+          id: action.id,
+          categoryId: action.categoryId,
+          isCustom: Boolean(action.isCustom),
+          isCardio: Boolean(action.isCardio),
+          name: action.name,
+          iconPath: action.iconFileID || action.iconPath,
+          durationMinutes: action.isCardio ? action.durationMinutes : null,
+          sets: action.sets.map((set) => ({
+            weight: set.weight,
+            reps: set.reps
+          }))
+        }))
+      };
+
+      if (this.data.templateId) {
+        updateUserTemplate(user.id, this.data.templateId, templateData);
+      } else {
+        saveUserTemplate(user.id, templateData);
+      }
+
+      this.trainingCompleted = true;
+      wx.showToast({ title: this.data.templateId ? "模板已更新" : "模板已保存", icon: "success" });
+
+      setTimeout(() => {
+        wx.navigateBack();
+      }, 500);
+    } catch (error) {
+      this.setData({ saving: false });
+      wx.showToast({
+        title: error.message || "保存失败，请重试",
+        icon: "none"
+      });
+    }
+  },
+
+  onUseTemplateTap() {
+    if (!this.data.templateId) return;
+
+    wx.navigateTo({
+      url: `/pages/new-training/new-training?mode=templateUse&id=${encodeURIComponent(this.data.templateId)}`
+    });
+  },
+
+  onTemplateDeleteTap() {
+    if (!this.data.templateId) return;
+
+    wx.showModal({
+      title: "删除模板",
+      content: `确定删除「${this.data.title || "该模板"}」吗？删除后不可恢复。`,
+      confirmText: "删除",
+      confirmColor: "#D93025",
+      success: async (res) => {
+        if (!res.confirm) return;
+
+        try {
+          const app = getApp();
+          let user = app.globalData.userInfo || wx.getStorageSync("userInfo");
+
+          if (!user) {
+            const result = await app.login({ redirectToRegister: false });
+            user = result.registered ? result.user : null;
+          }
+
+          if (!user) {
+            throw new Error("用户信息加载失败");
+          }
+
+          deleteUserTemplate(user.id, this.data.templateId);
+          wx.showToast({ title: "模板已删除", icon: "success" });
+          setTimeout(() => wx.navigateBack(), 400);
+        } catch (error) {
+          wx.showToast({ title: error.message || "删除失败，请重试", icon: "none" });
+        }
+      }
+    });
   },
 
   onTrainingDeleteTap() {
@@ -579,6 +796,9 @@ Page({
   },
 
   adjustTimerForCardioDurationChange(previousCardioDurationMinutes, actions) {
+    if (this.data.isTemplateMode) {
+      return;
+    }
     const cardioDurationDeltaSeconds = (
       getCardioDurationMinutes(actions) - previousCardioDurationMinutes
     ) * 60;

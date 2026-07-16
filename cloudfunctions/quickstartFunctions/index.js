@@ -190,6 +190,8 @@ exports.main = async (event, context) => {
       return await customActionService.getCustomActions(event);
     case "createCustomAction":
       return await customActionService.createCustomAction(event);
+    case "deleteCustomAction":
+      return await customActionService.deleteCustomAction(event);
     case "saveTraining":
       return await trainingService.saveTraining(event);
     case "getRecentTrainings":

@@ -1,0 +1,26 @@
+<view class="templates-page">
+  <view class="page-heading">
+    <view class="page-title">我的模板</view>
+    <view class="page-subtitle">已保存的训练模板</view>
+  </view>
+
+  <view wx:if="{{templates.length}}" class="template-grid">
+    <view class="template-item" wx:for="{{templates}}" wx:key="id" bindtap="onTemplateTap" data-id="{{item.id}}" role="button" aria-label="查看{{item.name}}">
+      <view class="template-icon {{item.tone}}">
+        <view class="lucide-icon {{item.icon}}"></view>
+      </view>
+      <view class="template-name">{{item.name}}</view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <view class="empty-icon"><view class="lucide-icon icon-calendar"></view></view>
+    <view class="empty-title">还没有保存模板</view>
+    <view class="empty-copy">保存的训练模板会显示在这里</view>
+  </view>
+
+  <button class="add-template-button" bindtap="onAddTemplateTap">
+    <view class="lucide-icon icon-plus"></view>
+    <text>新增模板</text>
+  </button>
+</view>

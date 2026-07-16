@@ -12,7 +12,8 @@
     "pages/group-leaderboard/group-leaderboard",
     "pages/group-management/group-management",
     "pages/group-management-detail/group-management-detail",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/templates/templates"
   ],
   "window": {
     "backgroundColor": "#FFFFFF",

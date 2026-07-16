@@ -89,7 +89,8 @@ Page({
     showCustomActionDialog: false,
     customActionName: "",
     customActionCategory: "strength",
-    creatingCustomAction: false
+    creatingCustomAction: false,
+    deletingCustomAction: false
   },
 
   onLoad(options = {}) {
@@ -218,6 +219,9 @@ Page({
 
   onActionTap(event) {
     const id = String(event.currentTarget.dataset.id);
+
+    if (Date.now() < (this.suppressActionTapUntil || 0)) return;
+
     const selectedAction = this.data.actions.find((item) => String(item.id) === id);
     const pages = getCurrentPages();
     const previousPage = pages.length > 1 ? pages[pages.length - 2] : null;
@@ -250,6 +254,54 @@ Page({
   },
 
   onCustomActionDialogTap() {},
+
+  clearCustomActionLongPress() {
+    if (this.customActionLongPressTimer) {
+      clearTimeout(this.customActionLongPressTimer);
+      this.customActionLongPressTimer = null;
+    }
+  },
+
+  onCustomActionTouchStart(event) {
+    if (this.data.activeCategory !== "custom" || this.data.deletingCustomAction) return;
+
+    const { id, name } = event.currentTarget.dataset;
+    this.clearCustomActionLongPress();
+    this.customActionLongPressTimer = setTimeout(() => {
+      this.customActionLongPressTimer = null;
+      this.suppressActionTapUntil = Date.now() + 500;
+      this.confirmDeleteCustomAction(String(id), String(name || "该动作"));
+    }, 2000);
+  },
+
+  onCustomActionTouchEnd() {
+    this.clearCustomActionLongPress();
+  },
+
+  confirmDeleteCustomAction(id, name) {
+    wx.showModal({
+      title: "删除自定义动作",
+      content: `确定删除“${name}”吗？`,
+      confirmText: "删除",
+      confirmColor: "#e5484d",
+      success: ({ confirm }) => {
+        if (confirm) this.deleteCustomAction(id);
+      }
+    });
+  },
+
+  deleteCustomAction(id) {
+    this.setData({ deletingCustomAction: true });
+    customActionService.deleteCustomAction(id).then(() => {
+      customActionTable = customActionTable.filter((item) => String(item.id) !== id);
+      this.refreshActions();
+      wx.showToast({ title: "已删除", icon: "success" });
+    }).catch((error) => {
+      wx.showToast({ title: error.message || "删除失败，请重试", icon: "none" });
+    }).finally(() => {
+      this.setData({ deletingCustomAction: false });
+    });
+  },
 
   onCustomActionNameInput(event) {
     this.setData({ customActionName: event.detail.value });
@@ -284,5 +336,9 @@ Page({
     }).finally(() => {
       this.setData({ creatingCustomAction: false });
     });
+  },
+
+  onUnload() {
+    this.clearCustomActionLongPress();
   }
 });

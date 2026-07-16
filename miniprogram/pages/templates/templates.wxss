@@ -1,0 +1,157 @@
+.templates-page {
+  min-height: 100vh;
+  padding: 48rpx 28rpx 144rpx;
+  color: #111111;
+  background: #FFFFFF;
+}
+
+.page-heading {
+  margin-bottom: 42rpx;
+}
+
+.page-title {
+  font-size: 46rpx;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.page-subtitle {
+  margin-top: 14rpx;
+  color: #6B6F76;
+  font-size: 26rpx;
+  line-height: 1.4;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 38rpx 26rpx;
+}
+
+.template-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.template-icon {
+  width: 118rpx;
+  height: 118rpx;
+  border: 1rpx solid #DADDE2;
+  border-radius: 38rpx;
+  display: grid;
+  place-items: center;
+}
+
+.template-icon .lucide-icon {
+  width: 45rpx;
+  height: 45rpx;
+}
+
+.template-icon.energy {
+  color: #F06F38;
+  border-color: #F4B18C;
+  background: #FFF0EA;
+  box-shadow: 0 10rpx 24rpx rgba(240, 111, 56, 0.14);
+}
+
+.template-icon.vital {
+  color: #44BF72;
+  border-color: #9EE3B7;
+  background: #EAF8EF;
+  box-shadow: 0 10rpx 24rpx rgba(68, 191, 114, 0.14);
+}
+
+.template-icon.cool {
+  color: #258DE9;
+  border-color: #A8D8FF;
+  background: #E9F4FF;
+  box-shadow: 0 10rpx 24rpx rgba(37, 141, 233, 0.14);
+}
+
+.template-icon.gold {
+  color: #D9A900;
+  border-color: #F4DC7A;
+  background: #FFF7D7;
+  box-shadow: 0 10rpx 24rpx rgba(217, 169, 0, 0.14);
+}
+
+.template-icon.power {
+  color: #D14AC7;
+  border-color: #E9A8E2;
+  background: #F8E9F6;
+  box-shadow: 0 10rpx 24rpx rgba(209, 74, 199, 0.14);
+}
+
+.template-name {
+  width: 100%;
+  margin-top: 17rpx;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #111111;
+  font-size: 24rpx;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.empty-state {
+  padding: 126rpx 24rpx;
+  color: #7B8088;
+  text-align: center;
+  font-size: 27rpx;
+}
+
+.empty-icon {
+  width: 110rpx;
+  height: 110rpx;
+  margin: 0 auto 26rpx;
+  border-radius: 36rpx;
+  color: #258DE9;
+  background: #EAF6FF;
+  display: grid;
+  place-items: center;
+}
+
+.empty-icon .lucide-icon {
+  width: 52rpx;
+  height: 52rpx;
+}
+
+.empty-title {
+  color: #111111;
+  font-size: 31rpx;
+  font-weight: 900;
+}
+
+.empty-copy {
+  margin-top: 14rpx;
+  font-size: 25rpx;
+}
+
+.add-template-button {
+  position: fixed;
+  right: 28rpx;
+  bottom: calc(24rpx + env(safe-area-inset-bottom));
+  left: 28rpx;
+  z-index: 20;
+  height: 78rpx;
+  margin: 0;
+  border-radius: 40rpx;
+  color: #FFFFFF;
+  background: #E26424;
+  box-shadow: 0 14rpx 34rpx rgba(226, 100, 36, 0.24);
+  font-size: 29rpx;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.add-template-button .lucide-icon {
+  width: 30rpx;
+  height: 30rpx;
+}
