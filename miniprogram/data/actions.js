@@ -59,6 +59,7 @@ const BACK_ACTION_ICON_PATHS = {
   "杠铃耸肩": "/assets/action-icons/back-barbell-shrug.png",
   "哑铃耸肩": "/assets/action-icons/back-dumbbell-shrug.png",
   "罗马椅挺身": "/assets/action-icons/back-roman-chair-extension.png",
+  "山羊挺身": "/assets/action-icons/back-goat-extension.png",
   "架上硬拉": "/assets/action-icons/back-rack-pull.png",
   "哑铃硬拉": "/assets/action-icons/back-dumbbell-deadlift.png",
   "V把高位下拉": "/assets/action-icons/back-v-bar-lat-pulldown.png",
@@ -95,6 +96,7 @@ const LEG_ACTION_ICON_PATHS = {
   "哈克深蹲": "/assets/action-icons/legs-hack-squat.png",
   "罗马尼亚硬拉": "/assets/action-icons/legs-romanian-deadlift.png",
   "腿弯举": "/assets/action-icons/legs-leg-curl.png",
+  "俯卧腿弯举": "/assets/action-icons/legs-prone-leg-curl.png",
   "登台阶": "/assets/action-icons/legs-step-up.png",
   "提踵": "/assets/action-icons/legs-calf-raise.png",
   "相扑硬拉": "/assets/action-icons/legs-sumo-deadlift.png",
@@ -130,6 +132,7 @@ const TRICEPS_ACTION_ICON_PATHS = {
   "窄距卧推": "/assets/action-icons/triceps-close-grip-bench-press.png",
   "臂屈伸": "/assets/action-icons/triceps-dip.png",
   "仰卧臂屈伸": "/assets/action-icons/triceps-lying-extension.png",
+  "直杆臂屈伸": "/assets/action-icons/triceps-straight-bar-extension.png",
   "过顶臂屈伸": "/assets/action-icons/triceps-overhead-extension.png",
   "哑铃臂后伸": "/assets/action-icons/triceps-dumbbell-kickback.png",
   "绳索过顶臂屈伸": "/assets/action-icons/triceps-cable-overhead-extension.png",
@@ -172,7 +175,8 @@ const CARDIO_ACTION_ICON_PATHS = {
   "椭圆机": "/assets/action-icons/cardio-elliptical.png",
   "划船机": "/assets/action-icons/cardio-rowing-machine.png",
   "爬楼机": "/assets/action-icons/cardio-stair-climber.png",
-  "有氧操": "/assets/action-icons/cardio-aerobics.png"
+  "有氧操": "/assets/action-icons/cardio-aerobics.png",
+  "农夫走": "/assets/action-icons/cardio-farmers-walk.png"
 };
 
 function getActionIconPath(name, categoryId) {
@@ -253,6 +257,7 @@ const ACTION_DEFINITIONS = [
   { name: "杠铃耸肩", categoryId: "back", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "哑铃耸肩", categoryId: "back", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "罗马椅挺身", categoryId: "back", iconPath: DEFAULT_ACTION_ICON_PATH },
+  { name: "山羊挺身", categoryId: "back", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "架上硬拉", categoryId: "back", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "哑铃硬拉", categoryId: "back", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "V把高位下拉", categoryId: "back", iconPath: DEFAULT_ACTION_ICON_PATH },
@@ -286,6 +291,7 @@ const ACTION_DEFINITIONS = [
   { name: "哈克深蹲", categoryId: "legs", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "罗马尼亚硬拉", categoryId: "legs", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "腿弯举", categoryId: "legs", iconPath: DEFAULT_ACTION_ICON_PATH },
+  { name: "俯卧腿弯举", categoryId: "legs", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "登台阶", categoryId: "legs", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "提踵", categoryId: "legs", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "相扑硬拉", categoryId: "legs", iconPath: DEFAULT_ACTION_ICON_PATH },
@@ -312,6 +318,7 @@ const ACTION_DEFINITIONS = [
   { name: "窄距卧推", categoryId: "triceps", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "臂屈伸", categoryId: "triceps", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "仰卧臂屈伸", categoryId: "triceps", iconPath: DEFAULT_ACTION_ICON_PATH },
+  { name: "直杆臂屈伸", categoryId: "triceps", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "过顶臂屈伸", categoryId: "triceps", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "哑铃臂后伸", categoryId: "triceps", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "绳索过顶臂屈伸", categoryId: "triceps", iconPath: DEFAULT_ACTION_ICON_PATH },
@@ -345,7 +352,8 @@ const ACTION_DEFINITIONS = [
   { name: "椭圆机", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "划船机", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "爬楼机", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH },
-  { name: "有氧操", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH }
+  { name: "有氧操", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH },
+  { name: "农夫走", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH }
 ];
 
 const ACTION_TABLE = ACTION_DEFINITIONS.map((action) => ({

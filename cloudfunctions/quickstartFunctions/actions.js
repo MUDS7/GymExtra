@@ -4,7 +4,7 @@ const path = require("path");
 
 const db = cloud.database();
 const COLLECTION = "actions";
-const DATA_VERSION = 14;
+const DATA_VERSION = 15;
 const ICON_BATCH_SIZE = 6;
 const DEFAULT_ACTION_ICON_PATH = "/assets/action-icons/bench-press.png";
 const ACTION_ICON_LOCAL_PATH = path.join(__dirname, "assets", "default-action.png");
@@ -65,6 +65,7 @@ const BACK_ACTION_ICON_PATHS = {
   "杠铃耸肩": "/assets/action-icons/back-barbell-shrug.png",
   "哑铃耸肩": "/assets/action-icons/back-dumbbell-shrug.png",
   "罗马椅挺身": "/assets/action-icons/back-roman-chair-extension.png",
+  "山羊挺身": "/assets/action-icons/back-goat-extension.png",
   "架上硬拉": "/assets/action-icons/back-rack-pull.png",
   "哑铃硬拉": "/assets/action-icons/back-dumbbell-deadlift.png",
   "V把高位下拉": "/assets/action-icons/back-v-bar-lat-pulldown.png",
@@ -101,6 +102,7 @@ const LEG_ACTION_ICON_PATHS = {
   "哈克深蹲": "/assets/action-icons/legs-hack-squat.png",
   "罗马尼亚硬拉": "/assets/action-icons/legs-romanian-deadlift.png",
   "腿弯举": "/assets/action-icons/legs-leg-curl.png",
+  "俯卧腿弯举": "/assets/action-icons/legs-prone-leg-curl.png",
   "登台阶": "/assets/action-icons/legs-step-up.png",
   "提踵": "/assets/action-icons/legs-calf-raise.png",
   "相扑硬拉": "/assets/action-icons/legs-sumo-deadlift.png",
@@ -136,6 +138,7 @@ const TRICEPS_ACTION_ICON_PATHS = {
   "窄距卧推": "/assets/action-icons/triceps-close-grip-bench-press.png",
   "臂屈伸": "/assets/action-icons/triceps-dip.png",
   "仰卧臂屈伸": "/assets/action-icons/triceps-lying-extension.png",
+  "直杆臂屈伸": "/assets/action-icons/triceps-straight-bar-extension.png",
   "过顶臂屈伸": "/assets/action-icons/triceps-overhead-extension.png",
   "哑铃臂后伸": "/assets/action-icons/triceps-dumbbell-kickback.png",
   "绳索过顶臂屈伸": "/assets/action-icons/triceps-cable-overhead-extension.png",
@@ -178,7 +181,8 @@ const CARDIO_ACTION_ICON_PATHS = {
   "椭圆机": "/assets/action-icons/cardio-elliptical.png",
   "划船机": "/assets/action-icons/cardio-rowing-machine.png",
   "爬楼机": "/assets/action-icons/cardio-stair-climber.png",
-  "有氧操": "/assets/action-icons/cardio-aerobics.png"
+  "有氧操": "/assets/action-icons/cardio-aerobics.png",
+  "农夫走": "/assets/action-icons/cardio-farmers-walk.png"
 };
 
 function getActionIconPath(name, categoryId) {
@@ -246,6 +250,7 @@ const ACTION_DEFINITIONS = [
   ["杠铃耸肩", "back"],
   ["哑铃耸肩", "back"],
   ["罗马椅挺身", "back"],
+  ["山羊挺身", "back"],
   ["架上硬拉", "back"],
   ["哑铃硬拉", "back"],
   ["V把高位下拉", "back"],
@@ -279,6 +284,7 @@ const ACTION_DEFINITIONS = [
   ["哈克深蹲", "legs"],
   ["罗马尼亚硬拉", "legs"],
   ["腿弯举", "legs"],
+  ["俯卧腿弯举", "legs"],
   ["登台阶", "legs"],
   ["提踵", "legs"],
   ["相扑硬拉", "legs"],
@@ -305,6 +311,7 @@ const ACTION_DEFINITIONS = [
   ["窄距卧推", "triceps"],
   ["臂屈伸", "triceps"],
   ["仰卧臂屈伸", "triceps"],
+  ["直杆臂屈伸", "triceps"],
   ["过顶臂屈伸", "triceps"],
   ["哑铃臂后伸", "triceps"],
   ["绳索过顶臂屈伸", "triceps"],
@@ -338,7 +345,8 @@ const ACTION_DEFINITIONS = [
   ["椭圆机", "cardio"],
   ["划船机", "cardio"],
   ["爬楼机", "cardio"],
-  ["有氧操", "cardio"]
+  ["有氧操", "cardio"],
+  ["农夫走", "cardio"]
 ];
 
 const ACTION_TABLE = ACTION_DEFINITIONS.map(([name, categoryId], order) => ({

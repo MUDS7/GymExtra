@@ -50,6 +50,7 @@
 | `back-t-bar-row.png` | T杠划船 | [T bar rows 1.svg](https://commons.wikimedia.org/wiki/File:T_bar_rows_1.svg) |
 | `back-chest-supported-row.png` | 胸托划船 | [Bent-over-rear-delt-row-with-head-on-bench-1.png](https://commons.wikimedia.org/wiki/File:Bent-over-rear-delt-row-with-head-on-bench-1.png) |
 | `back-straight-arm-pulldown.png` | 直臂下压 | [Straight arm push down 2.svg](https://commons.wikimedia.org/wiki/File:Straight_arm_push_down_2.svg) |
+| `back-goat-extension.png` | 山羊挺身 | [Hyperextensions 1.svg](https://commons.wikimedia.org/wiki/File:Hyperextensions_1.svg) |
 | `back-face-pull.png` | 面拉 | [Seated rear lateral cable raise 1.svg](https://commons.wikimedia.org/wiki/File:Seated_rear_lateral_cable_raise_1.svg) |
 | `back-inverted-row.png` | 反向划船 | [Body row 1.svg](https://commons.wikimedia.org/wiki/File:Body_row_1.svg) |
 | `back-wide-grip-lat-pulldown.png` | 宽握高位下拉 | [Wide grip lat pull down 1.svg](https://commons.wikimedia.org/wiki/File:Wide_grip_lat_pull_down_1.svg) |
@@ -108,6 +109,7 @@
 | `legs-hack-squat.png` | 哈克深蹲 | [Hack squat machine 1.svg](https://commons.wikimedia.org/wiki/File:Hack_squat_machine_1.svg) |
 | `legs-romanian-deadlift.png` | 罗马尼亚硬拉 | [Romanian dead lift 1.svg](https://commons.wikimedia.org/wiki/File:Romanian_dead_lift_1.svg) |
 | `legs-leg-curl.png` | 腿弯举 | [Lying leg curl machine 1.svg](https://commons.wikimedia.org/wiki/File:Lying_leg_curl_machine_1.svg) |
+| `legs-prone-leg-curl.png` | 俯卧腿弯举 | [Lying leg curl machine 1.svg](https://commons.wikimedia.org/wiki/File:Lying_leg_curl_machine_1.svg) |
 | `legs-step-up.png` | 登台阶 | [Step ups with dumbbells 1.svg](https://commons.wikimedia.org/wiki/File:Step_ups_with_dumbbells_1.svg) |
 | `legs-calf-raise.png` | 提踵 | [Standing calf raises using machine 1.svg](https://commons.wikimedia.org/wiki/File:Standing_calf_raises_using_machine_1.svg) |
 | `legs-sumo-deadlift.png` | 相扑硬拉 | [Barbell dead lifts 2.svg](https://commons.wikimedia.org/wiki/File:Barbell_dead_lifts_2.svg)（最接近的杠铃硬拉线稿） |
@@ -155,6 +157,7 @@
 | `triceps-close-grip-bench-press.png` | 窄距卧推 | [Close grip barbell bench press 1.svg](https://commons.wikimedia.org/wiki/File:Close_grip_barbell_bench_press_1.svg) |
 | `triceps-dip.png` | 臂屈伸 | [Tricep dips using body weight 1.svg](https://commons.wikimedia.org/wiki/File:Tricep_dips_using_body_weight_1.svg) |
 | `triceps-lying-extension.png` | 仰卧臂屈伸 | [Lying triceps press with barbell 1.svg](https://commons.wikimedia.org/wiki/File:Lying_triceps_press_with_barbell_1.svg) |
+| `triceps-straight-bar-extension.png` | 直杆臂屈伸 | [Standing overhead triceps extension with barbell 1.svg](https://commons.wikimedia.org/wiki/File:Standing_overhead_triceps_extension_with_barbell_1.svg) |
 | `triceps-overhead-extension.png` | 过顶臂屈伸 | [Seated triceps press with dumbbell 1.svg](https://commons.wikimedia.org/wiki/File:Seated_triceps_press_with_dumbbell_1.svg) |
 | `triceps-dumbbell-kickback.png` | 哑铃臂后伸 | [Triceps kickback with dumbbell 1.svg](https://commons.wikimedia.org/wiki/File:Triceps_kickback_with_dumbbell_1.svg) |
 | `triceps-cable-overhead-extension.png` | 绳索过顶臂屈伸 | [Kneeling triceps extension with cable 1.svg](https://commons.wikimedia.org/wiki/File:Kneeling_triceps_extension_with_cable_1.svg) |
@@ -210,3 +213,4 @@ Tabler 线条图标作者为 Tabler，采用 [MIT License](https://opensource.or
 | `cardio-rowing-machine.png` | 划船机 | [Rowing pictogram.svg](https://commons.wikimedia.org/wiki/File:Rowing_pictogram.svg) |
 | `cardio-stair-climber.png` | 爬楼机 | [Tabler-icons stairs.svg](https://commons.wikimedia.org/wiki/File:Tabler-icons_stairs.svg) |
 | `cardio-aerobics.png` | 有氧操 | [Tabler-icons stretching.svg](https://commons.wikimedia.org/wiki/File:Tabler-icons_stretching.svg)（最接近的健身操图标） |
+| `cardio-farmers-walk.png` | 农夫走 | [Farmer's Walk.jpg](https://commons.wikimedia.org/wiki/File:Farmer%27s_Walk.jpg)（基于原图生成的黑白线稿衍生图） |
