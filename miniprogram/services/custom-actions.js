@@ -46,7 +46,7 @@ function getCustomActions() {
   if (!wx.cloud) return Promise.resolve(getCachedCustomActions());
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "actionFunctions",
     data: { type: "getCustomActions" }
   }).then(({ result }) => {
     if (!result || !result.success || !Array.isArray(result.data)) {
@@ -71,7 +71,7 @@ function createCustomAction(values) {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "actionFunctions",
     data: { type: "createCustomAction", name, categoryId }
   }).then(({ result }) => {
     if (!result || !result.success || !result.data) {
@@ -96,7 +96,7 @@ function deleteCustomAction(actionId) {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "actionFunctions",
     data: { type: "deleteCustomAction", actionId: id }
   }).then(({ result }) => {
     if (!result || !result.success) {

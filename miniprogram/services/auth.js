@@ -2,7 +2,7 @@ const { callCloudFunction, uploadCloudFile } = require("./network");
 
 function call(type, data = {}) {
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "authFunctions",
     data: { type, ...data }
   }).then(({ result }) => {
     if (!result || !result.success) {

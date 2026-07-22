@@ -6,7 +6,7 @@ function saveTraining(data) {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "trainingFunctions",
     data: {
       type: "saveTraining",
       ...data
@@ -26,7 +26,7 @@ function getRecentTrainings() {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "trainingFunctions",
     data: { type: "getRecentTrainings" }
   }).then(({ result }) => {
     if (!result || !result.success) {
@@ -43,7 +43,7 @@ function getAllTrainings(page = 0, pageSize = 20) {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "trainingFunctions",
     data: {
       type: "getAllTrainings",
       page,
@@ -67,7 +67,7 @@ function getTrainingDetail(trainingId) {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "trainingFunctions",
     data: {
       type: "getTrainingDetail",
       trainingId
@@ -87,14 +87,14 @@ function deleteTraining(trainingId) {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "trainingFunctions",
     data: {
       type: "deleteTraining",
       trainingId
     }
   }).then(({ result }) => {
     if (!result) {
-      throw new Error("云函数未返回删除结果，请重新部署 quickstartFunctions");
+      throw new Error("云函数未返回删除结果，请重新部署 trainingFunctions");
     }
 
     if (!result || !result.success) {
@@ -111,7 +111,7 @@ function getWeeklyTrainings(weekStart, weekEnd) {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "trainingFunctions",
     data: {
       type: "getWeeklyTrainings",
       weekStart,
@@ -132,7 +132,7 @@ function getMonthlyTrainings(monthStart, monthEnd) {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "trainingFunctions",
     data: {
       type: "getMonthlyTrainings",
       monthStart,
@@ -153,7 +153,7 @@ function getTrainingTrend(actionId, categoryId) {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "trainingFunctions",
     data: {
       type: "getTrainingTrend",
       actionId,

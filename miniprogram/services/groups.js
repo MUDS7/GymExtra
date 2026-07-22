@@ -6,7 +6,7 @@ function callGroupFunction(type, data = {}) {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "groupFunctions",
     data: { type, ...data }
   }).then(({ result }) => {
     if (!result || !result.success) {

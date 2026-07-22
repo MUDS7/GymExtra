@@ -6,7 +6,7 @@ function getUserStats() {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "statsFunctions",
     data: { type: "getUserStats" }
   }).then(({ result }) => {
     if (!result || !result.success) {

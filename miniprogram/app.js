@@ -48,7 +48,7 @@ App({
     this.loginPromise = Promise.resolve(this.testUserSelectionPromise)
       .catch(() => null)
       .then(() => callCloudFunction({
-        name: "quickstartFunctions",
+        name: "authFunctions",
         data: { type: "login" }
       }))
       .then(({ result }) => {
@@ -82,7 +82,7 @@ App({
     if (!wx.cloud) return Promise.resolve();
 
     return callCloudFunction({
-      name: "quickstartFunctions",
+      name: "authFunctions",
       data: { type: "listTestUsers" }
     }).then(({ result }) => {
       const users = result && result.success && Array.isArray(result.data) ? result.data : [];

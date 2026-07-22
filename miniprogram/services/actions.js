@@ -26,7 +26,7 @@ function getActions() {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "actionFunctions",
     data: { type: "getActions" }
   }).then(({ result }) => {
     if (!result || !result.success || !Array.isArray(result.data)) {
@@ -56,7 +56,7 @@ function ensureActionIcons(actionIds) {
   }
 
   return callCloudFunction({
-    name: "quickstartFunctions",
+    name: "actionFunctions",
     // 云端也会强制限制为 6 个，防止单次请求上传过多图片。
     data: { type: "ensureActionIcons", actionIds: uniqueActionIds.slice(0, 6) }
   }).then(({ result }) => {
