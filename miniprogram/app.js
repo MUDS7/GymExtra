@@ -1,24 +1,15 @@
 const { cloudEnvId } = require("./config/env.local");
 const { callCloudFunction } = require("./services/network");
 
-// Temporary: keep the test-user entry hidden and use the current WeChat account.
-const ENABLE_TEST_USER_SELECTOR = false;
-
 App({
   globalData: {
     env: cloudEnvId,
     userInfo: null,
-    userId: "",
-    testUserId: ""
+    userId: ""
   },
-
-  testUserSelectionPromise: null,
 
   onLaunch() {
     this.initCloud();
-    this.testUserSelectionPromise = ENABLE_TEST_USER_SELECTOR
-      ? this.selectTestUser()
-      : Promise.resolve();
     this.login().catch(() => { });
   },
 
@@ -45,12 +36,10 @@ App({
       return this.loginPromise;
     }
 
-    this.loginPromise = Promise.resolve(this.testUserSelectionPromise)
-      .catch(() => null)
-      .then(() => callCloudFunction({
-        name: "authFunctions",
-        data: { type: "login" }
-      }))
+    this.loginPromise = callCloudFunction({
+      name: "authFunctions",
+      data: { type: "login" }
+    })
       .then(({ result }) => {
       if (!result || !result.success) {
         throw new Error((result && result.message) || "登录失败");
@@ -76,36 +65,6 @@ App({
     });
 
     return this.loginPromise;
-  },
-
-  selectTestUser() {
-    if (!wx.cloud) return Promise.resolve();
-
-    return callCloudFunction({
-      name: "authFunctions",
-      data: { type: "listTestUsers" }
-    }).then(({ result }) => {
-      const users = result && result.success && Array.isArray(result.data) ? result.data : [];
-      if (!users.length) return null;
-
-      const labels = ["当前微信账号"].concat(users.map((user) => {
-        const nickname = String(user.nickname || "未命名用户").slice(0, 14);
-        const suffix = String(user.id || "").slice(-6);
-        return suffix ? `${nickname} · ${suffix}` : nickname;
-      }));
-      return new Promise((resolve) => {
-        wx.showActionSheet({
-          alertText: "测试功能：选择进入小程序的人员",
-          itemList: labels,
-          success: ({ tapIndex }) => {
-            const selected = users[tapIndex - 1];
-            if (selected) this.globalData.testUserId = selected.id;
-            resolve();
-          },
-          fail: resolve
-        });
-      });
-    }).catch(() => null);
   },
 
   setUser(user) {

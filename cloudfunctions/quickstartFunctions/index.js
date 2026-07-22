@@ -175,8 +175,6 @@ exports.main = async (event, context) => {
   switch (event.type) {
     case "login":
       return await userService.login(event);
-    case "listTestUsers":
-      return await userService.listTestUsers();
     case "registerUser":
       return await userService.register(event);
     case "getActions":

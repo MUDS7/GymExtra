@@ -6,8 +6,6 @@ exports.main = async (event = {}) => {
   switch (event.type) {
     case "login":
       return userService.login(event);
-    case "listTestUsers":
-      return userService.listTestUsers();
     case "registerUser":
       return userService.register(event);
     default:

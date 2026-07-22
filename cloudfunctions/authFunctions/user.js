@@ -3,10 +3,6 @@ const identity = require("./identity");
 
 const db = cloud.database();
 const COLLECTION = "users";
-const TEST_USERS = [
-  { id: "test-user-001", nickname: "测试用户小李" },
-  { id: "test-user-002", nickname: "测试用户小王" }
-];
 
 async function ensureCollection() {
   try {
@@ -29,25 +25,6 @@ function toPublicUser(record) {
 async function findUser(openid) {
   const result = await db.collection(COLLECTION).where({ _id: openid }).limit(1).get();
   return result.data[0] || null;
-}
-
-async function ensureTestUsers() {
-  const now = new Date();
-  await Promise.all(TEST_USERS.map(async (user) => {
-    try {
-      await db.collection(COLLECTION).doc(user.id).get();
-    } catch (error) {
-      await db.collection(COLLECTION).doc(user.id).set({
-        data: {
-          nickname: user.nickname,
-          avatarUrl: "",
-          isTestAccount: true,
-          createdAt: now,
-          updatedAt: now
-        }
-      });
-    }
-  }));
 }
 
 async function login(event = {}) {
@@ -98,14 +75,4 @@ async function register(event) {
   };
 }
 
-async function listTestUsers() {
-  await ensureCollection();
-  await ensureTestUsers();
-  const result = await db.collection(COLLECTION).orderBy("updatedAt", "desc").limit(20).get();
-  return {
-    success: true,
-    data: (result.data || []).map(toPublicUser)
-  };
-}
-
-module.exports = { login, register, listTestUsers };
+module.exports = { login, register };

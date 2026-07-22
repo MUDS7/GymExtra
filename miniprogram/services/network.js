@@ -51,12 +51,7 @@ function withTimeout(request, abort) {
 }
 
 function callCloudFunction(options) {
-  const app = typeof getApp === "function" ? getApp() : null;
-  const testUserId = app && app.globalData && app.globalData.testUserId;
-  const data = { ...(options.data || {}) };
-  if (testUserId) data.testUserId = testUserId;
-
-  return withTimeout(wx.cloud.callFunction({ ...options, data }));
+  return withTimeout(wx.cloud.callFunction(options));
 }
 
 function uploadCloudFile(options) {
