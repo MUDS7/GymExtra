@@ -611,14 +611,35 @@ async function getMonthlyTrainings(event) {
   }
 }
 
-function getRecordMetric(action, isCardio) {
+function getRecordMetric(action, isCardio, metric) {
   if (isCardio) {
     return Math.max(0, Number(action.durationMinutes) || 0);
+  }
+
+  if (metric === "reps") {
+    return (Array.isArray(action.sets) ? action.sets : []).reduce((total, set) => (
+      total + Math.max(0, Number(set && set.reps) || 0)
+    ), 0);
   }
 
   return (Array.isArray(action.sets) ? action.sets : []).reduce((maximum, set) => (
     Math.max(maximum, Number(set && set.weight) || 0)
   ), 0);
+}
+
+function getRecordSetDetails(action) {
+  const sets = Array.isArray(action.sets) ? action.sets : [];
+  const bestSet = sets.reduce((currentBest, set) => {
+    const weight = Math.max(0, Number(set && set.weight) || 0);
+    const bestWeight = Math.max(0, Number(currentBest && currentBest.weight) || 0);
+
+    return weight > bestWeight ? set : currentBest;
+  }, null) || {};
+
+  return {
+    weight: Math.max(0, Number(bestSet.weight) || 0),
+    reps: Math.max(0, Number(bestSet.reps) || 0)
+  };
 }
 
 async function getTrainingTrend(event = {}) {
@@ -652,18 +673,25 @@ async function getTrainingTrend(event = {}) {
       .end();
 
     const isCardio = categoryId === "cardio";
+    const metric = isCardio ? "duration" : (event.metric === "reps" ? "reps" : "weight");
     const records = (result.list || [])
-      .map((training) => ({
-        trainingId: training.uuid,
-        createdAt: training.createdAt,
-        value: getRecordMetric(training.action || {}, isCardio)
-      }))
+      .map((training) => {
+        const action = training.action || {};
+        const setDetails = isCardio ? {} : getRecordSetDetails(action);
+
+        return {
+          trainingId: training.uuid,
+          createdAt: training.createdAt,
+          value: getRecordMetric(action, isCardio, metric),
+          ...setDetails
+        };
+      })
       .sort((first, second) => new Date(first.createdAt) - new Date(second.createdAt));
 
     return {
       success: true,
       data: records,
-      metric: isCardio ? "duration" : "weight"
+      metric
     };
   } catch (error) {
     console.error("获取训练趋势失败", error);

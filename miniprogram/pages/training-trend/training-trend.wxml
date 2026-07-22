@@ -8,16 +8,27 @@
     <view class="trend-card-head">
       <view>
         <view class="trend-card-title">近 20 次训练记录</view>
-        <view class="trend-card-desc">{{isCardio ? '每次记录取最长运动时长' : '每次记录取最大训练重量'}}</view>
+        <view class="trend-card-desc">{{trendDescription}}</view>
       </view>
-      <view class="unit-badge">{{unit}}</view>
+      <view wx:if="{{!isCardio}}" class="metric-select">
+        <view class="unit-badge metric-trigger" bindtap="toggleMetricMenu">{{unit}} {{metricMenuOpen ? '▴' : '▾'}}</view>
+        <view wx:if="{{metricMenuOpen}}" class="metric-menu">
+          <view wx:for="{{metricOptions}}" wx:key="*this" class="metric-option {{index === metricIndex ? 'active' : ''}}" data-index="{{index}}" bindtap="onMetricChange">{{item}}</view>
+        </view>
+      </view>
+      <view wx:else class="unit-badge">{{unit}}</view>
     </view>
     <canvas
+      id="trendChart"
       canvas-id="trendChart"
       class="trend-chart"
       style="width: {{chartWidth}}px; height: {{chartHeight}}px;"
       width="{{chartWidth}}"
       height="{{chartHeight}}"
+      bindtouchstart="onChartTouchStart"
+      bindtouchmove="onChartTouchMove"
+      bindtouchend="onChartTouchEnd"
+      bindtouchcancel="onChartTouchEnd"
     ></canvas>
   </view>
 

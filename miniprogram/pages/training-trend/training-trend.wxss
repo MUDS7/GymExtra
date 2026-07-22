@@ -51,6 +51,33 @@
   font-weight: 800;
 }
 
+.metric-select { position: relative; flex-shrink: 0; }
+.metric-trigger { min-width: 72rpx; text-align: center; }
+
+.metric-menu {
+  position: absolute;
+  top: calc(100% + 10rpx);
+  right: 0;
+  z-index: 5;
+  min-width: 116rpx;
+  overflow: hidden;
+  border: 1rpx solid #F3C9B5;
+  border-radius: 18rpx;
+  background: #FFFFFF;
+  box-shadow: 0 10rpx 24rpx rgba(53, 40, 32, 0.14);
+}
+
+.metric-option {
+  padding: 13rpx 20rpx;
+  color: #5E6269;
+  text-align: center;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.metric-option + .metric-option { border-top: 1rpx solid #F2F3F5; }
+.metric-option.active { color: #E26424; background: #FFF5F0; }
+
 .trend-chart { display: block; margin: 12rpx auto 0; }
 
 .state-text {

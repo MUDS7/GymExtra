@@ -147,7 +147,7 @@ function getMonthlyTrainings(monthStart, monthEnd) {
   });
 }
 
-function getTrainingTrend(actionId, categoryId) {
+function getTrainingTrend(actionId, categoryId, metric) {
   if (!wx.cloud) {
     return Promise.reject(new Error("当前基础库不支持云开发"));
   }
@@ -157,7 +157,8 @@ function getTrainingTrend(actionId, categoryId) {
     data: {
       type: "getTrainingTrend",
       actionId,
-      categoryId
+      categoryId,
+      metric
     }
   }).then(({ result }) => {
     if (!result || !result.success) {
