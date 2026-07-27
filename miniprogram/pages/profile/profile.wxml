@@ -3,7 +3,7 @@
     <view class="page-title">我的</view>
   </view>
 
-  <view class="profile-card">
+  <view class="profile-card" bindtap="onProfileTap" role="button" aria-label="{{isGuest ? '登录或注册' : '编辑资料'}}">
     <view class="avatar-wrap">
       <image wx:if="{{user.avatarUrl}}" class="avatar-letter avatar-image" src="{{user.avatarUrl}}" mode="aspectFill"></image>
       <view wx:else class="avatar-letter">{{user.avatar}}</view>
@@ -19,7 +19,7 @@
         <text>{{user.level}}</text>
       </view>
     </view>
-    <view class="edit-button" bindtap="onActionTap" data-name="编辑资料">编辑</view>
+    <view class="edit-button">{{isGuest ? '登录' : '编辑'}}</view>
   </view>
 
   <view class="stats-grid">
@@ -46,6 +46,7 @@
         <view class="template-name">{{item.name}}</view>
       </view>
     </view>
+    <view wx:if="{{templates.length === 0}}" class="template-empty">{{isGuest ? '登录后保存并查看你的训练模板' : '还没有训练模板'}}</view>
   </view>
 
   <view class="menu-section" wx:for="{{menuGroups}}" wx:for-item="group" wx:key="group">

@@ -11,8 +11,9 @@ Page({
   },
 
   onLoad() {
-    app.login({ redirectToRegister: false }).then((result) => {
+    app.login({ redirectToRegister: false, force: true }).then((result) => {
       if (result.registered) {
+        app.exitExperienceMode();
         wx.switchTab({ url: "/pages/train/train" });
         return;
       }
@@ -49,6 +50,9 @@ Page({
     wx.showLoading({ title: "正在注册", mask: true });
 
     try {
+      if (!app.globalData.userId) {
+        await app.login({ redirectToRegister: false, force: true });
+      }
       const upload = await auth.uploadAvatar(this.data.avatarUrl, app.globalData.userId);
       const result = await auth.registerUser({
         nickname,

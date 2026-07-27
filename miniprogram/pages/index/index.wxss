@@ -62,6 +62,32 @@
   gap: 18rpx;
 }
 
+.group-empty {
+  min-height: 158rpx;
+  padding: 28rpx 30rpx;
+  border: 1rpx dashed #DADDE2;
+  border-radius: 38rpx;
+  background: #F8F9FA;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.group-empty-title {
+  color: #111111;
+  font-size: 30rpx;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.group-empty-copy {
+  margin-top: 14rpx;
+  color: #6B6F76;
+  font-size: 25rpx;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
 .group-card {
   min-height: 158rpx;
   padding: 28rpx 30rpx;

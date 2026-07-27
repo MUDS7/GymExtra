@@ -176,9 +176,13 @@ Page({
   async loadRecentWorkouts() {
     try {
       const app = getApp();
-      const loginResult = await app.login();
+      const loginResult = await app.login({ redirectToRegister: false });
 
       if (!loginResult.registered) {
+        this.setData({
+          recentWorkouts: [],
+          ...buildWeeklyDashboard([], getCurrentWeekRange().weekStart)
+        });
         return;
       }
 
@@ -208,6 +212,11 @@ Page({
 
   onActionTap(event) {
     const { action, name, trainingId, draftId } = event.currentTarget.dataset;
+
+    if (!getApp().globalData.isRegistered) {
+      wx.showToast({ title: "登录后即可使用训练功能", icon: "none" });
+      return;
+    }
 
     if (action === "viewTraining" && draftId) {
       wx.navigateTo({

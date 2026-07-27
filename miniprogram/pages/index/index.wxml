@@ -23,6 +23,10 @@
         </view>
         <view class="lucide-icon icon-chevron-right row-arrow"></view>
       </view>
+      <view wx:if="{{!loading && groups.length === 0}}" class="group-empty">
+        <view class="group-empty-title">{{isGuest ? '登录后查看你的群组' : '还没有加入群组'}}</view>
+        <view class="group-empty-copy">{{isGuest ? '注册后可加入群组，与伙伴一起训练' : '发现更多群组，开始和伙伴一起训练'}}</view>
+      </view>
     </view>
   </view>
 

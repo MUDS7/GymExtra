@@ -16,11 +16,12 @@ function formatStats(stats = {}) {
 
 Page({
   data: {
+    isGuest: true,
     user: {
-      nickname: "Alex Zhang",
-      id: "fitlog_0421",
-      level: "Lv.8 精英训练者",
-      avatar: "A"
+      nickname: "登录 / 注册",
+      id: "登录后同步你的训练数据",
+      level: "体验模式",
+      avatar: "G"
     },
     stats: formatStats(),
     templates: [],
@@ -46,30 +47,37 @@ Page({
 
   onShow() {
     const app = getApp();
-    const cachedUser = app.globalData.userInfo || wx.getStorageSync("userInfo");
-
-    if (cachedUser) {
-      this.showUser(cachedUser);
-      this.loadUserStats();
-      this.loadUserTemplates(cachedUser.id);
-      return;
-    }
-
     app.login({ redirectToRegister: false }).then((result) => {
       if (!result.registered) {
-        wx.reLaunch({ url: "/pages/login/login" });
+        this.showGuest();
         return;
       }
       this.showUser(result.user);
       this.loadUserStats();
       this.loadUserTemplates(result.user.id);
     }).catch(() => {
-      wx.showToast({ title: "用户信息加载失败", icon: "none" });
+      this.showGuest();
+    });
+  },
+
+  showGuest() {
+    this.setData({
+      isGuest: true,
+      user: {
+        nickname: "登录 / 注册",
+        id: "登录后同步你的训练数据",
+        level: "体验模式",
+        avatar: "G",
+        avatarUrl: ""
+      },
+      stats: formatStats(),
+      templates: []
     });
   },
 
   showUser(user) {
     this.setData({
+      isGuest: false,
       user: {
         nickname: user.nickname,
         id: user.id,
@@ -95,6 +103,11 @@ Page({
 
   onActionTap(event) {
     const { name, templateId } = event.currentTarget.dataset;
+
+    if (this.data.isGuest) {
+      wx.showToast({ title: "请先点击上方信息框登录", icon: "none" });
+      return;
+    }
 
     if (templateId) {
       wx.navigateTo({
@@ -127,5 +140,14 @@ Page({
       title: `${name} 待接入`,
       icon: "none"
     });
+  },
+
+  onProfileTap() {
+    if (this.data.isGuest) {
+      wx.navigateTo({ url: "/pages/login/login" });
+      return;
+    }
+
+    this.onActionTap({ currentTarget: { dataset: { name: "编辑资料" } } });
   }
 });

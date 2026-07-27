@@ -4,6 +4,7 @@ Page({
   data: {
     groups: [],
     loading: false,
+    isGuest: true,
     showDiscoverModal: false,
     discoverKeyword: "",
     searchResults: [],
@@ -20,8 +21,14 @@ Page({
     this.setData({ loading: true });
 
     try {
+      const loginResult = await getApp().login({ redirectToRegister: false });
+      if (!loginResult.registered) {
+        this.setData({ groups: [], loading: false, isGuest: true });
+        return;
+      }
+
       const groups = await groupService.getMyGroups();
-      this.setData({ groups, loading: false });
+      this.setData({ groups, loading: false, isGuest: false });
     } catch (error) {
       console.error("群组列表加载失败", error);
       this.setData({ loading: false });
@@ -30,6 +37,11 @@ Page({
   },
 
   onGroupTap(event) {
+    if (this.data.isGuest) {
+      this.showGuestNotice();
+      return;
+    }
+
     const { id, name } = event.currentTarget.dataset;
 
     wx.navigateTo({
@@ -38,6 +50,11 @@ Page({
   },
 
   onActionTap(event) {
+    if (this.data.isGuest) {
+      this.showGuestNotice();
+      return;
+    }
+
     const { name } = event.currentTarget.dataset;
 
     wx.showToast({
@@ -47,6 +64,11 @@ Page({
   },
 
   openDiscoverModal() {
+    if (this.data.isGuest) {
+      this.showGuestNotice();
+      return;
+    }
+
     this.setData({
       showDiscoverModal: true,
       discoverKeyword: "",
@@ -75,6 +97,11 @@ Page({
   },
 
   async searchDiscoverGroups() {
+    if (this.data.isGuest) {
+      this.showGuestNotice();
+      return;
+    }
+
     const keyword = this.data.discoverKeyword.trim();
 
     if (!keyword) {
@@ -96,6 +123,11 @@ Page({
   },
 
   async applyToGroup(event) {
+    if (this.data.isGuest) {
+      this.showGuestNotice();
+      return;
+    }
+
     const { id } = event.currentTarget.dataset;
     if (!id) return;
 
@@ -115,5 +147,9 @@ Page({
       console.error("申请加入群组失败", error);
       wx.showToast({ title: error.message || "申请失败", icon: "none" });
     }
+  },
+
+  showGuestNotice() {
+    wx.showToast({ title: "登录后即可使用群组功能", icon: "none" });
   }
 });

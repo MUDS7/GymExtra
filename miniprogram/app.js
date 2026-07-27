@@ -5,12 +5,34 @@ App({
   globalData: {
     env: cloudEnvId,
     userInfo: null,
-    userId: ""
+    userId: "",
+    isRegistered: false,
+    isExperienceMode: true
   },
 
   onLaunch() {
     this.initCloud();
-    this.login().catch(() => { });
+    const initialAuthPromise = this.login({
+      redirectToRegister: false,
+      force: true,
+      fallbackToExperience: true
+    })
+      .catch(() => {
+        this.globalData.isRegistered = false;
+        this.globalData.isExperienceMode = true;
+        return {
+          success: false,
+          registered: false,
+          userId: "",
+          user: null
+        };
+      });
+
+    // Tab 页首次展示时复用这次身份识别，避免已注册用户被短暂当成体验用户。
+    this.initialAuthPromise = initialAuthPromise;
+    initialAuthPromise.then(() => {
+      this.initialAuthPromise = null;
+    });
   },
 
   initCloud() {
@@ -26,7 +48,20 @@ App({
   },
 
   login(options = {}) {
-    const { redirectToRegister = true, force = false } = options;
+    const { redirectToRegister = true, force = false, fallbackToExperience = false } = options;
+
+    if (this.initialAuthPromise && !force) {
+      return this.initialAuthPromise;
+    }
+
+    if (this.globalData.isExperienceMode && !force) {
+      return Promise.resolve({
+        success: true,
+        registered: false,
+        userId: "",
+        user: null
+      });
+    }
 
     if (!wx.cloud) {
       return Promise.reject(new Error("当前基础库不支持云开发"));
@@ -47,7 +82,14 @@ App({
 
       this.globalData.userId = result.userId;
       this.globalData.userInfo = result.user || null;
-      wx.setStorageSync("userInfo", result.user || null);
+      this.globalData.isRegistered = Boolean(result.registered);
+      this.globalData.isExperienceMode = !result.registered;
+
+      if (result.registered) {
+        wx.setStorageSync("userInfo", result.user);
+      } else {
+        wx.removeStorageSync("userInfo");
+      }
 
       if (!result.registered && redirectToRegister) {
         const pages = getCurrentPages();
@@ -60,6 +102,21 @@ App({
       return result;
     }).catch((error) => {
       this.loginPromise = null;
+
+      if (fallbackToExperience) {
+        this.globalData.userId = "";
+        this.globalData.userInfo = null;
+        this.globalData.isRegistered = false;
+        this.globalData.isExperienceMode = true;
+        wx.removeStorageSync("userInfo");
+        return {
+          success: false,
+          registered: false,
+          userId: "",
+          user: null
+        };
+      }
+
       console.error("自动登录失败", error);
       return Promise.reject(error);
     });
@@ -70,6 +127,8 @@ App({
   setUser(user) {
     this.globalData.userId = user.id;
     this.globalData.userInfo = user;
+    this.globalData.isRegistered = true;
+    this.globalData.isExperienceMode = false;
     this.loginPromise = Promise.resolve({
       success: true,
       registered: true,
@@ -77,5 +136,9 @@ App({
       user
     });
     wx.setStorageSync("userInfo", user);
+  },
+
+  exitExperienceMode() {
+    this.globalData.isExperienceMode = false;
   }
 });

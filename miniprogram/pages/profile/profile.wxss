@@ -227,6 +227,22 @@
   gap: 26rpx;
 }
 
+.template-empty {
+  min-height: 118rpx;
+  padding: 0 30rpx;
+  border: 1rpx dashed #DADDE2;
+  border-radius: 30rpx;
+  color: #6B6F76;
+  background: #FBFBFC;
+  font-size: 25rpx;
+  line-height: 1.4;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
 .template-item {
   min-width: 0;
   display: flex;
