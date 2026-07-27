@@ -6,7 +6,6 @@ const groupService = require("../../services/groups");
 const { getTrainingDraft, saveTrainingDraft, removeTrainingDraft } = require("../../utils/training-drafts");
 const {
   getUserTemplate,
-  hasUserTemplateName,
   saveUserTemplate,
   updateUserTemplate,
   deleteUserTemplate
@@ -360,7 +359,7 @@ Page({
         user = result.registered ? result.user : null;
       }
 
-      const template = user ? getUserTemplate(user.id, templateId) : null;
+      const template = user ? await getUserTemplate(user.id, templateId) : null;
 
       if (!template) {
         throw new Error("模板不存在或已删除");
@@ -394,7 +393,7 @@ Page({
         user = result.registered ? result.user : null;
       }
 
-      const template = user ? getUserTemplate(user.id, templateId) : null;
+      const template = user ? await getUserTemplate(user.id, templateId) : null;
 
       if (!template) {
         throw new Error("模板不存在或已删除");
@@ -462,7 +461,7 @@ Page({
       }
       if (!user) throw new Error("用户信息加载失败");
 
-      saveUserTemplate(user.id, {
+      await saveUserTemplate(user.id, {
         name: this.data.title,
         actions: this.data.actions.map((action) => ({
           id: action.id,
@@ -738,10 +737,6 @@ Page({
         throw new Error("用户信息加载失败");
       }
 
-      if (hasUserTemplateName(user.id, name, this.data.templateId)) {
-        throw new Error("模板名称已存在，请重命名");
-      }
-
       const templateData = {
         name,
         actions: this.data.actions.map((action) => ({
@@ -760,9 +755,9 @@ Page({
       };
 
       if (this.data.templateId) {
-        updateUserTemplate(user.id, this.data.templateId, templateData);
+        await updateUserTemplate(user.id, this.data.templateId, templateData);
       } else {
-        saveUserTemplate(user.id, templateData);
+        await saveUserTemplate(user.id, templateData);
       }
 
       this.trainingCompleted = true;
@@ -812,7 +807,7 @@ Page({
             throw new Error("用户信息加载失败");
           }
 
-          deleteUserTemplate(user.id, this.data.templateId);
+          await deleteUserTemplate(user.id, this.data.templateId);
           wx.showToast({ title: "模板已删除", icon: "success" });
           setTimeout(() => wx.navigateBack(), 400);
         } catch (error) {

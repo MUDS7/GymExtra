@@ -1,12 +1,7 @@
+const { callCloudFunction } = require("./network");
+
 const STORAGE_KEY_PREFIX = "userTemplates:";
-
-const LEGACY_DEFAULT_TEMPLATE_IDS = new Set([
-  "strength",
-  "fat-loss",
-  "check-in",
-  "advanced"
-]);
-
+const LEGACY_DEFAULT_TEMPLATE_IDS = new Set(["strength", "fat-loss", "check-in", "advanced"]);
 const TEMPLATE_APPEARANCES = [
   { icon: "icon-zap", tone: "energy" },
   { icon: "icon-flame", tone: "power" },
@@ -23,11 +18,7 @@ function cloneTemplates(templates) {
   return templates.map((template) => ({ ...template }));
 }
 
-function normalizeTemplateName(name) {
-  return String(name || "").trim().toLocaleLowerCase();
-}
-
-function getUserTemplates(userId) {
+function getCachedUserTemplates(userId) {
   const key = getStorageKey(userId);
   const templates = wx.getStorageSync(key);
   const savedTemplates = Array.isArray(templates)
@@ -41,75 +32,82 @@ function getUserTemplates(userId) {
   return cloneTemplates(savedTemplates);
 }
 
-function hasUserTemplateName(userId, name, excludeTemplateId = "") {
-  const normalizedName = normalizeTemplateName(name);
-  return Boolean(normalizedName) && getUserTemplates(userId).some(
-    (template) => template.id !== excludeTemplateId && normalizeTemplateName(template.name) === normalizedName
-  );
+function setCachedUserTemplates(userId, templates) {
+  const safeTemplates = Array.isArray(templates) ? cloneTemplates(templates) : [];
+  wx.setStorageSync(getStorageKey(userId), safeTemplates);
+  return safeTemplates;
 }
 
-function getUserTemplate(userId, templateId) {
-  return getUserTemplates(userId).find((template) => template.id === templateId) || null;
+function callTemplateFunction(type, data = {}) {
+  if (!wx.cloud) return Promise.reject(new Error("当前基础库不支持云开发"));
+
+  return callCloudFunction({
+    name: "trainingFunctions",
+    data: { type, ...data }
+  }).then(({ result }) => {
+    if (!result || !result.success) {
+      throw new Error((result && result.message) || "模板数据加载失败");
+    }
+    return result.data;
+  });
 }
 
-function saveUserTemplate(userId, data = {}) {
-  if (hasUserTemplateName(userId, data.name)) {
-    throw new Error("模板名称已存在，请重命名");
+async function getUserTemplates(userId) {
+  const localTemplates = getCachedUserTemplates(userId);
+  let templates;
+  try {
+    templates = await callTemplateFunction("getUserTemplates");
+  } catch (error) {
+    if (localTemplates.length) return localTemplates;
+    throw error;
+  }
+  templates = Array.isArray(templates) ? templates : [];
+
+  // 将旧版仅存于本机的模板一次性迁移到云端，避免升级后已有模板丢失。
+  if (!templates.length && localTemplates.length) {
+    await Promise.all(localTemplates.map((template) => (
+      callTemplateFunction("saveUserTemplate", { template })
+    )));
+    templates = await callTemplateFunction("getUserTemplates");
+    templates = Array.isArray(templates) ? templates : [];
   }
 
-  const templates = getUserTemplates(userId);
+  return setCachedUserTemplates(userId, templates);
+}
+
+async function getUserTemplate(userId, templateId) {
+  const templates = await getUserTemplates(userId);
+  return templates.find((template) => template.id === templateId) || null;
+}
+
+async function saveUserTemplate(userId, data = {}) {
+  const templates = getCachedUserTemplates(userId);
   const appearance = TEMPLATE_APPEARANCES[templates.length % TEMPLATE_APPEARANCES.length];
-  const template = {
-    id: `template-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    name: String(data.name || "未命名模板").trim() || "未命名模板",
-    icon: appearance.icon,
-    tone: appearance.tone,
-    actions: Array.isArray(data.actions) ? data.actions : []
-  };
-
-  wx.setStorageSync(getStorageKey(userId), templates.concat(template));
+  const template = await callTemplateFunction("saveUserTemplate", {
+    template: { ...appearance, ...data }
+  });
+  setCachedUserTemplates(userId, [template, ...templates]);
   return { ...template };
 }
 
-function updateUserTemplate(userId, templateId, data = {}) {
-  const templates = getUserTemplates(userId);
-  const index = templates.findIndex((template) => template.id === templateId);
-
-  if (index < 0) {
-    throw new Error("模板不存在或已删除");
-  }
-
-  if (hasUserTemplateName(userId, data.name, templateId)) {
-    throw new Error("模板名称已存在，请重命名");
-  }
-
-  const template = {
-    ...templates[index],
-    name: String(data.name || "未命名模板").trim() || "未命名模板",
-    actions: Array.isArray(data.actions) ? data.actions : []
-  };
-  const updatedTemplates = templates.slice();
-  updatedTemplates[index] = template;
-  wx.setStorageSync(getStorageKey(userId), updatedTemplates);
-
+async function updateUserTemplate(userId, templateId, data = {}) {
+  const template = await callTemplateFunction("updateUserTemplate", { templateId, template: data });
+  const templates = getCachedUserTemplates(userId).map((item) => (
+    item.id === templateId ? template : item
+  ));
+  setCachedUserTemplates(userId, templates);
   return { ...template };
 }
 
-function deleteUserTemplate(userId, templateId) {
-  const templates = getUserTemplates(userId);
-  const updatedTemplates = templates.filter((template) => template.id !== templateId);
-
-  if (updatedTemplates.length === templates.length) {
-    throw new Error("模板不存在或已删除");
-  }
-
-  wx.setStorageSync(getStorageKey(userId), updatedTemplates);
+async function deleteUserTemplate(userId, templateId) {
+  await callTemplateFunction("deleteUserTemplate", { templateId });
+  setCachedUserTemplates(userId, getCachedUserTemplates(userId).filter((item) => item.id !== templateId));
 }
 
 module.exports = {
+  getCachedUserTemplates,
   getUserTemplates,
   getUserTemplate,
-  hasUserTemplateName,
   saveUserTemplate,
   updateUserTemplate,
   deleteUserTemplate

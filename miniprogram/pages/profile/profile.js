@@ -97,8 +97,12 @@ Page({
     });
   },
 
-  loadUserTemplates(userId) {
-    this.setData({ templates: getUserTemplates(userId).slice(0, 4) });
+  async loadUserTemplates(userId) {
+    try {
+      this.setData({ templates: (await getUserTemplates(userId)).slice(0, 4) });
+    } catch (error) {
+      console.error("用户模板加载失败", error);
+    }
   },
 
   onActionTap(event) {

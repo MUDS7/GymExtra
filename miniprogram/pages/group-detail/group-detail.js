@@ -205,7 +205,7 @@ Page({
       const actions = Array.isArray(template.actions) ? template.actions : [];
       if (!actions.length) throw new Error("该模板暂无动作");
 
-      saveUserTemplate(user.id, {
+      await saveUserTemplate(user.id, {
         name: template.name,
         actions
       });

@@ -46,3 +46,11 @@ cloudfunctions/         云函数目录
 `cloudbaserc.json` 为 `trainings` 集合声明了 `userId ASC + completedAt DESC` 联合索引。它支持按用户查询，也支持将某个用户的训练记录按完成时间倒序排列。
 
 使用 `npx @cloudbase/cli framework deploy` 部署索引；也可以在微信开发者工具的“云开发 → 数据库 → trainings → 索引管理”中创建相同索引。
+
+## 我的模板同步
+
+“我的模板”会保存到云数据库的 `user_templates` 集合，并按当前微信 `openid`
+隔离。发布此功能时，需要在微信开发者工具中重新上传并部署
+`trainingFunctions`（选择“云端安装依赖”）。首次打开“我的模板”时，旧版本仅
+保存在当前设备本地的模板会自动迁移到云端；随后同一微信账号可在真机和开发者
+工具之间查看、编辑和删除同一份模板。

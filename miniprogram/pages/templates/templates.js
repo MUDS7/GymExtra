@@ -18,18 +18,23 @@ Page({
     }
   },
 
-  onShow() {
+  async onShow() {
     const app = getApp();
     const cachedUser = app.globalData.userInfo || wx.getStorageSync("userInfo");
 
     if (cachedUser) {
-      this.setData({ templates: getUserTemplates(cachedUser.id) });
+      try {
+        this.setData({ templates: await getUserTemplates(cachedUser.id) });
+      } catch (error) {
+        console.error("模板加载失败", error);
+        wx.showToast({ title: error.message || "模板加载失败", icon: "none" });
+      }
       return;
     }
 
-    app.login({ redirectToRegister: false }).then((result) => {
+    app.login({ redirectToRegister: false }).then(async (result) => {
       if (result.registered) {
-        this.setData({ templates: getUserTemplates(result.user.id) });
+        this.setData({ templates: await getUserTemplates(result.user.id) });
       }
     }).catch((error) => {
       console.error("模板加载失败", error);
