@@ -33,14 +33,6 @@ Page({
           { label: "训练日历", desc: "按月查看打卡记录", icon: "icon-calendar", tone: "cool" },
           { label: "我的群组", desc: "管理我创建的群组", icon: "icon-users", tone: "gold" }
         ]
-      },
-      {
-        group: "设置",
-        items: [
-          { label: "提醒设置", desc: "打卡提醒与通知", icon: "icon-bell", tone: "power" },
-          { label: "隐私与安全", desc: "", icon: "icon-shield", tone: "vital" },
-          { label: "帮助与反馈", desc: "", icon: "icon-help-circle", tone: "muted" }
-        ]
       }
     ]
   },

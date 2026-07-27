@@ -373,21 +373,6 @@
   background: #FFF4C9;
 }
 
-.menu-mark.power {
-  color: #D14AC7;
-  background: #F3D8EF;
-}
-
-.menu-mark.vital {
-  color: #44BF72;
-  background: #DDF4E4;
-}
-
-.menu-mark.muted {
-  color: #6B6F76;
-  background: #ECEEF2;
-}
-
 .menu-main {
   min-width: 0;
   flex: 1;
