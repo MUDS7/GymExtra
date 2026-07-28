@@ -53,6 +53,10 @@ function uploadGroupTemplate(groupId, template) {
   return callGroupFunction("uploadGroupTemplate", { groupId, template });
 }
 
+function deleteGroupTemplate(groupId, templateId) {
+  return callGroupFunction("deleteGroupTemplate", { groupId, templateId });
+}
+
 function getGroupLeaderboard(groupId, leaderboardType) {
   return callGroupFunction("getGroupLeaderboard", { groupId, leaderboardType });
 }
@@ -84,6 +88,7 @@ module.exports = {
   getGroupTemplates,
   getGroupTemplate,
   uploadGroupTemplate,
+  deleteGroupTemplate,
   getGroupLeaderboard,
   searchGroups,
   applyToGroup,

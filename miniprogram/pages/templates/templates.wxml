@@ -1,11 +1,11 @@
 <view class="templates-page">
   <view class="page-heading">
     <view class="page-title">我的模板</view>
-    <view class="page-subtitle">已保存的训练模板</view>
+    <view class="page-subtitle">{{uploadGroupId ? '选择并上传训练模板' : '已保存的训练模板 · 长按一秒可删除'}}</view>
   </view>
 
   <view wx:if="{{templates.length}}" class="template-grid">
-    <view class="template-item" wx:for="{{templates}}" wx:key="id" bindtap="onTemplateTap" data-id="{{item.id}}" role="button" aria-label="查看{{item.name}}">
+    <view class="template-item" wx:for="{{templates}}" wx:key="id" bindtap="onTemplateTap" bindtouchstart="onTemplateTouchStart" bindtouchend="onTemplateTouchEnd" bindtouchcancel="onTemplateTouchCancel" data-id="{{item.id}}" role="button" aria-label="{{uploadGroupId ? '选择上传' : '长按删除或查看'}}{{item.name}}">
       <view class="template-icon {{item.tone}}">
         <view class="lucide-icon {{item.icon}}"></view>
       </view>

@@ -42,6 +42,25 @@
         >{{item.buttonText}}</button>
       </view>
     </view>
+
+    <view class="template-management-section">
+      <view class="template-section-heading">
+        <view class="section-title">模板管理</view>
+        <view class="all-templates-button" bindtap="onAllTemplatesTap" role="button" aria-label="查看全部模板">
+          <text>全部</text>
+          <view class="lucide-icon icon-chevron-right"></view>
+        </view>
+      </view>
+      <view wx:if="{{templates.length}}" class="managed-template-grid">
+        <view class="managed-template-item" wx:for="{{templates}}" wx:key="id" bindtap="onManagedTemplateTap" data-id="{{item.id}}" role="button" aria-label="查看{{item.name}}">
+          <view class="managed-template-icon {{item.tone}}">
+            <view class="lucide-icon {{item.icon}}"></view>
+          </view>
+          <view class="managed-template-name">{{item.name}}</view>
+        </view>
+      </view>
+      <view wx:else class="managed-template-empty">暂无已存储模板</view>
+    </view>
   </view>
 
   <view wx:elif="{{activeTab === 'members'}}" class="tab-panel">

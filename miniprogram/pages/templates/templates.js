@@ -1,12 +1,14 @@
-const { getUserTemplates } = require("../../services/user-templates");
+const { getUserTemplates, deleteUserTemplate } = require("../../services/user-templates");
 const groupService = require("../../services/groups");
 
 Page({
   data: {
     templates: [],
+    userId: "",
     uploadGroupId: "",
     uploadGroupName: "",
-    uploading: false
+    uploading: false,
+    deletingTemplateId: ""
   },
 
   onLoad(options) {
@@ -24,7 +26,7 @@ Page({
 
     if (cachedUser) {
       try {
-        this.setData({ templates: await getUserTemplates(cachedUser.id) });
+        this.setData({ userId: cachedUser.id, templates: await getUserTemplates(cachedUser.id) });
       } catch (error) {
         console.error("模板加载失败", error);
         wx.showToast({ title: error.message || "模板加载失败", icon: "none" });
@@ -34,7 +36,7 @@ Page({
 
     app.login({ redirectToRegister: false }).then(async (result) => {
       if (result.registered) {
-        this.setData({ templates: await getUserTemplates(result.user.id) });
+        this.setData({ userId: result.user.id, templates: await getUserTemplates(result.user.id) });
       }
     }).catch((error) => {
       console.error("模板加载失败", error);
@@ -50,6 +52,11 @@ Page({
     const { id } = event.currentTarget.dataset;
 
     if (!id) return;
+
+    if (this.suppressTemplateTapId === id) {
+      this.suppressTemplateTapId = "";
+      return;
+    }
 
     if (this.data.uploadGroupId) {
       this.uploadTemplateToGroup(id);
@@ -88,5 +95,69 @@ Page({
         }
       }
     });
+  },
+
+  onTemplateTouchStart(event) {
+    if (this.data.uploadGroupId || this.data.deletingTemplateId) return;
+    const { id } = event.currentTarget.dataset;
+    if (!id) return;
+
+    this.clearTemplateLongPressTimer();
+    this.templateLongPressTimer = setTimeout(() => {
+      this.templateLongPressTimer = null;
+      this.suppressTemplateTapId = id;
+      this.confirmDeleteTemplate(id);
+    }, 1000);
+  },
+
+  onTemplateTouchEnd() {
+    this.clearTemplateLongPressTimer();
+    if (this.suppressTemplateTapId) {
+      setTimeout(() => {
+        this.suppressTemplateTapId = "";
+      }, 200);
+    }
+  },
+
+  onTemplateTouchCancel() {
+    this.clearTemplateLongPressTimer();
+    this.suppressTemplateTapId = "";
+  },
+
+  clearTemplateLongPressTimer() {
+    if (this.templateLongPressTimer) {
+      clearTimeout(this.templateLongPressTimer);
+      this.templateLongPressTimer = null;
+    }
+  },
+
+  confirmDeleteTemplate(templateId) {
+    const template = this.data.templates.find((item) => item.id === templateId);
+    if (!template || !this.data.userId) return;
+
+    wx.showModal({
+      title: "删除模板",
+      content: `确定删除“${template.name}”吗？删除后不可恢复。`,
+      confirmText: "删除",
+      confirmColor: "#E54D4D",
+      success: async ({ confirm }) => {
+        if (!confirm) return;
+
+        this.setData({ deletingTemplateId: templateId });
+        try {
+          await deleteUserTemplate(this.data.userId, templateId);
+          this.setData({ templates: this.data.templates.filter((item) => item.id !== templateId) });
+          wx.showToast({ title: "模板已删除", icon: "success" });
+        } catch (error) {
+          wx.showToast({ title: error.message || "删除失败，请重试", icon: "none" });
+        } finally {
+          this.setData({ deletingTemplateId: "" });
+        }
+      }
+    });
+  },
+
+  onUnload() {
+    this.clearTemplateLongPressTimer();
   }
 });

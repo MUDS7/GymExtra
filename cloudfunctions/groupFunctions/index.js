@@ -16,6 +16,7 @@ const handlers = {
   getGroupTemplates: "getGroupTemplates",
   getGroupTemplate: "getGroupTemplate",
   uploadGroupTemplate: "uploadGroupTemplate",
+  deleteGroupTemplate: "deleteGroupTemplate",
   getGroupLeaderboard: "getGroupLeaderboard"
 };
 

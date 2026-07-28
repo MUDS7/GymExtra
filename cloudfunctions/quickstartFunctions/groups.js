@@ -1222,6 +1222,30 @@ async function uploadGroupTemplate(event) {
   }
 }
 
+async function deleteGroupTemplate(event) {
+  try {
+    const userId = getIdentity(event);
+    const groupId = String(event.groupId || "").trim();
+    const templateId = String(event.templateId || "").trim();
+    if (!groupId || !templateId) throw new Error("缺少模板信息");
+
+    await ensureCollections();
+    await getOwnedGroup(groupId, userId);
+
+    const result = await db.collection("training_templates").doc(templateId).get();
+    const template = result.data;
+    if (!template || template.groupId !== groupId || template.status !== "active") {
+      throw new Error("模板不存在或已删除");
+    }
+
+    await db.collection("training_templates").doc(templateId).remove();
+    return { success: true };
+  } catch (error) {
+    console.error("删除群组模板失败", error);
+    return { success: false, message: error.message || "删除群组模板失败" };
+  }
+}
+
 async function queryRankingActivities(groupId) {
   const result = await db.collection("group_daily_activities")
     .where({ groupId, sharedToGroup: true, checkInStatus: "done" })
@@ -1684,6 +1708,7 @@ module.exports = {
   getGroupTemplates,
   getGroupTemplate,
   uploadGroupTemplate,
+  deleteGroupTemplate,
   getGroupLeaderboard,
   searchGroups,
   applyToGroup,

@@ -1,13 +1,13 @@
 <view class="templates-page">
   <view class="page-heading">
-    <view class="page-title">训练模板</view>
-    <view class="page-subtitle">{{groupName}} 的训练模板</view>
+    <view class="page-title">{{managementMode ? '全部模板' : '训练模板'}}</view>
+    <view class="page-subtitle">{{managementMode ? '长按模板一秒可删除' : groupName + ' 的训练模板'}}</view>
   </view>
 
   <view wx:if="{{loading}}" class="loading-state">正在加载模板…</view>
 
   <view wx:elif="{{templates.length}}" class="template-grid">
-    <view class="template-item" wx:for="{{templates}}" wx:key="id" bindtap="onTemplateTap" data-id="{{item.id}}" role="button" aria-label="查看{{item.name}}">
+    <view class="template-item" wx:for="{{templates}}" wx:key="id" bindtap="onTemplateTap" bindtouchstart="onTemplateTouchStart" bindtouchend="onTemplateTouchEnd" bindtouchcancel="onTemplateTouchCancel" data-id="{{item.id}}" role="button" aria-label="{{managementMode ? '长按删除或查看' : '查看'}}{{item.name}}">
       <image wx:if="{{item.imageUrl}}" class="template-image" src="{{item.imageUrl}}" mode="aspectFill"></image>
       <view wx:else class="template-icon {{item.tone}}">
         <view class="lucide-icon {{item.icon}}"></view>

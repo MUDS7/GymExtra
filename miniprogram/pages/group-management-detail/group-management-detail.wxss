@@ -71,6 +71,22 @@
 }
 .goal-action.configured { color: #8B9097; background: #E5E7EB; }
 
+.template-management-section { margin-top: 42rpx; }
+.template-section-heading { margin-bottom: 22rpx; display: flex; align-items: center; justify-content: space-between; }
+.all-templates-button { padding: 8rpx 0 8rpx 16rpx; color: #258DE9; font-size: 25rpx; font-weight: 800; display: flex; align-items: center; gap: 2rpx; }
+.all-templates-button .lucide-icon { width: 25rpx; height: 25rpx; }
+.managed-template-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24rpx 16rpx; }
+.managed-template-item { min-width: 0; display: flex; flex-direction: column; align-items: center; }
+.managed-template-icon { width: 112rpx; height: 112rpx; border: 1rpx solid #DADDE2; border-radius: 36rpx; display: grid; place-items: center; }
+.managed-template-icon .lucide-icon { width: 43rpx; height: 43rpx; }
+.managed-template-icon.energy { color: #F06F38; border-color: #F4B18C; background: #FFF0EA; box-shadow: 0 10rpx 24rpx rgba(240, 111, 56, .14); }
+.managed-template-icon.vital { color: #44BF72; border-color: #9EE3B7; background: #EAF8EF; box-shadow: 0 10rpx 24rpx rgba(68, 191, 114, .14); }
+.managed-template-icon.cool { color: #258DE9; border-color: #A8D8FF; background: #E9F4FF; box-shadow: 0 10rpx 24rpx rgba(37, 141, 233, .14); }
+.managed-template-icon.gold { color: #D9A900; border-color: #F4DC7A; background: #FFF7D7; box-shadow: 0 10rpx 24rpx rgba(217, 169, 0, .14); }
+.managed-template-icon.power { color: #D14AC7; border-color: #E9A8E2; background: #F8E9F6; box-shadow: 0 10rpx 24rpx rgba(209, 74, 199, .14); }
+.managed-template-name { width: 100%; margin-top: 15rpx; overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; font-size: 23rpx; line-height: 1.2; font-weight: 800; }
+.managed-template-empty { padding: 50rpx 24rpx; border: 1rpx dashed #DADDE2; border-radius: 28rpx; color: #7B8088; text-align: center; font-size: 25rpx; }
+
 .person-row { min-height: 112rpx; padding: 18rpx 26rpx; border-bottom: 1rpx solid #E5E7EB; display: flex; align-items: center; gap: 18rpx; }
 .person-avatar { width: 62rpx; height: 62rpx; border-radius: 50%; flex-shrink: 0; }
 .avatar-fallback { color: #258DE9; background: #EAF6FF; font-size: 26rpx; font-weight: 900; display: grid; place-items: center; }

@@ -1,5 +1,13 @@
 const groupService = require("../../services/groups");
 
+const TEMPLATE_APPEARANCES = [
+  { icon: "icon-zap", tone: "energy" },
+  { icon: "icon-flame", tone: "power" },
+  { icon: "icon-calendar", tone: "cool" },
+  { icon: "icon-trophy", tone: "gold" },
+  { icon: "icon-zap", tone: "vital" }
+];
+
 function formatGroupId(groupId) {
   const id = String(groupId || "");
   return id.length > 10 ? `${id.slice(0, 10)}...` : id;
@@ -12,6 +20,7 @@ Page({
     groupName: "群组管理",
     activeTab: "goals",
     goalPresets: [],
+    templates: [],
     members: [],
     applications: [],
     loading: true,
@@ -37,7 +46,10 @@ Page({
     if (!this.data.groupId) return;
     this.setData({ loading: true });
     try {
-      const detail = await groupService.getManagedGroupDetail(this.data.groupId);
+      const [detail, groupTemplates] = await Promise.all([
+        groupService.getManagedGroupDetail(this.data.groupId),
+        groupService.getGroupTemplates(this.data.groupId)
+      ]);
       const members = Array.isArray(detail.members) ? detail.members : [];
       const applications = Array.isArray(detail.applications) ? detail.applications : [];
       const groupId = (detail.group && detail.group.id) || this.data.groupId;
@@ -46,6 +58,10 @@ Page({
         groupIdDisplay: formatGroupId(groupId),
         groupName: (detail.group && detail.group.name) || this.data.groupName,
         goalPresets: Array.isArray(detail.goalPresets) ? detail.goalPresets : [],
+        templates: (Array.isArray(groupTemplates) ? groupTemplates : []).slice(0, 4).map((template, index) => ({
+          ...TEMPLATE_APPEARANCES[index % TEMPLATE_APPEARANCES.length],
+          ...template
+        })),
         members,
         applications,
         loading: false
@@ -87,6 +103,21 @@ Page({
     } finally {
       this.setData({ settingGoalId: "" });
     }
+  },
+
+  onManagedTemplateTap(event) {
+    const { id } = event.currentTarget.dataset;
+    if (!id) return;
+
+    wx.navigateTo({
+      url: `/pages/new-training/new-training?mode=groupTemplateDetail&groupId=${encodeURIComponent(this.data.groupId)}&id=${encodeURIComponent(id)}`
+    });
+  },
+
+  onAllTemplatesTap() {
+    wx.navigateTo({
+      url: `/pages/group-templates/group-templates?groupId=${encodeURIComponent(this.data.groupId)}&groupName=${encodeURIComponent(this.data.groupName)}&manage=1`
+    });
   },
 
   async onApproveApplication(event) {
