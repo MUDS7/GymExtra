@@ -341,6 +341,19 @@ function buildDefaultGroupGoal(groupId, now = new Date()) {
   };
 }
 
+function isGoalInWeek(goal, weekRange) {
+  if (!goal || !weekRange) return false;
+
+  const periodStart = toValidDate(goal.periodStart, null);
+  const periodEnd = toValidDate(goal.periodEnd, null);
+  return Boolean(
+    periodStart
+    && periodEnd
+    && dayKey(periodStart) === dayKey(weekRange.start)
+    && dayKey(periodEnd) === dayKey(weekRange.end)
+  );
+}
+
 async function prepareGroupData() {
   await ensureCollections();
 }
@@ -544,7 +557,11 @@ async function getManagedGroupDetail(event) {
     const [memberResult, applicationResult, goalResult] = await Promise.all([
       db.collection("group_members").where({ groupId, status: "active" }).limit(100).get(),
       db.collection("group_applications").where({ groupId }).limit(100).get(),
-      db.collection("group_goals").where({ groupId, status: "active" }).limit(20).get()
+      db.collection("group_goals")
+        .where({ groupId, status: "active" })
+        .orderBy("periodStart", "desc")
+        .limit(20)
+        .get()
     ]);
     const members = (memberResult.data || []).sort((a, b) => (
       new Date(b.joinedAt || 0).getTime() - new Date(a.joinedAt || 0).getTime()
@@ -556,7 +573,10 @@ async function getManagedGroupDetail(event) {
       ...members.map((item) => item.userId),
       ...applications.map((item) => item.userId)
     ]);
-    const activeGoal = (goalResult.data || []).find((goal) => !isSeedRecord(goal)) || null;
+    const currentWeek = getWeekRange();
+    const activeGoal = (goalResult.data || []).find((goal) => (
+      !isSeedRecord(goal) && isGoalInWeek(goal, currentWeek)
+    )) || null;
 
     return {
       success: true,
@@ -859,13 +879,15 @@ async function getActiveMembership(groupId, userId) {
 }
 
 async function queryCurrentGoal(groupId) {
+  const currentWeek = getWeekRange();
   const result = await db.collection("group_goals")
     .where({ groupId, status: "active" })
     .orderBy("periodStart", "desc")
     .limit(20)
     .get();
-  return (result.data || []).find((goal) => !isSeedRecord(goal))
-    || buildDefaultGroupGoal(groupId);
+  return (result.data || []).find((goal) => (
+    !isSeedRecord(goal) && isGoalInWeek(goal, currentWeek)
+  )) || buildDefaultGroupGoal(groupId);
 }
 
 async function queryGoalPeriodActivities(groupId, periodStartKey, periodEndKey) {
@@ -897,11 +919,9 @@ async function queryGoalPeriodActivities(groupId, periodStartKey, periodEndKey) 
 
 async function queryGoalStats(groupId, goal) {
   const weekRange = getWeekRange();
-  const periodStart = toValidDate(goal && goal.periodStart, weekRange.start);
-  const periodEnd = toValidDate(goal && goal.periodEnd, weekRange.end);
   const todayKey = dayKey();
-  const periodStartKey = dayKey(periodStart);
-  const periodEndKey = dayKey(periodEnd);
+  const periodStartKey = dayKey(weekRange.start);
+  const periodEndKey = dayKey(weekRange.end);
 
   const [activities, memberResult] = await Promise.all([
     queryGoalPeriodActivities(groupId, periodStartKey, periodEndKey),

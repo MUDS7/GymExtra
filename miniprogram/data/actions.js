@@ -162,7 +162,8 @@ const CORE_ACTION_ICON_PATHS = {
   "健腹轮": "/assets/action-icons/core-ab-wheel.png",
   "登山跑": "/assets/action-icons/core-mountain-climber.png",
   "侧平板支撑": "/assets/action-icons/core-side-plank.png",
-  "帕洛夫抗旋转": "/assets/action-icons/core-pallof-press.png"
+  "帕洛夫抗旋转": "/assets/action-icons/core-pallof-press.png",
+  "农夫走": "/assets/action-icons/cardio-farmers-walk.png"
 };
 
 const CARDIO_ACTION_ICON_PATHS = {
@@ -175,8 +176,7 @@ const CARDIO_ACTION_ICON_PATHS = {
   "椭圆机": "/assets/action-icons/cardio-elliptical.png",
   "划船机": "/assets/action-icons/cardio-rowing-machine.png",
   "爬楼机": "/assets/action-icons/cardio-stair-climber.png",
-  "有氧操": "/assets/action-icons/cardio-aerobics.png",
-  "农夫走": "/assets/action-icons/cardio-farmers-walk.png"
+  "有氧操": "/assets/action-icons/cardio-aerobics.png"
 };
 
 function getActionIconPath(name, categoryId) {
@@ -343,6 +343,7 @@ const ACTION_DEFINITIONS = [
   { name: "登山跑", categoryId: "core", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "侧平板支撑", categoryId: "core", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "帕洛夫抗旋转", categoryId: "core", iconPath: DEFAULT_ACTION_ICON_PATH },
+  { name: "农夫走", categoryId: "core", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "跑步", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "快走", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "骑行", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH },
@@ -352,8 +353,7 @@ const ACTION_DEFINITIONS = [
   { name: "椭圆机", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "划船机", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH },
   { name: "爬楼机", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH },
-  { name: "有氧操", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH },
-  { name: "农夫走", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH }
+  { name: "有氧操", categoryId: "cardio", iconPath: DEFAULT_ACTION_ICON_PATH }
 ];
 
 const ACTION_TABLE = ACTION_DEFINITIONS.map((action) => ({

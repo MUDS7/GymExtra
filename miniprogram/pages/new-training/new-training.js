@@ -13,6 +13,19 @@ const {
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
 const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, "0"));
+const CATEGORY_TITLE_LABELS = {
+  chest: "胸",
+  back: "背",
+  legs: "腿",
+  shoulders: "肩",
+  biceps: "二头",
+  triceps: "三头",
+  glutes: "臀",
+  core: "核心",
+  cardio: "有氧",
+  strength: "力量",
+  custom: "自定义"
+};
 
 function getActionCategory(action) {
   if (action.categoryId) {
@@ -21,6 +34,23 @@ function getActionCategory(action) {
 
   const definition = ACTION_TABLE.find((item) => item.id === action.id || item.id === action.actionId || item.name === action.name);
   return definition ? definition.categoryId : "";
+}
+
+function buildAutoTrainingTitle(actions) {
+  const titleParts = [];
+  const includedCategories = new Set();
+
+  (Array.isArray(actions) ? actions : []).forEach((action) => {
+    const categoryId = getActionCategory(action);
+    const label = CATEGORY_TITLE_LABELS[categoryId];
+
+    if (label && !includedCategories.has(categoryId)) {
+      includedCategories.add(categoryId);
+      titleParts.push(label);
+    }
+  });
+
+  return titleParts.join("+");
 }
 
 function normalizeDuration(value, fallback = 30) {
@@ -678,7 +708,8 @@ Page({
 
     this.stopTimer();
     this.trainingCompleted = true;
-    this.setData({ saving: true });
+    const title = this.data.title.trim() || buildAutoTrainingTitle(this.data.actions);
+    this.setData({ title, saving: true });
     wx.showLoading({ title: "保存中", mask: true });
 
     try {
