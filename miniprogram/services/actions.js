@@ -21,24 +21,9 @@ function preferCloudIcons(actions) {
 }
 
 function getActions() {
-  if (!wx.cloud) {
-    return Promise.resolve(ACTION_TABLE);
-  }
-
-  return callCloudFunction({
-    name: "actionFunctions",
-    data: { type: "getActions" }
-  }).then(({ result }) => {
-    if (!result || !result.success || !Array.isArray(result.data)) {
-      throw new Error((result && result.message) || "云端动作表读取失败");
-    }
-
-    // 只返回动作元数据。图标由动作选择页在切换到对应分类时再按需下载。
-    return preferCloudIcons(result.data);
-  }).catch((error) => {
-    console.warn("云端动作表不可用，使用本地动作表", error);
-    return ACTION_TABLE;
-  });
+  // 工作簿生成的本地目录是动作元数据的唯一来源，避免旧云函数覆盖新动作库。
+  // 云端仅在 ensureActionIcons 中负责已有图片的上传与缓存。
+  return Promise.resolve(ACTION_TABLE);
 }
 
 function ensureActionIcons(actionIds) {

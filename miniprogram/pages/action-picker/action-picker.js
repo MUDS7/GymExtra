@@ -1,4 +1,4 @@
-const { ACTION_TABLE } = require("../../data/actions");
+const { ACTION_TABLE, ACTION_CATEGORIES, DEFAULT_ACTION_ICON_PATH } = require("../../data/actions");
 const actionService = require("../../services/actions");
 const customActionService = require("../../services/custom-actions");
 const { cacheActionIcons } = require("../../services/action-icon-cache");
@@ -8,19 +8,11 @@ let customActionTable = [];
 const pendingCategoryIconLoads = Object.create(null);
 const iconBatchStates = Object.create(null);
 const ICON_BATCH_SIZE = 6;
+const EQUIPMENT_GROUP_ORDER = ["杠铃", "哑铃", "器械", "史密斯机", "绳索", "悍马机", "自重"];
 
-const categories = [
-  { id: "chest", name: "胸" },
-  { id: "back", name: "背" },
-  { id: "legs", name: "腿" },
-  { id: "shoulders", name: "肩" },
-  { id: "biceps", name: "二头" },
-  { id: "triceps", name: "三头" },
-  { id: "glutes", name: "臀部" },
-  { id: "core", name: "核心" },
-  { id: "cardio", name: "有氧运动" },
-  { id: "custom", name: "自定义" }
-];
+const categories = ACTION_CATEGORIES
+  .map((category) => ({ ...category, isLong: category.name.length > 3 }))
+  .concat({ id: "custom", name: "自定义", isLong: false });
 
 function buildActions(categoryId, keyword = "") {
   const normalizedKeyword = keyword.trim().toLowerCase();
@@ -33,57 +25,65 @@ function buildActions(categoryId, keyword = "") {
   });
 }
 
-function getBackActionGroup(action) {
-  if (/(下拉|引体向上|直臂下压|面拉|哑铃后拉|哑铃上拉)/.test(action.name)) {
-    return "pull";
-  }
-
-  if (action.name.includes("划船")) {
-    return "row";
-  }
-
-  return "other";
-}
-
-function buildBackActionGroups(actions) {
-  const groups = [
-    { id: "pull", title: "拉类", actions: [] },
-    { id: "row", title: "划类", actions: [] },
-    { id: "other", title: "其他", actions: [] }
-  ];
-
-  const groupById = groups.reduce((result, group) => {
-    result[group.id] = group;
-    return result;
-  }, {});
+function buildEquipmentGroups(actions) {
+  const groups = [];
+  const groupByTitle = new Map();
 
   actions.forEach((action) => {
-    groupById[getBackActionGroup(action)].actions.push(action);
+    const title = action.equipmentCategory || "其他";
+    let group = groupByTitle.get(title);
+
+    if (!group) {
+      group = { id: `equipment:${title}`, title, actions: [] };
+      groupByTitle.set(title, group);
+      groups.push(group);
+    }
+
+    group.actions.push(action);
   });
 
-  return groups.filter((group) => group.actions.length);
+  const priorityByTitle = new Map(
+    EQUIPMENT_GROUP_ORDER.map((title, index) => [title, index])
+  );
+
+  return groups
+    .map((group, sourceOrder) => ({ ...group, sourceOrder }))
+    .sort((first, second) => {
+      if (first.title === "其他") return second.title === "其他" ? 0 : 1;
+      if (second.title === "其他") return -1;
+
+      const firstPriority = priorityByTitle.has(first.title)
+        ? priorityByTitle.get(first.title)
+        : EQUIPMENT_GROUP_ORDER.length;
+      const secondPriority = priorityByTitle.has(second.title)
+        ? priorityByTitle.get(second.title)
+        : EQUIPMENT_GROUP_ORDER.length;
+
+      return firstPriority - secondPriority || first.sourceOrder - second.sourceOrder;
+    })
+    .map(({ sourceOrder, ...group }) => group);
 }
 
 function buildActionData(categoryId, keyword = "") {
   const actions = buildActions(categoryId, keyword).map((action) => ({
     ...action,
-    // 未请求的卡片保持空白，避免 image 组件自行触发下载。
-    displayIconPath: action.iconCached ? action.iconPath : ""
+    // 云端图片完成缓存前先显示统一默认图，避免卡片区域闪空。
+    displayIconPath: action.iconCached ? action.iconPath : DEFAULT_ACTION_ICON_PATH
   }));
 
   return {
     actions,
-    actionGroups: categoryId === "back" ? buildBackActionGroups(actions) : []
+    actionGroups: categoryId === "custom" ? [] : buildEquipmentGroups(actions)
   };
 }
 
 Page({
   data: {
     categories,
-    activeCategory: "chest",
-    activeCategoryName: "胸",
+    activeCategory: ACTION_CATEGORIES[0].id,
+    activeCategoryName: ACTION_CATEGORIES[0].name,
     keyword: "",
-    ...buildActionData("chest"),
+    ...buildActionData(ACTION_CATEGORIES[0].id),
     headerHeight: 128,
     toolbarTop: 76,
     showCustomActionDialog: false,
@@ -130,16 +130,16 @@ Page({
 
     if (activeCategory === "custom") return Promise.resolve();
 
-    const actions = buildActions(activeCategory, keyword);
+    const actions = buildActions(activeCategory, keyword).filter((action) => !action.iconCached);
     const cacheKey = this.getIconBatchKey();
-    const state = iconBatchStates[cacheKey] || { offset: 0, loading: false, completed: false };
+    const state = iconBatchStates[cacheKey] || { loading: false, completed: false };
     iconBatchStates[cacheKey] = state;
 
     if (!actions.length || state.loading || state.completed) {
       return Promise.resolve();
     }
 
-    const batch = actions.slice(state.offset, state.offset + ICON_BATCH_SIZE);
+    const batch = actions.slice(0, ICON_BATCH_SIZE);
     if (!batch.length) {
       state.completed = true;
       return Promise.resolve();
@@ -151,14 +151,16 @@ Page({
     pendingCategoryIconLoads[cacheKey] = actionService.ensureActionIcons(batch.map((action) => action.id))
       .then((syncedActions) => {
         const syncedById = new Map(syncedActions.map((action) => [String(action.id), action]));
-        return cacheActionIcons(batch.map((action) => syncedById.get(String(action.id)) || action));
+        const availableCloudIcons = batch
+          .map((action) => syncedById.get(String(action.id)))
+          .filter((action) => action && action.iconFileID);
+        return availableCloudIcons.length ? cacheActionIcons(availableCloudIcons) : [];
       })
       .then((cachedActions) => {
         const cachedById = new Map(cachedActions.map((action) => [String(action.id), action]));
         actionTable = actionTable.map((action) => cachedById.get(String(action.id)) || action);
-        state.offset += batch.length;
-        state.completed = state.offset >= actions.length;
-        batchSucceeded = true;
+        state.completed = !cachedActions.length || actions.length <= batch.length;
+        batchSucceeded = cachedActions.length > 0;
 
         // 下载完成时仅刷新当前可见列表，避免切换分类后用旧请求覆盖新视图。
         this.refreshActions();

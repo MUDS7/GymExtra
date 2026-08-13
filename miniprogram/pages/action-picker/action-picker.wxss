@@ -170,7 +170,7 @@
   font-weight: 900;
 }
 
-.back-group-title {
+.equipment-group-title {
   margin: 6rpx -20rpx 26rpx -24rpx;
   color: #4E5157;
   font-size: 28rpx;
@@ -182,13 +182,13 @@
   gap: 14rpx;
 }
 
-.back-group-line {
+.equipment-group-line {
   flex: 1;
   height: 0;
   border-top: 2rpx dashed #A6A6AA;
 }
 
-.back-action-groups .action-grid {
+.equipment-action-groups .action-grid {
   margin-bottom: 18rpx;
 }
 
@@ -411,7 +411,7 @@
     padding-right: 16rpx;
   }
 
-  .back-group-title {
+  .equipment-group-title {
     margin-left: -18rpx;
     margin-right: -16rpx;
   }

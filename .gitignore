@@ -3,3 +3,9 @@ miniprogram/config/env.local.js
 
 # Cloud function dependencies are installed locally when needed.
 cloudfunctions/quickstartFunctions/node_modules/
+
+# Local exercise media source files
+训记_动作库_分类及媒体对应.xlsx
+训记_动作图片_GIF_按身体部位分类.zip
+训记_动作图片_GIF_按身体部位分类/
+assets/

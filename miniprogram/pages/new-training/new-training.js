@@ -1,4 +1,4 @@
-const { ACTION_TABLE, DEFAULT_ACTION_ICON_PATH } = require("../../data/actions");
+const { ACTION_CATEGORIES, ACTION_TABLE, DEFAULT_ACTION_ICON_PATH } = require("../../data/actions");
 const actionService = require("../../services/actions");
 const { getCachedIconPath, isCloudFile } = require("../../services/action-icon-cache");
 const trainingService = require("../../services/trainings");
@@ -13,19 +13,13 @@ const {
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
 const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, "0"));
-const CATEGORY_TITLE_LABELS = {
-  chest: "胸",
-  back: "背",
-  legs: "腿",
-  shoulders: "肩",
-  biceps: "二头",
-  triceps: "三头",
-  glutes: "臀",
-  core: "核心",
-  cardio: "有氧",
+const CATEGORY_TITLE_LABELS = ACTION_CATEGORIES.reduce((labels, category) => {
+  labels[category.id] = category.name;
+  return labels;
+}, {
   strength: "力量",
   custom: "自定义"
-};
+});
 
 function getActionCategory(action) {
   if (action.categoryId) {

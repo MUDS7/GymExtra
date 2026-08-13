@@ -23,7 +23,7 @@
       <view
         wx:for="{{categories}}"
         wx:key="id"
-        class="category-item {{item.id === 'cardio' ? 'category-item-long' : ''}} {{activeCategory === item.id ? 'active' : ''}}"
+        class="category-item {{item.isLong ? 'category-item-long' : ''}} {{activeCategory === item.id ? 'active' : ''}}"
         bindtap="onCategoryTap"
         data-id="{{item.id}}"
         data-name="{{item.name}}"
@@ -34,13 +34,13 @@
 
     <scroll-view class="action-scroll" scroll-y enhanced show-scrollbar="{{false}}">
       <view class="action-content">
-        <view wx:if="{{activeCategory !== 'back'}}" class="group-title">{{activeCategoryName}}</view>
-        <view wx:if="{{activeCategory === 'back' && actions.length}}" class="back-action-groups">
+        <view class="group-title">{{activeCategoryName}}</view>
+        <view wx:if="{{activeCategory !== 'custom' && actions.length}}" class="equipment-action-groups">
           <block wx:for="{{actionGroups}}" wx:for-item="group" wx:key="id">
-            <view class="back-group-title">
-              <view class="back-group-line"></view>
+            <view class="equipment-group-title">
+              <view class="equipment-group-line"></view>
               <text>{{group.title}}</text>
-              <view class="back-group-line"></view>
+              <view class="equipment-group-line"></view>
             </view>
             <view class="action-grid">
               <view
