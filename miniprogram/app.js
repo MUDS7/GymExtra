@@ -11,6 +11,7 @@ App({
   },
 
   onLaunch() {
+    this.restoreCachedSession();
     this.initCloud();
     const initialAuthPromise = this.login({
       redirectToRegister: false,
@@ -33,6 +34,20 @@ App({
     initialAuthPromise.then(() => {
       this.initialAuthPromise = null;
     });
+  },
+
+  restoreCachedSession() {
+    try {
+      const user = wx.getStorageSync("userInfo");
+      if (!user || !user.id) return;
+
+      this.globalData.userId = user.id;
+      this.globalData.userInfo = user;
+      this.globalData.isRegistered = true;
+      this.globalData.isExperienceMode = false;
+    } catch (error) {
+      console.warn("读取本地登录缓存失败", error);
+    }
   },
 
   initCloud() {

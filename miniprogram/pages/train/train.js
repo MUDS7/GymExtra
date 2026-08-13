@@ -2,6 +2,29 @@ const trainingService = require("../../services/trainings");
 const { getTrainingTags } = require("../../utils/training-tags");
 const { getTrainingDrafts } = require("../../utils/training-drafts");
 
+const DASHBOARD_CACHE_PREFIX = "trainingDashboard:";
+
+function getDashboardCache(userId) {
+  if (!userId) return null;
+
+  try {
+    return wx.getStorageSync(`${DASHBOARD_CACHE_PREFIX}${userId}`) || null;
+  } catch (error) {
+    console.warn("读取训练首页缓存失败", error);
+    return null;
+  }
+}
+
+function setDashboardCache(userId, data) {
+  if (!userId) return;
+
+  try {
+    wx.setStorageSync(`${DASHBOARD_CACHE_PREFIX}${userId}`, data);
+  } catch (error) {
+    console.warn("保存训练首页缓存失败", error);
+  }
+}
+
 // 力量和自定义训练按产品约定估算；有氧采用常见中等强度有氧的平均值。
 const STRENGTH_KCAL_PER_HOUR = 300;
 const CARDIO_KCAL_PER_HOUR = 530;
@@ -173,9 +196,39 @@ Page({
     this.loadRecentWorkouts();
   },
 
+  renderDashboard(recentTrainings, weeklyTrainings, weekStart) {
+    const weeklyDashboard = buildWeeklyDashboard(weeklyTrainings, weekStart);
+
+    this.setData({
+      recentWorkouts: getTrainingDrafts()
+        .concat(recentTrainings)
+        .sort((left, right) => new Date(right.updatedAt || right.createdAt).getTime() - new Date(left.updatedAt || left.createdAt).getTime())
+        .slice(0, 5)
+        .map(toWorkout),
+      ...weeklyDashboard
+    });
+  },
+
   async loadRecentWorkouts() {
     try {
       const app = getApp();
+      const { weekStart, weekEnd } = getCurrentWeekRange();
+      const cachedDashboard = getDashboardCache(app.globalData.userId);
+
+      if (cachedDashboard) {
+        this.renderDashboard(
+          Array.isArray(cachedDashboard.recentTrainings) ? cachedDashboard.recentTrainings : [],
+          Array.isArray(cachedDashboard.weeklyTrainings) ? cachedDashboard.weeklyTrainings : [],
+          weekStart
+        );
+      }
+
+      // 已有本地登录态时让身份校验和首页查询并行，避免两段云请求串行等待。
+      const dashboardPromise = app.globalData.isRegistered
+        ? trainingService.getTrainingDashboard(weekStart, weekEnd)
+          .then((data) => ({ data, error: null }))
+          .catch((error) => ({ data: null, error }))
+        : null;
       const loginResult = await app.login({ redirectToRegister: false });
 
       if (!loginResult.registered) {
@@ -186,21 +239,15 @@ Page({
         return;
       }
 
-      const { weekStart, weekEnd } = getCurrentWeekRange();
-      const [recentTrainings, weeklyTrainings] = await Promise.all([
-        trainingService.getRecentTrainings(),
-        trainingService.getWeeklyTrainings(weekStart, weekEnd)
-      ]);
-      const weeklyDashboard = buildWeeklyDashboard(weeklyTrainings, weekStart);
+      const dashboardResult = dashboardPromise
+        ? await dashboardPromise
+        : { data: await trainingService.getTrainingDashboard(weekStart, weekEnd), error: null };
 
-      this.setData({
-        recentWorkouts: getTrainingDrafts()
-          .concat(recentTrainings)
-          .sort((left, right) => new Date(right.updatedAt || right.createdAt).getTime() - new Date(left.updatedAt || left.createdAt).getTime())
-          .slice(0, 5)
-          .map(toWorkout),
-        ...weeklyDashboard
-      });
+      if (dashboardResult.error) throw dashboardResult.error;
+
+      const { recentTrainings, weeklyTrainings } = dashboardResult.data;
+      this.renderDashboard(recentTrainings, weeklyTrainings, weekStart);
+      setDashboardCache(loginResult.userId, { recentTrainings, weeklyTrainings });
     } catch (error) {
       console.error("加载最近训练记录失败", error);
       wx.showToast({

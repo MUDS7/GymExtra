@@ -4,14 +4,6 @@ const identity = require("./identity");
 const db = cloud.database();
 const COLLECTION = "users";
 
-async function ensureCollection() {
-  try {
-    await db.createCollection(COLLECTION);
-  } catch (error) {
-    // 集合已存在时会报错，此时可以继续使用。
-  }
-}
-
 function toPublicUser(record) {
   return {
     id: record._id,
@@ -28,7 +20,6 @@ async function findUser(openid) {
 }
 
 async function login(event = {}) {
-  await ensureCollection();
   const { openid } = identity.getUserIdentity(event);
   const record = await findUser(openid);
 
@@ -41,7 +32,6 @@ async function login(event = {}) {
 }
 
 async function register(event) {
-  await ensureCollection();
   const { openid, unionid } = identity.getUserIdentity(event);
   const nickname = String(event.nickname || "").trim().slice(0, 20);
   const avatarUrl = String(event.avatarUrl || "").trim();

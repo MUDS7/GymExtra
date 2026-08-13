@@ -11,11 +11,11 @@
               "description": "用户训练记录",
               "createIndexes": [
                 {
-                  "name": "userId_1_completedAt_-1",
+                  "name": "userId_1_createdAt_-1",
                   "unique": false,
                   "keys": [
                     { "name": "userId", "direction": "1" },
-                    { "name": "completedAt", "direction": "-1" }
+                    { "name": "createdAt", "direction": "-1" }
                   ]
                 }
               ]

@@ -11,6 +11,7 @@ exports.main = async (event = {}) => {
     case "getTrainingDetail": return trainingService.getTrainingDetail(event);
     case "deleteTraining": return trainingService.deleteTraining(event);
     case "getWeeklyTrainings": return trainingService.getWeeklyTrainings(event);
+    case "getTrainingDashboard": return trainingService.getTrainingDashboard(event);
     case "getMonthlyTrainings": return trainingService.getMonthlyTrainings(event);
     case "getTrainingTrend": return trainingService.getTrainingTrend(event);
     case "getUserTemplates": return templateService.getUserTemplates(event);

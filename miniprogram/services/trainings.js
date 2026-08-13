@@ -126,6 +126,48 @@ function getWeeklyTrainings(weekStart, weekEnd) {
   });
 }
 
+function getTrainingDashboard(weekStart, weekEnd) {
+  if (!wx.cloud) {
+    return Promise.reject(new Error("当前基础库不支持云开发"));
+  }
+
+  return callCloudFunction({
+    name: "trainingFunctions",
+    data: {
+      type: "getTrainingDashboard",
+      weekStart,
+      weekEnd
+    }
+  }).then(({ result }) => {
+    if (!result || !result.success) {
+      throw new Error((result && result.message) || "获取训练首页数据失败");
+    }
+
+    const data = result.data || {};
+    return {
+      recentTrainings: Array.isArray(data.recentTrainings) ? data.recentTrainings : [],
+      weeklyTrainings: Array.isArray(data.weeklyTrainings) ? data.weeklyTrainings : []
+    };
+  }).catch((error) => {
+    const message = String((error && error.message) || "");
+    const isOldCloudFunction = message.includes("未知训练操作")
+      && message.includes("getTrainingDashboard");
+
+    if (!isOldCloudFunction) {
+      return Promise.reject(error);
+    }
+
+    console.warn("trainingFunctions 尚未部署首页聚合接口，暂时回退到兼容查询");
+    return Promise.all([
+      getRecentTrainings(),
+      getWeeklyTrainings(weekStart, weekEnd)
+    ]).then(([recentTrainings, weeklyTrainings]) => ({
+      recentTrainings,
+      weeklyTrainings
+    }));
+  });
+}
+
 function getMonthlyTrainings(monthStart, monthEnd) {
   if (!wx.cloud) {
     return Promise.reject(new Error("当前基础库不支持云开发"));
@@ -169,4 +211,4 @@ function getTrainingTrend(actionId, categoryId, metric) {
   });
 }
 
-module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings, getMonthlyTrainings, getTrainingTrend };
+module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings, getTrainingDashboard, getMonthlyTrainings, getTrainingTrend };

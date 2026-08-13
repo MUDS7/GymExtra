@@ -43,7 +43,7 @@ cloudfunctions/         云函数目录
 
 ## 数据库索引
 
-`cloudbaserc.json` 为 `trainings` 集合声明了 `userId ASC + completedAt DESC` 联合索引。它支持按用户查询，也支持将某个用户的训练记录按完成时间倒序排列。
+`cloudbaserc.json` 为 `trainings` 集合声明了 `userId ASC + createdAt DESC` 联合索引。它支持首页按用户和创建时间查询、排序训练记录。
 
 使用 `npx @cloudbase/cli framework deploy` 部署索引；也可以在微信开发者工具的“云开发 → 数据库 → trainings → 索引管理”中创建相同索引。
 

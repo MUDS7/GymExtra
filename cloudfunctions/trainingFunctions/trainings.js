@@ -567,6 +567,24 @@ async function getWeeklyTrainings(event) {
   }
 }
 
+async function getTrainingDashboard(event) {
+  const [recentResult, weeklyResult] = await Promise.all([
+    getRecentTrainings(event),
+    getWeeklyTrainings(event)
+  ]);
+
+  if (!recentResult.success) return recentResult;
+  if (!weeklyResult.success) return weeklyResult;
+
+  return {
+    success: true,
+    data: {
+      recentTrainings: recentResult.data || [],
+      weeklyTrainings: weeklyResult.data || []
+    }
+  };
+}
+
 async function getMonthlyTrainings(event) {
   try {
     const userId = identity.getUserId(event);
@@ -702,4 +720,4 @@ async function getTrainingTrend(event = {}) {
   }
 }
 
-module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings, getMonthlyTrainings, getTrainingTrend };
+module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings, getTrainingDashboard, getMonthlyTrainings, getTrainingTrend };
