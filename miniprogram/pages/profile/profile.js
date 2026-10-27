@@ -140,6 +140,29 @@ Page({
 
   onProfileTap() {
     if (this.data.isGuest) {
+      this.onEditProfileTap();
+      return;
+    }
+
+    const userId = this.data.user.id;
+    if (userId === undefined || userId === null || userId === "") {
+      wx.showToast({ title: "用户ID暂不可用", icon: "none" });
+      return;
+    }
+
+    wx.setClipboardData({
+      data: String(userId),
+      success: () => {
+        wx.showToast({ title: "用户ID已复制", icon: "success" });
+      },
+      fail: () => {
+        wx.showToast({ title: "复制失败，请重试", icon: "none" });
+      }
+    });
+  },
+
+  onEditProfileTap() {
+    if (this.data.isGuest) {
       wx.navigateTo({ url: "/pages/login/login" });
       return;
     }

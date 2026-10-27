@@ -3,7 +3,7 @@
     <view class="page-title">我的</view>
   </view>
 
-  <view class="profile-card" bindtap="onProfileTap" role="button" aria-label="{{isGuest ? '登录或注册' : '编辑资料'}}">
+  <view class="profile-card" bindtap="onProfileTap" role="button" aria-label="{{isGuest ? '登录或注册' : '复制用户ID'}}">
     <view class="avatar-wrap">
       <image wx:if="{{user.avatarUrl}}" class="avatar-letter avatar-image" src="{{user.avatarUrl}}" mode="aspectFill"></image>
       <view wx:else class="avatar-letter">{{user.avatar}}</view>
@@ -19,7 +19,7 @@
         <text>{{user.level}}</text>
       </view>
     </view>
-    <view class="edit-button">{{isGuest ? '登录' : '编辑'}}</view>
+    <view class="edit-button" catchtap="onEditProfileTap" role="button" aria-label="{{isGuest ? '登录或注册' : '编辑资料'}}">{{isGuest ? '登录' : '编辑'}}</view>
   </view>
 
   <view class="stats-grid">

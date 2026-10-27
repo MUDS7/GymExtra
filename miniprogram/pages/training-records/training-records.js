@@ -1,5 +1,6 @@
 const trainingService = require("../../services/trainings");
 const { getTrainingTags } = require("../../utils/training-tags");
+const { buildTrainingExport } = require("../../utils/training-export");
 
 const PAGE_SIZE = 20;
 
@@ -90,7 +91,11 @@ Page({
     navHeight: 64,
     groups: [],
     loading: false,
-    hasMore: true
+    hasMore: true,
+    exporting: false,
+    showExportModal: false,
+    exportJson: "",
+    exportCount: 0
   },
 
   trainings: [],
@@ -187,6 +192,53 @@ Page({
     } finally {
       wx.stopPullDownRefresh();
     }
+  },
+
+  async onExportTap() {
+    if (this.data.exporting) return;
+    this.setData({ exporting: true });
+
+    try {
+      const { registered } = await getApp().login();
+      if (!registered) return;
+
+      const trainings = await trainingService.getTrainingsForExport();
+      if (!trainings.length) {
+        wx.showToast({ title: "暂无可导出的训练记录", icon: "none" });
+        return;
+      }
+
+      this.setData({
+        exportJson: JSON.stringify(buildTrainingExport(trainings), null, 2),
+        exportCount: trainings.length,
+        showExportModal: true
+      });
+    } catch (error) {
+      console.error("导出训练记录失败", error);
+      wx.showToast({ title: error.message || "导出失败，请重试", icon: "none" });
+    } finally {
+      this.setData({ exporting: false });
+    }
+  },
+
+  closeExportModal() {
+    this.setData({ showExportModal: false, exportJson: "", exportCount: 0 });
+  },
+
+  onCopyExportTap() {
+    if (!this.data.exportJson) return;
+    wx.setClipboardData({
+      data: JSON.stringify(JSON.parse(this.data.exportJson)),
+      success() {
+        wx.showToast({ title: "已复制", icon: "success" });
+      },
+      fail() {
+        wx.showToast({ title: "复制失败，请重试", icon: "none" });
+      }
+    });
+  },
+
+  noop() {
   },
 
   onRecordTap(event) {

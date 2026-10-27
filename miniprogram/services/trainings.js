@@ -81,6 +81,27 @@ function getTrainingDetail(trainingId) {
   });
 }
 
+async function getTrainingsForExport() {
+  const { list } = await getAllTrainings(0, 30);
+  const trainings = [];
+  // List responses contain summaries only. Reuse the deployed detail API with
+  // at most five concurrent requests, preserving newest-first list order.
+  for (let offset = 0; offset < list.length; offset += 5) {
+    const batch = await Promise.all(list.slice(offset, offset + 5).map((training) => {
+      const trainingId = training._id || training.uuid;
+      if (!trainingId) throw new Error("训练记录缺少 ID，无法导出");
+      return getTrainingDetail(trainingId).then((detail) => {
+        if (!detail || !Array.isArray(detail.actions)) {
+          throw new Error("训练动作明细不完整，请重试");
+        }
+        return detail;
+      });
+    }));
+    trainings.push(...batch);
+  }
+  return trainings;
+}
+
 function deleteTraining(trainingId) {
   if (!wx.cloud) {
     return Promise.reject(new Error("当前基础库不支持云开发"));
@@ -211,4 +232,4 @@ function getTrainingTrend(actionId, categoryId, metric) {
   });
 }
 
-module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, deleteTraining, getWeeklyTrainings, getTrainingDashboard, getMonthlyTrainings, getTrainingTrend };
+module.exports = { saveTraining, getRecentTrainings, getAllTrainings, getTrainingDetail, getTrainingsForExport, deleteTraining, getWeeklyTrainings, getTrainingDashboard, getMonthlyTrainings, getTrainingTrend };

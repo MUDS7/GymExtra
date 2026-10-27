@@ -45,6 +45,135 @@
   font-weight: 500;
 }
 
+.records-toolbar {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 26rpx;
+}
+
+.records-toolbar .records-export {
+  width: 120rpx;
+  min-width: 0;
+  flex: 0 0 120rpx;
+  height: 56rpx;
+  margin: 0 0 0 auto;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 28rpx;
+  color: #FFFFFF;
+  background: #E26424;
+  font-size: 24rpx;
+  line-height: 56rpx;
+  font-weight: 600;
+}
+
+.records-toolbar .records-export-hover {
+  background: #C9571F;
+}
+
+.export-modal-mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  padding: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.export-modal-backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.export-modal {
+  position: relative;
+  width: 100%;
+  max-width: 640rpx;
+  padding: 28rpx;
+  border-radius: 28rpx;
+  color: #111111;
+  background: #FFFFFF;
+}
+
+.export-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.export-modal-title {
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.export-modal .export-modal-close {
+  width: 56rpx;
+  height: 56rpx;
+  margin: 0;
+  padding: 0;
+  color: #6F757D;
+  font-size: 40rpx;
+  line-height: 56rpx;
+}
+
+.export-modal-subtitle {
+  margin: 8rpx 0 22rpx;
+  color: #6F757D;
+  font-size: 23rpx;
+}
+
+.export-json-scroll {
+  height: 44vh;
+  border: 1rpx solid #E2E4E8;
+  border-radius: 16rpx;
+  background: #F7F8FA;
+}
+
+.export-json {
+  display: block;
+  padding: 20rpx;
+  font-family: monospace;
+  font-size: 22rpx;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.export-modal-note {
+  margin-top: 16rpx;
+  color: #8A8E95;
+  font-size: 21rpx;
+  line-height: 1.5;
+}
+
+.export-modal .export-copy-button {
+  width: 100%;
+  height: 72rpx;
+  margin: 24rpx 0 0;
+  padding: 0;
+  border-radius: 36rpx;
+  color: #FFFFFF;
+  background: #E26424;
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 72rpx;
+}
+
+.export-modal .export-copy-hover {
+  background: #C9571F;
+}
+
 .day-group + .day-group {
   margin-top: 42rpx;
 }

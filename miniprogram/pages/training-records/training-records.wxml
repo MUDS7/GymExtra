@@ -6,6 +6,10 @@
     <view class="records-nav-title" style="height: {{navBarHeight}}px; line-height: {{navBarHeight}}px;">{{navTitle}}</view>
   </view>
 
+  <view class="records-toolbar">
+    <button class="records-export" size="mini" hover-class="records-export-hover" loading="{{exporting}}" disabled="{{exporting}}" bindtap="onExportTap">导出</button>
+  </view>
+
   <view class="day-group" wx:for="{{groups}}" wx:key="key">
     <view class="day-divider">
       <text class="day-label">{{item.label}}</text>
@@ -34,4 +38,20 @@
   <view class="empty-state" wx:if="{{!loading && groups.length === 0}}">暂无训练记录</view>
   <view class="loading-state" wx:if="{{loading}}">加载中...</view>
   <view class="loading-state" wx:if="{{!loading && groups.length > 0 && !hasMore}}">已经到底了</view>
+</view>
+
+<view class="export-modal-mask" wx:if="{{showExportModal}}" catchtouchmove="noop">
+  <view class="export-modal-backdrop" bindtap="closeExportModal"></view>
+  <view class="export-modal" role="dialog" aria-label="导出训练记录">
+    <view class="export-modal-header">
+      <view class="export-modal-title">导出训练记录</view>
+      <button class="export-modal-close" size="mini" bindtap="closeExportModal" aria-label="关闭">×</button>
+    </view>
+    <view class="export-modal-subtitle">最近 {{exportCount}} 次训练 · 重量单位 kg</view>
+    <scroll-view class="export-json-scroll" scroll-y="{{true}}">
+      <text class="export-json" selectable="{{true}}">{{exportJson}}</text>
+    </scroll-view>
+    <view class="export-modal-note">自定义或已移除的动作未提供英文名时，该字段为空。</view>
+    <button class="export-copy-button" hover-class="export-copy-hover" bindtap="onCopyExportTap">复制</button>
+  </view>
 </view>
