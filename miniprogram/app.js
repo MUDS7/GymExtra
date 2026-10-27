@@ -14,7 +14,7 @@ App({
     this.restoreCachedSession();
     this.initCloud();
     const initialAuthPromise = this.login({
-      redirectToRegister: false,
+      redirectToRegister: true,
       force: true,
       fallbackToExperience: true
     })

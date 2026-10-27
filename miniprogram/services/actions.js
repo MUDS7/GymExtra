@@ -1,6 +1,8 @@
 const { ACTION_TABLE } = require("../data/actions");
 const { callCloudFunction } = require("./network");
 
+const ACTION_ICON_SYNC_TIMEOUT = 25000;
+
 function findBundledAction(action) {
   return ACTION_TABLE.find((item) => item.id === action.id || item.name === action.name);
 }
@@ -44,7 +46,7 @@ function ensureActionIcons(actionIds) {
     name: "actionFunctions",
     // 云端也会强制限制为 6 个，防止单次请求上传过多图片。
     data: { type: "ensureActionIcons", actionIds: uniqueActionIds.slice(0, 6) }
-  }).then(({ result }) => {
+  }, ACTION_ICON_SYNC_TIMEOUT).then(({ result }) => {
     if (!result || !result.success || !Array.isArray(result.data)) {
       throw new Error((result && result.message) || "动作图标同步失败");
     }

@@ -1,6 +1,6 @@
 ﻿param(
     [string]$WorkbookPath = "训记_动作库_分类及媒体对应_图片路径已更新.xlsx",
-    [string]$AssetRoot = "assets"
+    [string]$KeyframeRoot = "assets/images"
 )
 
 $ErrorActionPreference = "Stop"
@@ -8,7 +8,8 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $workspaceRoot = Split-Path -Parent $PSScriptRoot
 $resolvedWorkbookPath = (Resolve-Path (Join-Path $workspaceRoot $WorkbookPath)).Path
-$resolvedAssetRoot = (Resolve-Path (Join-Path $workspaceRoot $AssetRoot)).Path
+$resolvedKeyframeRoot = (Resolve-Path (Join-Path $workspaceRoot $KeyframeRoot)).Path
+$iconRevision = "gif-keyframe-v1"
 
 $categoryDefinitions = @(
     [pscustomobject]@{ id = "neck"; name = "颈部" },
@@ -135,6 +136,7 @@ try {
             categoryId = [string]$categoryIds[$cells["D"]]
             equipmentCategory = [string]$cells["G"]
             trainingType = [string]$cells["I"]
+            imageRelativePath = [string]$cells["L"]
         }
     }
 }
@@ -156,17 +158,25 @@ foreach ($group in ($workbookRows | Group-Object name)) {
     $nameCounts[$group.Name] = $group.Count
 }
 
-$assetFiles = Get-ChildItem -LiteralPath $resolvedAssetRoot -File -Filter "*-chatgpt-lineart.png"
 $assetsBySourceId = @{}
+$missingKeyframes = [System.Collections.Generic.List[string]]::new()
 foreach ($row in $workbookRows) {
-    $suffix = "_$($row.sourceId)-chatgpt-lineart.png"
-    $matches = @($assetFiles | Where-Object { $_.Name.EndsWith($suffix, [System.StringComparison]::OrdinalIgnoreCase) })
-    if ($matches.Count -gt 1) {
-        throw "动作 $($row.name)（$($row.sourceId)）匹配到多张图片。"
+    if (-not $row.imageRelativePath -or [System.IO.Path]::GetExtension($row.imageRelativePath) -ine ".gif") {
+        continue
     }
-    if ($matches.Count -eq 1) {
-        $assetsBySourceId[$row.sourceId] = $matches[0]
+
+    $keyframeName = [System.IO.Path]::GetFileNameWithoutExtension($row.imageRelativePath) + ".png"
+    $keyframePath = Join-Path $resolvedKeyframeRoot $keyframeName
+    if (Test-Path -LiteralPath $keyframePath -PathType Leaf) {
+        $assetsBySourceId[$row.sourceId] = Get-Item -LiteralPath $keyframePath
     }
+    else {
+        $missingKeyframes.Add("$($row.sourceId)|$($row.name)|$keyframeName")
+    }
+}
+if ($missingKeyframes.Count -gt 0) {
+    $examples = ($missingKeyframes | Select-Object -First 10) -join [Environment]::NewLine
+    throw "$($missingKeyframes.Count) GIF keyframe images are missing:$([Environment]::NewLine)$examples"
 }
 
 $usedIds = @{}
@@ -204,6 +214,7 @@ foreach ($row in $workbookRows) {
         trainingType = $row.trainingType
         iconPath = $iconPath
         hasCustomIcon = $hasCustomIcon
+        iconRevision = if ($hasCustomIcon) { $iconRevision } else { "" }
     }
 }
 
@@ -261,10 +272,12 @@ foreach ($action in $actionDefinitions | Where-Object hasCustomIcon) {
 
 [pscustomobject]@{
     Workbook = $resolvedWorkbookPath
+    KeyframeRoot = $resolvedKeyframeRoot
     Categories = $categoryDefinitions.Count
     Actions = $actionDefinitions.Count
     CustomIcons = $assetsBySourceId.Count
     DefaultIcons = $actionDefinitions.Count - $assetsBySourceId.Count
+    MissingKeyframes = $missingKeyframes.Count
     CatalogTargets = $catalogTargets.Count
     CloudIconTargets = $iconOutputDirectories.Count
 }

@@ -25,8 +25,14 @@ Page({
   },
 
   onChooseAvatar(event) {
+    const avatarUrl = event.detail && event.detail.avatarUrl;
+    if (!avatarUrl) {
+      wx.showToast({ title: "未能读取头像，可跳过后继续注册", icon: "none" });
+      return;
+    }
+
     this.setData({
-      avatarUrl: event.detail.avatarUrl,
+      avatarUrl,
       avatarSelected: true
     });
   },
@@ -35,12 +41,13 @@ Page({
     this.setData({ nickname: event.detail.value });
   },
 
-  async onSubmit() {
-    const nickname = this.data.nickname.trim();
-    if (!this.data.avatarSelected) {
-      wx.showToast({ title: "请先选择微信头像", icon: "none" });
-      return;
-    }
+  async onSubmit(event) {
+    // iOS 上昵称输入框的 bindinput 偶尔不会在点击按钮前同步，
+    // 优先读取 form submit 携带的原生输入值。
+    const formNickname = event && event.detail && event.detail.value
+      ? event.detail.value.nickname
+      : "";
+    const nickname = String(formNickname || this.data.nickname || "").trim();
     if (!nickname) {
       wx.showToast({ title: "请填写昵称", icon: "none" });
       return;
@@ -53,10 +60,14 @@ Page({
       if (!app.globalData.userId) {
         await app.login({ redirectToRegister: false, force: true });
       }
-      const upload = await auth.uploadAvatar(this.data.avatarUrl, app.globalData.userId);
+      let avatarUrl = "/images/avatar.png";
+      if (this.data.avatarSelected) {
+        const upload = await auth.uploadAvatar(this.data.avatarUrl, app.globalData.userId);
+        avatarUrl = upload.fileID;
+      }
       const result = await auth.registerUser({
         nickname,
-        avatarUrl: upload.fileID
+        avatarUrl
       });
       app.setUser(result.user);
       wx.hideLoading();

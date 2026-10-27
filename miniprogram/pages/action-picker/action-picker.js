@@ -1,7 +1,11 @@
 const { ACTION_TABLE, ACTION_CATEGORIES, DEFAULT_ACTION_ICON_PATH } = require("../../data/actions");
 const actionService = require("../../services/actions");
 const customActionService = require("../../services/custom-actions");
-const { cacheActionIcons } = require("../../services/action-icon-cache");
+const {
+  cacheActionIcons,
+  isCloudFile,
+  restoreCachedActionIcons
+} = require("../../services/action-icon-cache");
 
 let actionTable = ACTION_TABLE;
 let customActionTable = [];
@@ -130,12 +134,54 @@ Page({
 
     if (activeCategory === "custom") return Promise.resolve();
 
-    const actions = buildActions(activeCategory, keyword).filter((action) => !action.iconCached);
     const cacheKey = this.getIconBatchKey();
-    const state = iconBatchStates[cacheKey] || { loading: false, completed: false };
+    const state = iconBatchStates[cacheKey] || {
+      loading: false,
+      restoring: false,
+      restored: false,
+      completed: false
+    };
     iconBatchStates[cacheKey] = state;
 
-    if (!actions.length || state.loading || state.completed) {
+    if (state.loading || state.restoring || state.completed) {
+      return Promise.resolve();
+    }
+
+    const visibleActions = buildActions(activeCategory, keyword);
+
+    if (!state.restored) {
+      state.restoring = true;
+      pendingCategoryIconLoads[cacheKey] = restoreCachedActionIcons(visibleActions)
+        .then((restoredActions) => {
+          const restoredById = new Map(
+            restoredActions
+              .filter((action) => action && action.iconCached)
+              .map((action) => [String(action.id), action])
+          );
+          actionTable = actionTable.map((action) => (
+            restoredById.get(String(action.id)) || action
+          ));
+          this.refreshActions();
+        })
+        .catch((error) => {
+          console.warn("动作图标本地缓存恢复失败", error);
+        })
+        .finally(() => {
+          state.restoring = false;
+          state.restored = true;
+          delete pendingCategoryIconLoads[cacheKey];
+
+          if (this.getIconBatchKey() === cacheKey) {
+            this.loadNextIconBatch();
+          }
+        });
+
+      return pendingCategoryIconLoads[cacheKey];
+    }
+
+    const actions = visibleActions.filter((action) => !action.iconCached);
+    if (!actions.length) {
+      state.completed = true;
       return Promise.resolve();
     }
 
@@ -147,15 +193,23 @@ Page({
 
     state.loading = true;
     let batchSucceeded = false;
+    const cloudBackedActions = batch.filter((action) => (
+      isCloudFile(action.iconFileID) || isCloudFile(action.iconPath)
+    ));
+    const generatedActions = batch.filter((action) => !cloudBackedActions.includes(action));
 
-    pendingCategoryIconLoads[cacheKey] = actionService.ensureActionIcons(batch.map((action) => action.id))
-      .then((syncedActions) => {
-        const syncedById = new Map(syncedActions.map((action) => [String(action.id), action]));
-        const availableCloudIcons = batch
-          .map((action) => syncedById.get(String(action.id)))
-          .filter((action) => action && action.iconFileID);
-        return availableCloudIcons.length ? cacheActionIcons(availableCloudIcons) : [];
-      })
+    pendingCategoryIconLoads[cacheKey] = Promise.all([
+      cloudBackedActions.length ? cacheActionIcons(cloudBackedActions) : [],
+      generatedActions.length
+        ? actionService.ensureActionIcons(generatedActions.map((action) => action.id))
+          .then((syncedActions) => cacheActionIcons(
+            syncedActions.filter((action) => action && action.iconFileID)
+          ))
+        : []
+    ])
+      .then(([cachedCloudActions, cachedGeneratedActions]) => (
+        cachedCloudActions.concat(cachedGeneratedActions)
+      ))
       .then((cachedActions) => {
         const cachedById = new Map(cachedActions.map((action) => [String(action.id), action]));
         actionTable = actionTable.map((action) => cachedById.get(String(action.id)) || action);

@@ -8,4 +8,9 @@ cloudfunctions/quickstartFunctions/node_modules/
 训记_动作库_分类及媒体对应.xlsx
 训记_动作图片_GIF_按身体部位分类.zip
 训记_动作图片_GIF_按身体部位分类/
-assets/
+/assets/
+/cloudfunctions/
+
+# Local temporary files, caches, previews, and generated outputs
+/tmp/
+/outputs/

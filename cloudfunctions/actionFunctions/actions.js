@@ -37,7 +37,7 @@ async function uploadActionIcon(action) {
   }
 
   const result = await cloud.uploadFile({
-    cloudPath: `actions/icons/${path.basename(localPath)}`,
+    cloudPath: `actions/icons/${action.iconRevision || "legacy"}/${path.basename(localPath)}`,
     fileContent: fs.readFileSync(localPath)
   });
   if (!result.fileID) {
@@ -62,14 +62,16 @@ async function ensureActionIcons({ categoryIds, actionIds } = {}) {
 
   const resolvedActions = await Promise.all(actions.map(async (action) => {
     let iconFileID = "";
+    let storedIconRevision = "";
     try {
       const result = await db.collection(COLLECTION).doc(String(action.id)).get();
       iconFileID = result.data && result.data.iconFileID;
+      storedIconRevision = result.data && result.data.iconRevision;
     } catch (error) {
       // 首次请求该图片时记录尚不存在。
     }
 
-    if (!iconFileID) {
+    if (!iconFileID || storedIconRevision !== action.iconRevision) {
       iconFileID = await uploadActionIcon(action);
       await db.collection(COLLECTION).doc(String(action.id)).set({
         data: { ...action, iconFileID }

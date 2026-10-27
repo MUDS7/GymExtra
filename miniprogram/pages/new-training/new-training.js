@@ -129,25 +129,76 @@ function getPersistentIconPath(action) {
 
 function getReadonlyIconSource(action, actionIconMap) {
   const savedIconPath = action && action.iconPath ? action.iconPath : "";
-  const libraryIconPath = actionIconMap && action && action.actionId !== undefined && action.actionId !== null
-    ? actionIconMap.get(String(action.actionId)) || ""
+  const actionId = action && action.actionId !== undefined && action.actionId !== null
+    ? String(action.actionId)
+    : "";
+  const actionName = String(action && action.name || "").trim();
+  const libraryIconPath = actionIconMap
+    ? actionIconMap.get(`id:${actionId}`) || actionIconMap.get(`name:${actionName}`) || ""
     : "";
 
-  if (libraryIconPath && !isCloudFile(libraryIconPath)) return libraryIconPath;
-  if (savedIconPath && !isCloudFile(savedIconPath)) return savedIconPath;
-  return libraryIconPath || savedIconPath || DEFAULT_ACTION_ICON_PATH;
+  // The current library is authoritative when it has a persistent image. A
+  // saved cloud image is the next best option for historical/custom actions.
+  // Package paths are only fallbacks because old temporary local paths may no
+  // longer exist when a training record is opened later.
+  if (isCloudFile(libraryIconPath)) return libraryIconPath;
+  if (isCloudFile(savedIconPath)) return savedIconPath;
+  if (libraryIconPath) return libraryIconPath;
+  if (savedIconPath && savedIconPath.indexOf("/assets/action-icons/") !== 0) return savedIconPath;
+  return DEFAULT_ACTION_ICON_PATH;
 }
 
-async function loadActionIconMap() {
+async function loadActionIconMap(trainingActions = []) {
   try {
     const actions = await actionService.getActions();
     const iconMap = new Map();
+    const actionsById = new Map();
+    const actionsByName = new Map();
 
     actions.forEach((action) => {
       if (action && action.id !== undefined && action.id !== null) {
-        iconMap.set(String(action.id), getPersistentIconPath(action) || action.iconPath || "");
+        actionsById.set(String(action.id), action);
       }
+      if (action && action.name) actionsByName.set(String(action.name).trim(), action);
+
+      const iconPath = getPersistentIconPath(action)
+        || (action.iconCached ? action.iconPath : "")
+        || (action.iconPath === DEFAULT_ACTION_ICON_PATH ? DEFAULT_ACTION_ICON_PATH : "");
+      if (action && action.id !== undefined && action.id !== null) {
+        iconMap.set(`id:${String(action.id)}`, iconPath);
+      }
+      if (action && action.name) iconMap.set(`name:${String(action.name).trim()}`, iconPath);
     });
+
+    const requestedActions = Array.from(new Set(
+      (Array.isArray(trainingActions) ? trainingActions : [])
+        .map((savedAction) => (
+          actionsById.get(String(savedAction && savedAction.actionId))
+          || actionsByName.get(String(savedAction && savedAction.name || "").trim())
+        ))
+        .filter((action) => action && action.hasCustomIcon && !getPersistentIconPath(action))
+    ));
+
+    // Both client and cloud function deliberately cap one icon request at six.
+    // Resolve every batch so records with more actions do not leave later cards blank.
+    for (let index = 0; index < requestedActions.length; index += 6) {
+      let syncedActions = [];
+      try {
+        syncedActions = await actionService.ensureActionIcons(
+          requestedActions.slice(index, index + 6).map((action) => action.id)
+        );
+      } catch (error) {
+        // Keep legacy/saved mappings usable even when one lazy upload fails.
+        console.warn("Load action icon batch failed", error);
+      }
+
+      syncedActions.forEach((action) => {
+        const iconPath = getPersistentIconPath(action);
+        if (!iconPath) return;
+        iconMap.set(`id:${String(action.id)}`, iconPath);
+        if (action.name) iconMap.set(`name:${String(action.name).trim()}`, iconPath);
+      });
+    }
 
     return iconMap;
   } catch (error) {
@@ -198,7 +249,9 @@ function createTrainingAction(action) {
   const categoryId = getActionCategory(action);
   const isCardio = categoryId === "cardio";
   const sourceSets = Array.isArray(action.sets) && action.sets.length ? action.sets : [createSet({ weight: action.weight })];
-  const iconPath = action.iconPath || action.image || DEFAULT_ACTION_ICON_PATH;
+  const iconFileID = getPersistentIconPath(action);
+  const sourceIconPath = action.iconPath || action.image || DEFAULT_ACTION_ICON_PATH;
+  const iconPath = isCloudFile(sourceIconPath) ? DEFAULT_ACTION_ICON_PATH : sourceIconPath;
 
   return refreshAction({
     uid: `${action.id || "action"}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -209,10 +262,18 @@ function createTrainingAction(action) {
     durationMinutes: normalizeDuration(action.durationMinutes, isCardio ? 30 : 0),
     name: action.name || "未命名动作",
     iconPath,
-    iconFileID: getPersistentIconPath(action),
+    iconFileID,
     expanded: false,
     sets: sourceSets.map((item) => (item.uid ? { ...item } : createSet(item)))
   });
+}
+
+async function createCachedTrainingAction(action) {
+  const trainingAction = createTrainingAction(action);
+  if (trainingAction.iconFileID) {
+    trainingAction.iconPath = await getCachedIconPath(trainingAction.iconFileID);
+  }
+  return trainingAction;
 }
 
 async function createReadonlyTrainingAction(action, actionIconMap) {
@@ -339,13 +400,11 @@ Page({
     wx.showLoading({ title: "加载中", mask: true });
 
     try {
-      const [training, actionIconMap] = await Promise.all([
-        trainingService.getTrainingDetail(trainingId),
-        loadActionIconMap()
-      ]);
+      const training = await trainingService.getTrainingDetail(trainingId);
+      const trainingActions = Array.isArray(training.actions) ? training.actions : [];
+      const actionIconMap = await loadActionIconMap(trainingActions);
       const actions = await Promise.all(
-        (Array.isArray(training.actions) ? training.actions : [])
-          .map((action) => createReadonlyTrainingAction(action, actionIconMap))
+        trainingActions.map((action) => createReadonlyTrainingAction(action, actionIconMap))
       );
 
       this.setData({
@@ -389,9 +448,9 @@ Page({
         throw new Error("模板不存在或已删除");
       }
 
-      const actions = (Array.isArray(template.actions) ? template.actions : []).map((action) => (
-        createTrainingAction(action)
-      ));
+      const actions = await Promise.all(
+        (Array.isArray(template.actions) ? template.actions : []).map(createCachedTrainingAction)
+      );
 
       this.setData({
         title: template.name,
@@ -423,9 +482,9 @@ Page({
         throw new Error("模板不存在或已删除");
       }
 
-      const actions = (Array.isArray(template.actions) ? template.actions : []).map((action) => (
-        createTrainingAction(action)
-      ));
+      const actions = await Promise.all(
+        (Array.isArray(template.actions) ? template.actions : []).map(createCachedTrainingAction)
+      );
 
       this.setData({
         title: template.name,
@@ -452,9 +511,9 @@ Page({
 
     try {
       const template = await groupService.getGroupTemplate(groupId, templateId);
-      const actions = (Array.isArray(template.actions) ? template.actions : []).map((action) => (
-        createTrainingAction(action)
-      ));
+      const actions = await Promise.all(
+        (Array.isArray(template.actions) ? template.actions : []).map(createCachedTrainingAction)
+      );
 
       this.setData({
         title: template.name || "未命名模板",
@@ -915,7 +974,20 @@ Page({
   },
 
   addTrainingAction(action) {
-    this.updateActions(this.data.actions.concat(createTrainingAction(action)));
+    const trainingAction = createTrainingAction(action);
+    this.updateActions(this.data.actions.concat(trainingAction));
+
+    const cloudIconPath = isCloudFile(trainingAction.iconFileID)
+      ? trainingAction.iconFileID
+      : (isCloudFile(trainingAction.iconPath) ? trainingAction.iconPath : "");
+    if (!cloudIconPath) return;
+
+    getCachedIconPath(cloudIconPath).then((iconPath) => {
+      const index = this.data.actions.findIndex((item) => item.uid === trainingAction.uid);
+      if (index >= 0 && iconPath) {
+        this.setData({ [`actions[${index}].iconPath`]: iconPath });
+      }
+    });
   },
 
   onAddActionTap() {
@@ -934,6 +1006,14 @@ Page({
     const actions = this.data.actions.slice();
     actions[index] = { ...actions[index], expanded: !actions[index].expanded };
     this.setData({ actions });
+  },
+
+  onActionImageError(event) {
+    const index = Number(event.currentTarget.dataset.index);
+    const action = this.data.actions[index];
+
+    if (!action || action.iconPath === DEFAULT_ACTION_ICON_PATH) return;
+    this.setData({ [`actions[${index}].iconPath`]: DEFAULT_ACTION_ICON_PATH });
   },
 
   onDurationChange(event) {

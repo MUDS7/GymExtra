@@ -1,5 +1,17 @@
 {
+  "$schema": "https://static.cloudbase.net/cli/cloudbaserc.schema.json",
   "envId": "cloud1-d0g045i05d14e02d0",
+  "functionRoot": "cloudfunctions",
+  "functions": [
+    {
+      "name": "actionFunctions",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256
+    }
+  ],
   "framework": {
     "plugins": {
       "trainingDatabase": {

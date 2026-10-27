@@ -3,6 +3,7 @@ const identity = require("./identity");
 
 const db = cloud.database();
 const COLLECTION = "users";
+const DEFAULT_AVATAR_URL = "/images/avatar.png";
 
 function toPublicUser(record) {
   return {
@@ -34,13 +35,13 @@ async function login(event = {}) {
 async function register(event) {
   const { openid, unionid } = identity.getUserIdentity(event);
   const nickname = String(event.nickname || "").trim().slice(0, 20);
-  const avatarUrl = String(event.avatarUrl || "").trim();
+  const avatarUrl = String(event.avatarUrl || DEFAULT_AVATAR_URL).trim();
 
   if (!nickname) {
     return { success: false, message: "请填写昵称" };
   }
 
-  if (!avatarUrl.startsWith("cloud://")) {
+  if (avatarUrl !== DEFAULT_AVATAR_URL && !avatarUrl.startsWith("cloud://")) {
     return { success: false, message: "请选择并上传头像" };
   }
 

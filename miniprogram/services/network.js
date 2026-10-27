@@ -9,13 +9,14 @@ function createTimeoutError() {
   return error;
 }
 
-function showTimeoutModal() {
+function showTimeoutModal(timeoutMs = NETWORK_TIMEOUT) {
   if (timeoutModalVisible) return;
 
+  const timeoutSeconds = Math.ceil(timeoutMs / 1000);
   timeoutModalVisible = true;
   wx.showModal({
     title: "网络超时",
-    content: "网络请求超过 10 秒，请检查网络后重试。",
+    content: `网络请求超过 ${timeoutSeconds} 秒，请检查网络后重试。`,
     showCancel: false,
     confirmText: "知道了",
     complete() {
@@ -24,7 +25,7 @@ function showTimeoutModal() {
   });
 }
 
-function withTimeout(request, abort) {
+function withTimeout(request, abort, timeoutMs = NETWORK_TIMEOUT) {
   return new Promise((resolve, reject) => {
     let settled = false;
     const timer = setTimeout(() => {
@@ -32,9 +33,9 @@ function withTimeout(request, abort) {
 
       settled = true;
       if (typeof abort === "function") abort();
-      showTimeoutModal();
+      showTimeoutModal(timeoutMs);
       reject(createTimeoutError());
-    }, NETWORK_TIMEOUT);
+    }, timeoutMs);
 
     Promise.resolve(request).then((result) => {
       if (settled) return;
@@ -50,8 +51,8 @@ function withTimeout(request, abort) {
   });
 }
 
-function callCloudFunction(options) {
-  return withTimeout(wx.cloud.callFunction(options));
+function callCloudFunction(options, timeoutMs = NETWORK_TIMEOUT) {
+  return withTimeout(wx.cloud.callFunction(options), null, timeoutMs);
 }
 
 function uploadCloudFile(options) {

@@ -222,8 +222,17 @@
   justify-content: flex-end;
 }
 
+.action-image-frame {
+  width: 100%;
+  height: 156rpx;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .action-image {
-  width: 176rpx;
   height: 156rpx;
   flex-shrink: 0;
 }
@@ -432,8 +441,8 @@
     height: 282rpx;
   }
 
+  .action-image-frame,
   .action-image {
-    width: 150rpx;
     height: 132rpx;
   }
 
